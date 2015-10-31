@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <!-- General -->
+    <category label="30000">
+        <setting    id="username"          type="text"     label="30001" />
+        <setting    id="password"          type="text"     label="30002"   option="hidden" />
+    </category>
+
+    <!-- Playback -->
+    <category label="30006">
+        <setting    id="stream_quality"   type="labelenum" label="30010"   values="hi|med|low" default="hi"/>
+        <setting    id="auto_fullscreen"  type="bool"      label="30008"   default="true" />
+    </category>
+
+    <!-- Actions -->
+    <category label="30011">
+        <setting    id="clear_search_history" type="action"   label="30012" action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/clear/search-history)" />
+        <setting    id="clear_cache"          type="action"   label="30013" action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/clear/cache)" />
+    </category>
+
+    <!-- Advanced -->
+    <category label="30054">
+        <setting    id="overwrite_views"   type="bool"     label="30003"   default="false" />
+        <setting    id="view_id_list"      type="number"   label="30007"   default="50"  enable="eq(-1,true)" />
+        <setting    id="view_id_artists"   type="number"   label="30055"   default="50"  enable="eq(-2,true)" />
+        <setting    id="view_id_albums"    type="number"   label="30056"   default="500" enable="eq(-3,true)" />
+        <setting    id="view_id_playlists" type="number"   label="30057"   default="51"  enable="eq(-4,true)" />
+        <setting    id="view_id_stations"  type="number"   label="30058"   default="50"  enable="eq(-5,true)" />
+        <setting    id="view_id_songs"     type="number"   label="30059"   default="506" enable="eq(-6,true)" />
+    </category>
+
+    <setting        id="android_id"     type="text"     visible="0"     default="" />
+    <setting        id="authtoken"      type="text"     visible="0"     default="" />
+</settings>

@@ -1,0 +1,282 @@
+# Kodi Media Center language file
+# Addon Name: Google Play Music
+# Addon id: plugin.audio.linuxwhatelse.gmusic
+# Addon Provider: linuxwhatelse
+msgid ""
+msgstr ""
+"Project-Id-Version: plugin.audio.linuxwhatelse.gmusic\n"
+"Report-Msgid-Bugs-To: tadly@linuxwhatelse.de\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: tadly\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+
+msgctxt "#30000"
+msgid "General"
+msgstr ""
+
+msgctxt "#30001"
+msgid "Username"
+msgstr ""
+
+msgctxt "#30002"
+msgid "Password"
+msgstr ""
+
+msgctxt "#30003"
+msgid "Overwrite Views"
+msgstr ""
+
+msgctxt "#30006"
+msgid "Playback"
+msgstr ""
+
+msgctxt "#30007"
+msgid "List view ID"
+msgstr ""
+
+msgctxt "#30008"
+msgid "Fullscreen when playing Station or \"Play all\""
+msgstr ""
+
+msgctxt "#30009"
+msgid ""
+msgstr ""
+
+msgctxt "#30010"
+msgid "Streaming quality"
+msgstr ""
+
+msgctxt "#30011"
+msgid "Actions"
+msgstr ""
+
+msgctxt "#30012"
+msgid "Clear search history"
+msgstr ""
+
+msgctxt "#30013"
+msgid "Clear cache (includes search history)"
+msgstr ""
+
+msgctxt "#30014"
+msgid "Listen Now"
+msgstr ""
+
+msgctxt "#30015"
+msgid "Top charts"
+msgstr ""
+
+msgctxt "#30016"
+msgid "New releases"
+msgstr ""
+
+msgctxt "#30017"
+msgid "My Library"
+msgstr ""
+
+msgctxt "#30018"
+msgid "Browse stations"
+msgstr ""
+
+msgctxt "#30019"
+msgid "Search"
+msgstr ""
+
+msgctxt "#30020"
+msgid "Playlists"
+msgstr ""
+
+msgctxt "#30021"
+msgid "Stations"
+msgstr ""
+
+msgctxt "#30022"
+msgid "Artists"
+msgstr ""
+
+msgctxt "#30023"
+msgid "Albums"
+msgstr ""
+
+msgctxt "#30024"
+msgid "Songs"
+msgstr ""
+
+msgctxt "#30025"
+msgid "Genres"
+msgstr ""
+
+msgctxt "#30026"
+msgid "Last added"
+msgstr ""
+
+msgctxt "#30027"
+msgid "Thumbs up"
+msgstr ""
+
+msgctxt "#30028"
+msgid "No Thumb"
+msgstr ""
+
+msgctxt "#30029"
+msgid "Thumbs down"
+msgstr ""
+
+msgctxt "#30030"
+msgid "Update Library"
+msgstr ""
+
+msgctxt "#30033"
+msgid "Play all"
+msgstr ""
+
+msgctxt "#30034"
+msgid "Go to Artist"
+msgstr ""
+
+msgctxt "#30035"
+msgid "Go to Album"
+msgstr ""
+
+msgctxt "#30036"
+msgid "Start Radio"
+msgstr ""
+
+msgctxt "#30037"
+msgid "Add to My Library"
+msgstr ""
+
+msgctxt "#30038"
+msgid "Add to Playlist"
+msgstr ""
+
+msgctxt "#30039"
+msgid "Queue"
+msgstr ""
+
+msgctxt "#30040"
+msgid "Play next"
+msgstr ""
+
+msgctxt "#30041"
+msgid "Rate song"
+msgstr ""
+
+msgctxt "#30042"
+msgid "Select devices for spoofing"
+msgstr ""
+
+msgctxt "#30043"
+msgid "Started..."
+msgstr ""
+
+msgctxt "#30044"
+msgid "Finished!"
+msgstr ""
+
+msgctxt "#30045"
+msgid "I'm feeling lucky radio"
+msgstr ""
+
+msgctxt "#30046"
+msgid "Setting(s) needed"
+msgstr ""
+
+msgctxt "#30047"
+msgid "Username and Password are requiered..."
+msgstr ""
+
+msgctxt "#30048"
+msgid "Login failed"
+msgstr ""
+
+msgctxt "#30049"
+msgid "Addon Settings"
+msgstr ""
+
+msgctxt "#30050"
+msgid "Something went wrong"
+msgstr ""
+
+msgctxt "#30051"
+msgid "Please try again..."
+msgstr ""
+
+msgctxt "#30052"
+msgid "-- Create new Playlist --"
+msgstr ""
+
+msgctxt "#30053"
+msgid "-- New Search --"
+msgstr ""
+
+msgctxt "#30054"
+msgid "Advanced"
+msgstr ""
+
+msgctxt "#30055"
+msgid "Artists view ID"
+msgstr ""
+
+msgctxt "#30056"
+msgid "Albums view ID"
+msgstr ""
+
+msgctxt "#30057"
+msgid "Playlists view ID"
+msgstr ""
+
+msgctxt "#30058"
+msgid "Stations view ID"
+msgstr ""
+
+msgctxt "#30059"
+msgid "Songs view ID"
+msgstr ""
+
+msgctxt "#30060"
+msgid "Google Play Music"
+msgstr ""
+
+msgctxt "#30061"
+msgid "Remove from Library"
+msgstr ""
+
+msgctxt "#30062"
+msgid "Remove from Playlist"
+msgstr ""
+
+msgctxt "#30063"
+msgid "Really remove this item from your library?"
+msgstr ""
+
+msgctxt "#30064"
+msgid "Really remove this item from this playlist?"
+msgstr ""
+
+msgctxt "#30065"
+msgid "It is necessary to update your library now. Proceed?"
+msgstr ""
+
+msgctxt "#30066"
+msgid "Top songs"
+msgstr ""
+
+msgctxt "#30067"
+msgid "Related artists"
+msgstr ""
+
+msgctxt "#30068"
+msgid "Delete playlist"
+msgstr ""
+
+msgctxt "#30069"
+msgid "Really delete this playlist?"
+msgstr ""

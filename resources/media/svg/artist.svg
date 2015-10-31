@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="256"
+   height="256"
+   viewBox="0 0 256 256"
+   id="svg3344"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   inkscape:export-filename="/home/tadly/Downloads/google music icons/pngs/browse-stations.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90"
+   sodipodi:docname="artist.svg">
+  <defs
+     id="defs3346" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.3443667"
+     inkscape:cx="111.28458"
+     inkscape:cy="158.67632"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="2048"
+     inkscape:window-height="1097"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata3349">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="bg"
+     style="display:inline;opacity:1">
+    <rect
+       style="fill:#ff6600"
+       id="rect3420"
+       width="256"
+       height="256"
+       x="0"
+       y="0" />
+  </g>
+  <g
+     inkscape:label="icon"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-796.36216)"
+     style="display:inline;opacity:1">
+    <g
+       style="display:inline;opacity:1;fill:#ffffff"
+       id="g4155"
+       transform="matrix(7.2916667,0,0,7.2916667,40.5,836.86216)">
+      <path
+         id="path4145"
+         d="m 12,12 c 2.21,0 4,-1.79 4,-4 C 16,5.79 14.21,4 12,4 9.79,4 8,5.79 8,8 c 0,2.21 1.79,4 4,4 z m 0,2 c -2.67,0 -8,1.34 -8,4 l 0,2 16,0 0,-2 c 0,-2.66 -5.33,-4 -8,-4 z"
+         inkscape:connector-curvature="0" />
+      <path
+         id="path4147"
+         d="M 0,0 24,0 24,24 0,24 Z"
+         inkscape:connector-curvature="0"
+         style="fill:none" />
+    </g>
+  </g>
+</svg>
