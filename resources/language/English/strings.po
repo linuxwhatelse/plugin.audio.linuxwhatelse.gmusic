@@ -170,7 +170,7 @@ msgid "Rate song"
 msgstr ""
 
 msgctxt "#30042"
-msgid "Select devices for spoofing"
+msgid "Select device for spoofing"
 msgstr ""
 
 msgctxt "#30043"
