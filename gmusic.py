@@ -265,12 +265,21 @@ class GMusic(Mobileclient):
             seen_add = seen.add
             songs = [x for x in songs if x['albumId'] not in seen and not seen_add(x['albumId'])]
             for song in songs:
-                try:
-                    album = self.get_album_info(album_id=song['albumId'], include_tracks=False)
-                    album['genre'] = song['genre']
-                    albums.append(album)
-                except:
-                    utils.log('Faild loading album "%s" with id: "%s"' % (song['album'], song['albumId']), LOGERROR)
+                if not 'albumId' in song:
+                    continue
+
+                album = {
+                    'name':        song['album']  if 'album'  in song else '',
+                    'artist':      song['artist'] if 'artist' in song else '',
+                    'albumArtist': song['albumArtist'] if 'albumArtist' in song else '',
+                    'albumArtRef': song['albumArtRef'][0]['url'] if len(song['albumArtRef']) > 0 else '',
+                    'albumId':     song['albumId'],
+                    'year':        song['year']     if 'year'     in song else '',
+                    'genre':       song['genre']    if 'genre'    in song else '',
+                    'artistId':    song['artistId'] if 'artistId' in song else '',
+                }
+
+                albums.append(album)
 
             albums = sorted(albums, key=lambda k: k['name'].lower())
             with open(albums_cache, 'w+') as f:
