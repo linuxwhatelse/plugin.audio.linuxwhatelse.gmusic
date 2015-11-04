@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import datetime
 import ipaddress
+
 from email.utils import parseaddr
 
 import idna
@@ -17,7 +18,9 @@ from six.moves import urllib_parse
 from cryptography import utils, x509
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.x509.oid import CertificatePoliciesOID, ExtensionOID
+from cryptography.x509.oid import (
+    CRLExtensionOID, CertificatePoliciesOID, ExtensionOID
+)
 
 
 def _obj2txt(backend, obj):
@@ -30,49 +33,12 @@ def _obj2txt(backend, obj):
     return backend._ffi.buffer(buf, res)[:].decode()
 
 
-def _asn1_integer_to_int(backend, asn1_int):
-    bn = backend._lib.ASN1_INTEGER_to_BN(asn1_int, backend._ffi.NULL)
-    backend.openssl_assert(bn != backend._ffi.NULL)
-    bn = backend._ffi.gc(bn, backend._lib.BN_free)
-    return backend._bn_to_int(bn)
-
-
-def _asn1_string_to_bytes(backend, asn1_string):
-    return backend._ffi.buffer(asn1_string.data, asn1_string.length)[:]
-
-
-def _asn1_string_to_ascii(backend, asn1_string):
-    return _asn1_string_to_bytes(backend, asn1_string).decode("ascii")
-
-
-def _asn1_string_to_utf8(backend, asn1_string):
-    buf = backend._ffi.new("unsigned char **")
-    res = backend._lib.ASN1_STRING_to_UTF8(buf, asn1_string)
-    backend.openssl_assert(res >= 0)
-    backend.openssl_assert(buf[0] != backend._ffi.NULL)
-    buf = backend._ffi.gc(
-        buf, lambda buffer: backend._lib.OPENSSL_free(buffer[0])
-    )
-    return backend._ffi.buffer(buf[0], res)[:].decode('utf8')
-
-
-def _asn1_to_der(backend, asn1_type):
-    buf = backend._ffi.new("unsigned char **")
-    res = backend._lib.i2d_ASN1_TYPE(asn1_type, buf)
-    backend.openssl_assert(res >= 0)
-    backend.openssl_assert(buf[0] != backend._ffi.NULL)
-    buf = backend._ffi.gc(
-        buf, lambda buffer: backend._lib.OPENSSL_free(buffer[0])
-    )
-    return backend._ffi.buffer(buf[0], res)[:]
-
-
 def _decode_x509_name_entry(backend, x509_name_entry):
     obj = backend._lib.X509_NAME_ENTRY_get_object(x509_name_entry)
     backend.openssl_assert(obj != backend._ffi.NULL)
     data = backend._lib.X509_NAME_ENTRY_get_data(x509_name_entry)
     backend.openssl_assert(data != backend._ffi.NULL)
-    value = _asn1_string_to_utf8(backend, data)
+    value = backend._asn1_string_to_utf8(data)
     oid = _obj2txt(backend, obj)
 
     return x509.NameAttribute(x509.ObjectIdentifier(oid), value)
@@ -101,8 +67,10 @@ def _decode_general_names(backend, gns):
 
 def _decode_general_name(backend, gn):
     if gn.type == backend._lib.GEN_DNS:
-        data = _asn1_string_to_bytes(backend, gn.d.dNSName)
-        if data.startswith(b"*."):
+        data = backend._asn1_string_to_bytes(gn.d.dNSName)
+        if not data:
+            decoded = u""
+        elif data.startswith(b"*."):
             # This is a wildcard name. We need to remove the leading wildcard,
             # IDNA decode, then re-add the wildcard. Wildcard characters should
             # always be left-most (RFC 2595 section 2.4).
@@ -118,9 +86,12 @@ def _decode_general_name(backend, gn):
 
         return x509.DNSName(decoded)
     elif gn.type == backend._lib.GEN_URI:
-        data = _asn1_string_to_ascii(backend, gn.d.uniformResourceIdentifier)
+        data = backend._asn1_string_to_ascii(gn.d.uniformResourceIdentifier)
         parsed = urllib_parse.urlparse(data)
-        hostname = idna.decode(parsed.hostname)
+        if parsed.hostname:
+            hostname = idna.decode(parsed.hostname)
+        else:
+            hostname = ""
         if parsed.port:
             netloc = hostname + u":" + six.text_type(parsed.port)
         else:
@@ -142,7 +113,7 @@ def _decode_general_name(backend, gn):
         oid = _obj2txt(backend, gn.d.registeredID)
         return x509.RegisteredID(x509.ObjectIdentifier(oid))
     elif gn.type == backend._lib.GEN_IPADD:
-        data = _asn1_string_to_bytes(backend, gn.d.iPAddress)
+        data = backend._asn1_string_to_bytes(gn.d.iPAddress)
         data_len = len(data)
         if data_len == 8 or data_len == 32:
             # This is an IPv4 or IPv6 Network and not a single IP. This
@@ -173,7 +144,7 @@ def _decode_general_name(backend, gn):
             _decode_x509_name(backend, gn.d.directoryName)
         )
     elif gn.type == backend._lib.GEN_EMAIL:
-        data = _asn1_string_to_ascii(backend, gn.d.rfc822Name)
+        data = backend._asn1_string_to_ascii(gn.d.rfc822Name)
         name, address = parseaddr(data)
         parts = address.split(u"@")
         if name or not address:
@@ -192,7 +163,7 @@ def _decode_general_name(backend, gn):
             )
     elif gn.type == backend._lib.GEN_OTHERNAME:
         type_id = _obj2txt(backend, gn.d.otherName.type_id)
-        value = _asn1_to_der(backend, gn.d.otherName.value)
+        value = backend._asn1_to_der(gn.d.otherName.value)
         return x509.OtherName(x509.ObjectIdentifier(type_id), value)
     else:
         # x400Address or ediPartyName
@@ -209,10 +180,11 @@ def _decode_ocsp_no_check(backend, ext):
 
 
 class _X509ExtensionParser(object):
-    def __init__(self, ext_count, get_ext, handlers):
+    def __init__(self, ext_count, get_ext, handlers, unsupported_exts=None):
         self.ext_count = ext_count
         self.get_ext = get_ext
         self.handlers = handlers
+        self.unsupported_exts = unsupported_exts
 
     def parse(self, backend, x509_obj):
         extensions = []
@@ -232,18 +204,25 @@ class _X509ExtensionParser(object):
             except KeyError:
                 if critical:
                     raise x509.UnsupportedExtension(
-                        "{0} is not currently supported".format(oid), oid
+                        "Critical extension {0} is not currently supported"
+                        .format(oid), oid
                     )
             else:
-                d2i = backend._lib.X509V3_EXT_d2i(ext)
-                if d2i == backend._ffi.NULL:
-                    backend._consume_errors()
-                    raise ValueError(
-                        "The {0} extension is invalid and can't be "
-                        "parsed".format(oid)
-                    )
+                # For extensions which are not supported by OpenSSL we pass the
+                # extension object directly to the parsing routine so it can
+                # be decoded manually.
+                if self.unsupported_exts and oid in self.unsupported_exts:
+                    ext_data = ext
+                else:
+                    ext_data = backend._lib.X509V3_EXT_d2i(ext)
+                    if ext_data == backend._ffi.NULL:
+                        backend._consume_errors()
+                        raise ValueError(
+                            "The {0} extension is invalid and can't be "
+                            "parsed".format(oid)
+                        )
 
-                value = handler(backend, d2i)
+                value = handler(backend, ext_data)
                 extensions.append(x509.Extension(oid, critical, value))
 
             seen_oids.add(oid)
@@ -294,11 +273,15 @@ class _Certificate(object):
     def serial(self):
         asn1_int = self._backend._lib.X509_get_serialNumber(self._x509)
         self._backend.openssl_assert(asn1_int != self._backend._ffi.NULL)
-        return _asn1_integer_to_int(self._backend, asn1_int)
+        return self._backend._asn1_integer_to_int(asn1_int)
 
     def public_key(self):
         pkey = self._backend._lib.X509_get_pubkey(self._x509)
-        self._backend.openssl_assert(pkey != self._backend._ffi.NULL)
+        if pkey == self._backend._ffi.NULL:
+            # Remove errors from the stack.
+            self._backend._consume_errors()
+            raise ValueError("Certificate public key is of an unknown type")
+
         pkey = self._backend._ffi.gc(pkey, self._backend._lib.EVP_PKEY_free)
 
         return self._backend._evp_pkey_to_public_key(pkey)
@@ -306,29 +289,12 @@ class _Certificate(object):
     @property
     def not_valid_before(self):
         asn1_time = self._backend._lib.X509_get_notBefore(self._x509)
-        return self._parse_asn1_time(asn1_time)
+        return self._backend._parse_asn1_time(asn1_time)
 
     @property
     def not_valid_after(self):
         asn1_time = self._backend._lib.X509_get_notAfter(self._x509)
-        return self._parse_asn1_time(asn1_time)
-
-    def _parse_asn1_time(self, asn1_time):
-        self._backend.openssl_assert(asn1_time != self._backend._ffi.NULL)
-        generalized_time = self._backend._lib.ASN1_TIME_to_generalizedtime(
-            asn1_time, self._backend._ffi.NULL
-        )
-        self._backend.openssl_assert(
-            generalized_time != self._backend._ffi.NULL
-        )
-        generalized_time = self._backend._ffi.gc(
-            generalized_time, self._backend._lib.ASN1_GENERALIZEDTIME_free
-        )
-        time = _asn1_string_to_ascii(
-            self._backend,
-            self._backend._ffi.cast("ASN1_STRING *", generalized_time)
-        )
-        return datetime.datetime.strptime(time, "%Y%m%d%H%M%SZ")
+        return self._backend._parse_asn1_time(asn1_time)
 
     @property
     def issuer(self):
@@ -412,12 +378,10 @@ def _decode_user_notice(backend, un):
     notice_reference = None
 
     if un.exptext != backend._ffi.NULL:
-        explicit_text = _asn1_string_to_utf8(backend, un.exptext)
+        explicit_text = backend._asn1_string_to_utf8(un.exptext)
 
     if un.noticeref != backend._ffi.NULL:
-        organization = _asn1_string_to_utf8(
-            backend, un.noticeref.organization
-        )
+        organization = backend._asn1_string_to_utf8(un.noticeref.organization)
 
         num = backend._lib.sk_ASN1_INTEGER_num(
             un.noticeref.noticenos
@@ -427,9 +391,7 @@ def _decode_user_notice(backend, un):
             asn1_int = backend._lib.sk_ASN1_INTEGER_value(
                 un.noticeref.noticenos, i
             )
-            notice_num = _asn1_integer_to_int(
-                backend, asn1_int
-            )
+            notice_num = backend._asn1_integer_to_int(asn1_int)
             notice_numbers.append(notice_num)
 
         notice_reference = x509.NoticeReference(
@@ -451,7 +413,7 @@ def _decode_basic_constraints(backend, bc_st):
     if basic_constraints.pathlen == backend._ffi.NULL:
         path_length = None
     else:
-        path_length = _asn1_integer_to_int(backend, basic_constraints.pathlen)
+        path_length = backend._asn1_integer_to_int(basic_constraints.pathlen)
 
     return x509.BasicConstraints(ca, path_length)
 
@@ -484,8 +446,8 @@ def _decode_authority_key_identifier(backend, akid):
         )
 
     if akid.serial != backend._ffi.NULL:
-        authority_cert_serial_number = _asn1_integer_to_int(
-            backend, akid.serial
+        authority_cert_serial_number = backend._asn1_integer_to_int(
+            akid.serial
         )
 
     return x509.AuthorityKeyIdentifier(
@@ -692,8 +654,180 @@ def _decode_crl_distribution_points(backend, cdps):
 def _decode_inhibit_any_policy(backend, asn1_int):
     asn1_int = backend._ffi.cast("ASN1_INTEGER *", asn1_int)
     asn1_int = backend._ffi.gc(asn1_int, backend._lib.ASN1_INTEGER_free)
-    skip_certs = _asn1_integer_to_int(backend, asn1_int)
+    skip_certs = backend._asn1_integer_to_int(asn1_int)
     return x509.InhibitAnyPolicy(skip_certs)
+
+
+_CRL_REASON_CODE_TO_ENUM = {
+    0: x509.ReasonFlags.unspecified,
+    1: x509.ReasonFlags.key_compromise,
+    2: x509.ReasonFlags.ca_compromise,
+    3: x509.ReasonFlags.affiliation_changed,
+    4: x509.ReasonFlags.superseded,
+    5: x509.ReasonFlags.cessation_of_operation,
+    6: x509.ReasonFlags.certificate_hold,
+    8: x509.ReasonFlags.remove_from_crl,
+    9: x509.ReasonFlags.privilege_withdrawn,
+    10: x509.ReasonFlags.aa_compromise,
+}
+
+
+def _decode_crl_reason(backend, enum):
+    enum = backend._ffi.cast("ASN1_ENUMERATED *", enum)
+    enum = backend._ffi.gc(enum, backend._lib.ASN1_ENUMERATED_free)
+    code = backend._lib.ASN1_ENUMERATED_get(enum)
+
+    try:
+        return _CRL_REASON_CODE_TO_ENUM[code]
+    except KeyError:
+        raise ValueError("Unsupported reason code: {0}".format(code))
+
+
+def _decode_invalidity_date(backend, inv_date):
+    generalized_time = backend._ffi.cast(
+        "ASN1_GENERALIZEDTIME *", inv_date
+    )
+    generalized_time = backend._ffi.gc(
+        generalized_time, backend._lib.ASN1_GENERALIZEDTIME_free
+    )
+    time = backend._ffi.string(
+        backend._lib.ASN1_STRING_data(
+            backend._ffi.cast("ASN1_STRING *", generalized_time)
+        )
+    ).decode("ascii")
+    return datetime.datetime.strptime(time, "%Y%m%d%H%M%SZ")
+
+
+def _decode_cert_issuer(backend, ext):
+    """
+    This handler decodes the CertificateIssuer entry extension directly
+    from the X509_EXTENSION object. This is necessary because this entry
+    extension is not directly supported by OpenSSL 0.9.8.
+    """
+
+    data_ptr_ptr = backend._ffi.new("const unsigned char **")
+    data_ptr_ptr[0] = ext.value.data
+    gns = backend._lib.d2i_GENERAL_NAMES(
+        backend._ffi.NULL, data_ptr_ptr, ext.value.length
+    )
+
+    # Check the result of d2i_GENERAL_NAMES() is valid. Usually this is covered
+    # in _X509ExtensionParser but since we are responsible for decoding this
+    # entry extension ourselves, we have to this here.
+    if gns == backend._ffi.NULL:
+        backend._consume_errors()
+        raise ValueError(
+            "The {0} extension is corrupted and can't be parsed".format(
+                CRLExtensionOID.CERTIFICATE_ISSUER))
+
+    gns = backend._ffi.gc(gns, backend._lib.GENERAL_NAMES_free)
+    return x509.GeneralNames(_decode_general_names(backend, gns))
+
+
+@utils.register_interface(x509.RevokedCertificate)
+class _RevokedCertificate(object):
+    def __init__(self, backend, x509_revoked):
+        self._backend = backend
+        self._x509_revoked = x509_revoked
+
+    @property
+    def serial_number(self):
+        asn1_int = self._x509_revoked.serialNumber
+        self._backend.openssl_assert(asn1_int != self._backend._ffi.NULL)
+        return self._backend._asn1_integer_to_int(asn1_int)
+
+    @property
+    def revocation_date(self):
+        return self._backend._parse_asn1_time(
+            self._x509_revoked.revocationDate)
+
+    @property
+    def extensions(self):
+        return _REVOKED_CERTIFICATE_EXTENSION_PARSER.parse(
+            self._backend, self._x509_revoked
+        )
+
+
+@utils.register_interface(x509.CertificateRevocationList)
+class _CertificateRevocationList(object):
+    def __init__(self, backend, x509_crl):
+        self._backend = backend
+        self._x509_crl = x509_crl
+
+    def __eq__(self, other):
+        if not isinstance(other, x509.CertificateRevocationList):
+            return NotImplemented
+
+        res = self._backend._lib.X509_CRL_cmp(self._x509_crl, other._x509_crl)
+        return res == 0
+
+    def __ne__(self, other):
+        return not self == other
+
+    def fingerprint(self, algorithm):
+        h = hashes.Hash(algorithm, self._backend)
+        bio = self._backend._create_mem_bio()
+        res = self._backend._lib.i2d_X509_CRL_bio(
+            bio, self._x509_crl
+        )
+        self._backend.openssl_assert(res == 1)
+        der = self._backend._read_mem_bio(bio)
+        h.update(der)
+        return h.finalize()
+
+    @property
+    def signature_hash_algorithm(self):
+        oid = _obj2txt(self._backend, self._x509_crl.sig_alg.algorithm)
+        try:
+            return x509._SIG_OIDS_TO_HASH[oid]
+        except KeyError:
+            raise UnsupportedAlgorithm(
+                "Signature algorithm OID:{0} not recognized".format(oid)
+            )
+
+    @property
+    def issuer(self):
+        issuer = self._backend._lib.X509_CRL_get_issuer(self._x509_crl)
+        self._backend.openssl_assert(issuer != self._backend._ffi.NULL)
+        return _decode_x509_name(self._backend, issuer)
+
+    @property
+    def next_update(self):
+        nu = self._backend._lib.X509_CRL_get_nextUpdate(self._x509_crl)
+        self._backend.openssl_assert(nu != self._backend._ffi.NULL)
+        return self._backend._parse_asn1_time(nu)
+
+    @property
+    def last_update(self):
+        lu = self._backend._lib.X509_CRL_get_lastUpdate(self._x509_crl)
+        self._backend.openssl_assert(lu != self._backend._ffi.NULL)
+        return self._backend._parse_asn1_time(lu)
+
+    def _revoked_certificates(self):
+        revoked = self._backend._lib.X509_CRL_get_REVOKED(self._x509_crl)
+        self._backend.openssl_assert(revoked != self._backend._ffi.NULL)
+
+        num = self._backend._lib.sk_X509_REVOKED_num(revoked)
+        revoked_list = []
+        for i in range(num):
+            r = self._backend._lib.sk_X509_REVOKED_value(revoked, i)
+            self._backend.openssl_assert(r != self._backend._ffi.NULL)
+            revoked_list.append(_RevokedCertificate(self._backend, r))
+
+        return revoked_list
+
+    def __iter__(self):
+        return iter(self._revoked_certificates())
+
+    def __getitem__(self, idx):
+        return self._revoked_certificates()[idx]
+
+    def __len__(self):
+        return len(self._revoked_certificates())
+
+    @property
+    def extensions(self):
+        raise NotImplementedError()
 
 
 @utils.register_interface(x509.CertificateSigningRequest)
@@ -776,6 +910,15 @@ _EXTENSION_HANDLERS = {
     ExtensionOID.NAME_CONSTRAINTS: _decode_name_constraints,
 }
 
+_REVOKED_EXTENSION_HANDLERS = {
+    CRLExtensionOID.CRL_REASON: _decode_crl_reason,
+    CRLExtensionOID.INVALIDITY_DATE: _decode_invalidity_date,
+    CRLExtensionOID.CERTIFICATE_ISSUER: _decode_cert_issuer,
+}
+
+_REVOKED_UNSUPPORTED_EXTENSIONS = set([
+    CRLExtensionOID.CERTIFICATE_ISSUER,
+])
 
 _CERTIFICATE_EXTENSION_PARSER = _X509ExtensionParser(
     ext_count=lambda backend, x: backend._lib.X509_get_ext_count(x),
@@ -787,4 +930,11 @@ _CSR_EXTENSION_PARSER = _X509ExtensionParser(
     ext_count=lambda backend, x: backend._lib.sk_X509_EXTENSION_num(x),
     get_ext=lambda backend, x, i: backend._lib.sk_X509_EXTENSION_value(x, i),
     handlers=_EXTENSION_HANDLERS
+)
+
+_REVOKED_CERTIFICATE_EXTENSION_PARSER = _X509ExtensionParser(
+    ext_count=lambda backend, x: backend._lib.X509_REVOKED_get_ext_count(x),
+    get_ext=lambda backend, x, i: backend._lib.X509_REVOKED_get_ext(x, i),
+    handlers=_REVOKED_EXTENSION_HANDLERS,
+    unsupported_exts=_REVOKED_UNSUPPORTED_EXTENSIONS
 )

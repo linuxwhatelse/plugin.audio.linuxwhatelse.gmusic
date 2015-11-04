@@ -97,11 +97,6 @@ class Binding(object):
     @classmethod
     def _register_osrandom_engine(cls):
         _openssl_assert(cls.lib, cls.lib.ERR_peek_error() == 0)
-        looked_up_engine = cls.lib.ENGINE_by_id(cls._osrandom_engine_id)
-        if looked_up_engine != ffi.NULL:
-            raise RuntimeError("osrandom engine already registered")
-
-        cls.lib.ERR_clear_error()
 
         engine = cls.lib.ENGINE_new()
         _openssl_assert(cls.lib, engine != cls.ffi.NULL)
@@ -113,7 +108,13 @@ class Binding(object):
             result = cls.lib.ENGINE_set_RAND(engine, cls._osrandom_method)
             _openssl_assert(cls.lib, result == 1)
             result = cls.lib.ENGINE_add(engine)
-            _openssl_assert(cls.lib, result == 1)
+            if result != 1:
+                errors = _consume_errors(cls.lib)
+                _openssl_assert(
+                    cls.lib,
+                    errors[0].reason == cls.lib.ENGINE_R_CONFLICTING_ENGINE_ID
+                )
+
         finally:
             result = cls.lib.ENGINE_free(engine)
             _openssl_assert(cls.lib, result == 1)
@@ -124,6 +125,12 @@ class Binding(object):
             if not cls._lib_loaded:
                 cls.lib = build_conditional_library(lib, CONDITIONAL_NAMES)
                 cls._lib_loaded = True
+                # initialize the SSL library
+                cls.lib.SSL_library_init()
+                # adds all ciphers/digests for EVP
+                cls.lib.OpenSSL_add_all_algorithms()
+                # loads error strings for libcrypto and libssl functions
+                cls.lib.SSL_load_error_strings()
                 cls._register_osrandom_engine()
 
     @classmethod
@@ -165,3 +172,11 @@ class Binding(object):
                     mode, n, file, line
                 )
             )
+
+
+# OpenSSL is not thread safe until the locks are initialized. We call this
+# method in module scope so that it executes with the import lock. On
+# Pythons < 3.4 this import lock is a global lock, which can prevent a race
+# condition registering the OpenSSL locks. On Python 3.4+ the import lock
+# is per module so this approach will not work.
+Binding.init_static_locks()

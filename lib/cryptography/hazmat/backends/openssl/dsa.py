@@ -176,6 +176,9 @@ class _DSAPublicKey(object):
     key_size = utils.read_only_property("_key_size")
 
     def verifier(self, signature, signature_algorithm):
+        if not isinstance(signature, bytes):
+            raise TypeError("signature must be bytes.")
+
         return _DSAVerificationContext(
             self._backend, self, signature, signature_algorithm
         )

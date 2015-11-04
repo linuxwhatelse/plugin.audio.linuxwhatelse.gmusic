@@ -15,7 +15,7 @@ from pyasn1.type import namedtype, univ
 import six
 
 from cryptography import utils
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import constant_time, serialization
 from cryptography.x509.general_name import GeneralName, IPAddress, OtherName
 from cryptography.x509.name import Name
 from cryptography.x509.oid import (
@@ -89,11 +89,25 @@ class Extensions(object):
 
         raise ExtensionNotFound("No {0} extension was found".format(oid), oid)
 
+    def get_extension_for_class(self, extclass):
+        for ext in self:
+            if isinstance(ext.value, extclass):
+                return ext
+
+        raise ExtensionNotFound(
+            "No {0} extension was found".format(extclass), extclass.oid
+        )
+
     def __iter__(self):
         return iter(self._extensions)
 
     def __len__(self):
         return len(self._extensions)
+
+    def __repr__(self):
+        return (
+            "<Extensions({0})>".format(self._extensions)
+        )
 
 
 @utils.register_interface(ExtensionType)
@@ -184,9 +198,7 @@ class SubjectKeyIdentifier(object):
         if not isinstance(other, SubjectKeyIdentifier):
             return NotImplemented
 
-        return (
-            self.digest == other.digest
-        )
+        return constant_time.bytes_eq(self.digest, other.digest)
 
     def __ne__(self, other):
         return not self == other
