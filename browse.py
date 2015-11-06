@@ -1,5 +1,6 @@
 import os
 import json
+import locale
 
 import xbmcgui
 import xbmcplugin
@@ -16,9 +17,10 @@ from utils  import translate, notify, execute_jsonrpc, get_cache_dir
 url          = None
 addon_handle = None
 
-_addon     = Addon()
-_cache_dir = get_cache_dir()
-gmusic     = GMusic(debug_logging=False, validate=True, verify_ssl=True)
+_addon       = Addon()
+_cache_dir   = get_cache_dir()
+_locale_code = locale.getdefaultlocale()[0]
+gmusic       = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 
 
 #######################
@@ -440,7 +442,7 @@ def browse_stations_categories(category_id):
 def browse_stations_subcategories(subcategory_id):
     gmusic.login()
 
-    stations = gmusic.get_stations(station_subcategory_id=subcategory_id, location_id='en_us')
+    stations = gmusic.get_stations(station_subcategory_id=subcategory_id, location_code=_locale_code)
 
     new_stations=[]
     for station in stations:
