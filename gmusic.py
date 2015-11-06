@@ -175,6 +175,9 @@ class GMusic(Mobileclient):
         res = self._make_call(mobileclient.GetListenNow)
         return res['listennow_items']
 
+    def get_situations(self, locale_code):
+        return self._make_call(mobileclient.GetSituations, locale_code)
+
     def get_new_releases(self, num_items=25, genre=None):
         res = self._make_call(mobileclient.GetNewReleases, num_items, genre)
         for tabs in res['tabs']:
