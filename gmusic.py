@@ -41,7 +41,11 @@ class GMusic(Mobileclient):
         dev_list = []
         for dev in devices:
             if 'id' in dev and dev['id']:
-                dev_list.append('%s %s (%s)' % (dev['carrier'], dev['model'], dev['name']))
+                dev_list.append('%s %s (%s)' % (
+                    dev['carrier'] if 'carrier' in dev else '',
+                    dev['model']   if 'model'   in dev else '',
+                    dev['name']    if 'name'    in dev else '',
+                ))
 
         selection = action_dialog.select(utils.translate(30042, _addon), dev_list, 0)
 
