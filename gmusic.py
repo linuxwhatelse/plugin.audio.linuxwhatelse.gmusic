@@ -198,8 +198,8 @@ class GMusic(Mobileclient):
         res = self._make_call(mobileclient.GetStationCategories)
         return res['root']['subcategories']
 
-    def get_stations(self, station_subcategory_id, location_id):
-        res = self._make_call(mobileclient.GetStations, station_subcategory_id, location_id)
+    def get_stations(self, station_subcategory_id, location_code):
+        res = self._make_call(mobileclient.GetStations, station_subcategory_id, location_code)
         return res['stations']
 
 

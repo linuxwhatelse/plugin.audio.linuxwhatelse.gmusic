@@ -72,9 +72,9 @@ class GetStations(McCall):
     static_method = 'GET'
 
     @staticmethod
-    def dynamic_url(station_id, location_id):
+    def dynamic_url(station_id, location_code):
         return sj_url + 'browse/stations/' + station_id
 
     @staticmethod
-    def dynamic_params(station_id, location_id):
-        return {'hl': location_id}
+    def dynamic_params(station_id, location_code):
+        return {'hl': location_code}
