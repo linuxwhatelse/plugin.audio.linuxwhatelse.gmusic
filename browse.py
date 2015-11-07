@@ -1008,6 +1008,12 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         if station_id:
             queries['station_id'] = station_id
 
+
+        # We cache everything so :play_track: doesn't have to featch those informations again
+        tracks_cache = utils.get_cache_dir(sub_dir=['tracks'])
+        with open(os.path.join(tracks_cache, track_id), 'w+') as f:
+            f.write(json.dumps(track, indent=2))
+
         items.append(
             (mapper.build_url(url=url, paths=['play', 'track'], queries=queries, overwrite_path=True, overwrite_query=True), item, False)
         )

@@ -31,7 +31,15 @@ gmusic     = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 def play_track(track_id, station_id):
     gmusic.login()
 
-    item = browse.build_song_listitems([gmusic.get_track_info(store_track_id=track_id)])[0]
+    cache = os.path.join(utils.get_cache_dir(sub_dir=['tracks']), track_id)
+    if os.path.exists(cache):
+        with open(cache, 'r') as f:
+            track = json.loads(f.read())
+
+    else:
+        track = gmusic.get_track_info(store_track_id=track_id)
+
+    item = browse.build_song_listitems([track])[0]
     item[1].setPath(gmusic.get_stream_url(song_id=track_id, quality=_addon.getSetting('stream_quality')))
 
     xbmcplugin.setResolvedUrl(addon_handle, True, item[1])
