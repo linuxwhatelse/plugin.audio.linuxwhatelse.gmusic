@@ -1,3 +1,6 @@
+v1.2.0
+- Strating playback should be a tiny little bit faster now (especially on slow networks)
+
 v1.1.1
 - fixed crash when device information is missing
 
