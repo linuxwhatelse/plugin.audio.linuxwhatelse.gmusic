@@ -1,6 +1,5 @@
-from os.path import join, exists
-from os import makedirs
-from json import dumps, loads
+import os
+import json
 
 import xbmc
 from xbmcaddon import Addon
@@ -10,7 +9,7 @@ def log(message, level=xbmc.LOGDEBUG):
 
 def notify(title, message, icon=None):
     if not icon:
-        icon = join(Addon().getAddonInfo('path'), 'icon.png')
+        icon = os.path.join(Addon().getAddonInfo('path'), 'icon.png')
 
     xbmc.executebuiltin('Notification(%s, %s, 5000, %s)' % (title, message, icon))
 
@@ -19,14 +18,17 @@ def translate(id, addon=None):
         addon = Addon()
     return addon.getLocalizedString(id)
 
-def get_cache_dir(addon=None):
+def get_cache_dir(addon=None, sub_dir=None):
+    if not sub_dir:
+        sub_dir = []
+
     if not addon:
         addon = Addon()
     
-    cache_dir = xbmc.translatePath(join(addon.getAddonInfo('profile'), '.cache'))
+    cache_dir = xbmc.translatePath(os.path.join(addon.getAddonInfo('profile'), '.cache', *sub_dir))
 
-    if not exists(cache_dir):
-        makedirs(cache_dir)
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
 
     return cache_dir
 
@@ -38,13 +40,13 @@ def execute_jsonrpc(method, params=None):
     if params:
         data['params'] = params
 
-    data = dumps(data)
+    data = json.dumps(data)
     request = xbmc.executeJSONRPC(data)
 
     try:
-        response = loads(request)
+        response = json.loads(request)
     except UnicodeDecodeError:
-        response = loads(request.decode('utf-8', 'ignore'))
+        response = json.loads(request.decode('utf-8', 'ignore'))
 
     try:
         if 'result' in response:
