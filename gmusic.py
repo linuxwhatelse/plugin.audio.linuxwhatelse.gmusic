@@ -1,16 +1,13 @@
-#from sys import exit
+import os
+import json
 
-from os import makedirs
-from os.path import join, exists
-from json import dumps, loads
-
-from xbmc import translatePath, LOGERROR
+import xbmc
 from xbmcaddon import Addon
 from xbmcgui import Dialog
 
 import utils
 
-from lib.gmusicapi import Mobileclient, Webclient
+from gmusicapi import Mobileclient, Webclient
 import mobileclient
 
 _addon     = Addon()
@@ -129,17 +126,14 @@ class GMusic(Mobileclient):
         return res['mutate_response'][0]['id']
 
     def get_station_tracks(self, station_id, num_tracks=25, recently_played_ids=None):
-        stations_cache = join(_cache_dir, 'stations')
-        station_ids_cache = join(stations_cache, '%s.json' % station_id)
-
-        if not exists(stations_cache):
-            makedirs(stations_cache)
+        stations_cache = utils.get_cache_dir(_addon, ['station-ids'])
+        station_ids_cache = os.path.join(stations_cache, '%s.json' % station_id)
 
         if not recently_played_ids:
-            if exists(station_ids_cache):
+            if os.path.exists(station_ids_cache):
                 with open(station_ids_cache, 'r') as f:
                     try:
-                        recently_played_ids = loads(f.read())
+                        recently_played_ids = json.loads(f.read())
                     except ValueError:
                         pass
 
@@ -155,12 +149,12 @@ class GMusic(Mobileclient):
                 elif 'storeId' in track:
                     track_ids.append(track['storeId'])
 
-            f.write(dumps(track_ids, indent=2))
+            f.write(json.dumps(track_ids, indent=2))
 
         return tracks
 
     def delete_album(self, album_id):
-        songs_cache  = join(_cache_dir, 'songs.json')
+        songs_cache  = os.path.join(_cache_dir, 'songs.json')
         songs        = self.get_my_library_songs(from_cache=True)
 
         if songs:
@@ -212,12 +206,12 @@ class GMusic(Mobileclient):
     ## Helper/Wrapper functions
     ##
     def get_my_library_songs(self, from_cache=True):
-        songs_cache = join(_cache_dir, 'songs.json')
+        songs_cache = os.path.join(_cache_dir, 'songs.json')
 
         songs = None
-        if exists(songs_cache) and from_cache:
+        if os.path.exists(songs_cache) and from_cache:
             with open(songs_cache, 'r') as f:
-                songs = loads(f.read())
+                songs = json.loads(f.read())
         else:
             songs = self.get_all_songs(incremental=True, include_deleted=False)
             tmp = []
@@ -226,17 +220,17 @@ class GMusic(Mobileclient):
             songs = tmp
 
             with open(songs_cache, 'w+') as f:
-                f.write(dumps(songs, indent=2))
+                f.write(json.dumps(songs, indent=2))
 
         return songs
 
     def get_my_library_artists(self, from_cache=True):
-        artists_cache = join(_cache_dir, 'artists.json')
+        artists_cache = os.path.join(_cache_dir, 'artists.json')
 
         artists = []
-        if exists(artists_cache) and from_cache:
+        if os.path.exists(artists_cache) and from_cache:
             with open(artists_cache, 'r') as f:
-                artists = loads(f.read())
+                artists = json.loads(f.read())
         else:
             songs = self.get_my_library_songs()
 
@@ -249,21 +243,21 @@ class GMusic(Mobileclient):
                 try:
                     artists.append(self.get_artist_info(artist_id=song['artistId'][0], include_albums=False, max_top_tracks=0, max_rel_artist=0))
                 except:
-                    utils.log('Faild loading artists "%s" with id: "%s"' % (song['artist'], song['artistId'][0]), LOGERROR)
+                    utils.log('Faild loading artists "%s" with id: "%s"' % (song['artist'], song['artistId'][0]), xbmc.LOGERROR)
 
             artists = sorted(artists, key=lambda k: k['name'].lower())
             with open(artists_cache, 'w+') as f:
-                f.write(dumps(artists, indent=2))
+                f.write(json.dumps(artists, indent=2))
 
         return artists
 
     def get_my_library_albums(self, from_cache=True):
-        albums_cache = join(_cache_dir, 'albums.json')
+        albums_cache = os.path.join(_cache_dir, 'albums.json')
 
         albums = []
-        if exists(albums_cache) and from_cache:
+        if os.path.exists(albums_cache) and from_cache:
             with open(albums_cache, 'r') as f:
-                albums = loads(f.read())
+                albums = json.loads(f.read())
         else:
             songs = self.get_my_library_songs()
 
@@ -290,7 +284,7 @@ class GMusic(Mobileclient):
 
             albums = sorted(albums, key=lambda k: k['name'].lower())
             with open(albums_cache, 'w+') as f:
-                f.write(dumps(albums, indent=2))
+                f.write(json.dumps(albums, indent=2))
 
         return albums
 

@@ -1,28 +1,27 @@
 import os
 import json
-from shutil import rmtree
-from time import time
-from urlparse import urlparse, parse_qsl
+import shutil
+import time
+import urlparse
 
+import xbmc
 import xbmcgui
 import xbmcplugin
 from xbmcaddon import Addon
-from xbmc      import executebuiltin, Keyboard, Player, PlayList, PLAYLIST_MUSIC
 
 import mapper
 
+import utils
+import browse
 import resources
 from gmusic import GMusic
-from utils  import translate, get_cache_dir, execute_jsonrpc, notify
-from browse import build_artist_listitems, build_album_listitems, build_playlist_listitems, build_song_listitems, \
-                   list_artists, list_albums, list_playlists, list_songs, list_items
 
 # Variables will be set from "default.py"
 url          = None
 addon_handle = None
 
 _addon     = Addon()
-_cache_dir = get_cache_dir()
+_cache_dir = utils.get_cache_dir()
 gmusic     = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 
 ##############
@@ -32,7 +31,7 @@ gmusic     = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 def play_track(track_id, station_id):
     gmusic.login()
 
-    item = build_song_listitems([gmusic.get_track_info(store_track_id=track_id)])[0]
+    item = browse.build_song_listitems([gmusic.get_track_info(store_track_id=track_id)])[0]
     item[1].setPath(gmusic.get_stream_url(song_id=track_id, quality=_addon.getSetting('stream_quality')))
 
     xbmcplugin.setResolvedUrl(addon_handle, True, item[1])
@@ -43,7 +42,7 @@ def play_track(track_id, station_id):
     # playlist tracks, we get a new set of tracks for this station and
     # add it to the playlist.
     if station_id:
-        playlist = PlayList(PLAYLIST_MUSIC)
+        playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
         if playlist.getposition() >= (len(playlist) - 5):
             mapper.call(mapper.build_url(url=url, paths=['queue', 'station'], queries={'station_id': station_id}, overwrite_path=True, overwrite_query=True))
 
@@ -51,34 +50,34 @@ def play_track(track_id, station_id):
 def play_album(album_id):
     _play(['album'])
     if _addon.getSetting('auto_fullscreen') == 'true':
-        execute_jsonrpc('GUI.SetFullscreen', {'fullscreen':True})
+        utils.execute_jsonrpc('GUI.SetFullscreen', {'fullscreen':True})
 
 @mapper.url('^/play/playlist/$')
 def play_playlist(playlist_id, shared_token):
     _play(['playlist'])
     if _addon.getSetting('auto_fullscreen') == 'true':
-        execute_jsonrpc('GUI.SetFullscreen', {'fullscreen':True})
+        utils.execute_jsonrpc('GUI.SetFullscreen', {'fullscreen':True})
 
 @mapper.url('^/play/station/$')
 def play_station(station_id, station_name, artist_id, album_id, genre_id, track_id, curated_station_id):
     _play(['station'])
     if _addon.getSetting('auto_fullscreen') == 'true':
-        execute_jsonrpc('GUI.SetFullscreen', {'fullscreen':True})
+        utils.execute_jsonrpc('GUI.SetFullscreen', {'fullscreen':True})
 
 def _play(path):
-    execute_jsonrpc(
+    utils.execute_jsonrpc(
         method='Playlist.Clear',
-        params={'playlistid': PLAYLIST_MUSIC}
+        params={'playlistid': xbmc.PLAYLIST_MUSIC}
     )
 
-    execute_jsonrpc(
+    utils.execute_jsonrpc(
         method='Playlist.Add',
-        params={'playlistid': PLAYLIST_MUSIC, 'item': {'directory': mapper.build_url(url=url, paths=path, overwrite_path=True)}}
+        params={'playlistid': xbmc.PLAYLIST_MUSIC, 'item': {'directory': mapper.build_url(url=url, paths=path, overwrite_path=True)}}
     )
 
-    execute_jsonrpc(
+    utils.execute_jsonrpc(
         method='Player.Open',
-        params={'item': {'playlistid': PLAYLIST_MUSIC, 'position': 0}}
+        params={'item': {'playlistid': xbmc.PLAYLIST_MUSIC, 'position': 0}}
     )
 
 
@@ -89,10 +88,10 @@ def _play(path):
 def queue_track(track_id, play_next=False):
     gmusic.login()
 
-    listitem = build_song_listitems([gmusic.get_track_info(track_id)])[0]
+    listitem = browse.build_song_listitems([gmusic.get_track_info(track_id)])[0]
 
 
-    playlist = PlayList(PLAYLIST_MUSIC)
+    playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
     position = len(playlist) + 1
     if play_next:
         position = playlist.getposition() + 1
@@ -112,19 +111,19 @@ def queue_station(station_id, station_name, artist_id, album_id, genre_id, track
     _queue(['station'])
 
 def _queue(path, play_next=False):
-    playlist = PlayList(PLAYLIST_MUSIC)
+    playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
     position = len(playlist) + 1
     if play_next:
         position = playlist.getposition() + 1
 
-    query = dict(parse_qsl(urlparse(url).query))
+    query = dict(urlparse.parse_qsl(urlparse.urlparse(url).query))
     if 'play_next' in query:
         del query['play_next']
         position = playlist.getposition()+1
 
-    execute_jsonrpc(
+    utils.execute_jsonrpc(
         method='Playlist.Insert',
-        params={'playlistid': PLAYLIST_MUSIC, 'position': position, 'item': {'directory': mapper.build_url(url=url, paths=path, queries=query, overwrite_path=True, overwrite_query=True)}}
+        params={'playlistid': xbmc.PLAYLIST_MUSIC, 'position': position, 'item': {'directory': mapper.build_url(url=url, paths=path, queries=query, overwrite_path=True, overwrite_query=True)}}
     )
 
 
@@ -147,10 +146,10 @@ def search(query):
     
         query = None
         if history:
-            history.insert(0, translate(30053, _addon))
+            history.insert(0, utils.translate(30053, _addon))
             diag = xbmcgui.Dialog()
     
-            selection = diag.select(translate(30019, _addon), history, 0)
+            selection = diag.select(utils.translate(30019, _addon), history, 0)
     
             # User canceled the operation
             if selection == -1:
@@ -176,7 +175,7 @@ def search(query):
         # a actuall history entry so we know he either selected "New Search"
         # or a history didn't exist at this point
         if not query:
-            keyboard = Keyboard()
+            keyboard = xbmc.Keyboard()
             keyboard.doModal()
             if keyboard.isConfirmed() and keyboard.getText():
                 query = keyboard.getText()
@@ -203,31 +202,31 @@ def search(query):
         items = []
         if 'artist_hits' in result and len(result['artist_hits']) > 0:
             items.append(
-                ( mapper.build_url(url, ['artists']), xbmcgui.ListItem(label='%s (%s)' % (translate(30022, _addon), \
+                ( mapper.build_url(url, ['artists']), xbmcgui.ListItem(label='%s (%s)' % (utils.translate(30022, _addon), \
                     len(result['artist_hits'])), iconImage=resources.IMG_ARTIST, thumbnailImage=resources.IMG_ARTIST), True )
             )
         if 'album_hits' in result and len(result['album_hits']) > 0:
             items.append(
-                ( mapper.build_url(url, ['albums']),  xbmcgui.ListItem(label='%s (%s)' % (translate(30023, _addon), \
+                ( mapper.build_url(url, ['albums']),  xbmcgui.ListItem(label='%s (%s)' % (utils.translate(30023, _addon), \
                     len(result['album_hits'])), iconImage=resources.IMG_ALBUM, thumbnailImage=resources.IMG_ALBUM), True )
             )
 
         if 'playlist_hits' in result and len(result['playlist_hits']) > 0:
             items.append(
-                ( mapper.build_url(url, ['playlists']),   xbmcgui.ListItem(label='%s (%s)' % (translate(30020, _addon), \
+                ( mapper.build_url(url, ['playlists']),   xbmcgui.ListItem(label='%s (%s)' % (utils.translate(30020, _addon), \
                     len(result['playlist_hits'])), iconImage=resources.IMG_PLAYLIST, thumbnailImage=resources.IMG_PLAYLIST), True )
             )
 
         if 'song_hits' in result and len(result['song_hits']) > 0:
             items.append(
-                ( mapper.build_url(url, ['songs']),   xbmcgui.ListItem(label='%s (%s)' % (translate(30024, _addon), \
+                ( mapper.build_url(url, ['songs']),   xbmcgui.ListItem(label='%s (%s)' % (utils.translate(30024, _addon), \
                     len(result['song_hits'])), iconImage=resources.IMG_TRACK, thumbnailImage=resources.IMG_TRACK), True )
             )
 
         for item in items:
             item[1].addContextMenuItems([],True)
 
-        list_items(items)
+        browse.list_items(items)
 
 @mapper.url('^/search/artists/$')
 def search_artists(query):
@@ -243,8 +242,8 @@ def search_artists(query):
                 pass
 
     if result:
-        items = build_artist_listitems(result['artist_hits'])
-        list_artists(items)
+        items = browse.build_artist_listitems(result['artist_hits'])
+        browse.list_artists(items)
 
 @mapper.url('^/search/albums/$')
 def search_artists(query):
@@ -260,8 +259,8 @@ def search_artists(query):
                 pass
 
     if result:
-        items = build_album_listitems(result['album_hits'])
-        list_albums(items)
+        items = browse.build_album_listitems(result['album_hits'])
+        browse.list_albums(items)
 
 @mapper.url('^/search/playlists/$')
 def search_artists(query):
@@ -277,8 +276,8 @@ def search_artists(query):
                 pass
 
     if result:
-        items = build_playlist_listitems(result['playlist_hits'])
-        list_playlists(items)
+        items = browse.build_playlist_listitems(result['playlist_hits'])
+        browse.list_playlists(items)
 
 @mapper.url('^/search/songs/$')
 def search_artists(query):
@@ -294,8 +293,8 @@ def search_artists(query):
                 pass
 
     if result:
-        items = build_song_listitems(result['song_hits'])
-        list_songs(items)
+        items = browse.build_song_listitems(result['song_hits'])
+        browse.list_songs(items)
 
 def _perform_search(query):
     gmusic.login()
@@ -315,7 +314,7 @@ def _perform_search(query):
 ###################
 @mapper.url('^/my-library/update/$')
 def my_library_update():
-    notify(translate(30030, _addon), translate(30043, _addon))
+    utils.notify(utils.translate(30030, _addon), utils.translate(30043, _addon))
 
     gmusic.login()
 
@@ -323,9 +322,9 @@ def my_library_update():
     gmusic.get_my_library_artists(from_cache=False)
     gmusic.get_my_library_albums(from_cache=False)
 
-    notify(translate(30030, _addon), translate(30044, _addon))
+    utils.notify(utils.translate(30030, _addon), utils.translate(30044, _addon))
 
-    executebuiltin('Container.Refresh')
+    xbmc.executebuiltin('Container.Refresh')
 
 @mapper.url('^/my-library/add/$')
 def my_library_add(album_id, track_id):
@@ -343,7 +342,7 @@ def my_library_remove(album_id, library_song_id):
     if not album_id and not library_song_id:
         return
 
-    if not xbmcgui.Dialog().yesno(heading=translate(30061), line1=translate(30063)):
+    if not xbmcgui.Dialog().yesno(heading=utils.translate(30061), line1=utils.translate(30063)):
         return
 
     gmusic.login()
@@ -354,7 +353,7 @@ def my_library_remove(album_id, library_song_id):
     elif library_song_id:
         gmusic.delete_songs(library_song_id)
 
-    if xbmcgui.Dialog().yesno(heading=translate(30030), line1=translate(30065)):
+    if xbmcgui.Dialog().yesno(heading=utils.translate(30030), line1=utils.translate(30065)):
         mapper.call(mapper.build_url(url=url, paths=['my-library', 'update'], overwrite_path=True, overwrite_query=True))
 
 @mapper.url('^/my-library/playlist/add/$')
@@ -377,13 +376,13 @@ def my_library_playlist_add(playlist_id, album_id, track_id):
             playlist_names.append(playlist['name'])
             playlist_ids.append(playlist['id'])
 
-        playlist_names.insert(0, translate(30052, _addon))
-        selection = action_dialog.select(translate(30020, _addon), playlist_names, 0)
+        playlist_names.insert(0, utils.translate(30052, _addon))
+        selection = action_dialog.select(utils.translate(30020, _addon), playlist_names, 0)
         if selection == -1:
             return
 
         if selection == 0:
-            keyboard = Keyboard()
+            keyboard = xbmc.Keyboard()
             keyboard.doModal()
 
             if keyboard.isConfirmed() and keyboard.getText():
@@ -407,34 +406,34 @@ def my_library_playlist_add(playlist_id, album_id, track_id):
 @mapper.url('^/my-library/playlist/remove/$')
 def my_library_playlist_remove(entry_id):
     if entry_id:
-        if xbmcgui.Dialog().yesno(heading=translate(30062), line1=translate(30064)):
+        if xbmcgui.Dialog().yesno(heading=utils.translate(30062), line1=utils.translate(30064)):
             gmusic.login()
 
             gmusic.remove_entries_from_playlist([entry_id])
 
-            executebuiltin('Container.Refresh')
+            xbmc.executebuiltin('Container.Refresh')
 
 @mapper.url('^/my-library/playlist/delete/$')
 def my_library_playlist_delete(playlist_id):
     if playlist_id:
-        if xbmcgui.Dialog().yesno(heading=translate(30068), line1=translate(30069)):
+        if xbmcgui.Dialog().yesno(heading=utils.translate(30068), line1=utils.translate(30069)):
             gmusic.login()
 
             gmusic.delete_playlist(playlist_id)
 
-            executebuiltin('Container.Refresh')
+            xbmc.executebuiltin('Container.Refresh')
 
 @mapper.url('^/rate/$')
 def rate(track_id):
 
     rating = [
-        translate(30027, _addon),  # Thumbs up
-        translate(30028, _addon),  # No Thumbs
-        translate(30029, _addon),  # Thumbs down
+        utils.translate(30027, _addon),  # Thumbs up
+        utils.translate(30028, _addon),  # No Thumbs
+        utils.translate(30029, _addon),  # Thumbs down
     ]
 
     dialog = xbmcgui.Dialog()    
-    selection = dialog.select(translate(30041, _addon), rating, 0)
+    selection = dialog.select(utils.translate(30041, _addon), rating, 0)
 
     if selection == -1:
         return
@@ -452,13 +451,13 @@ def rate(track_id):
         elif selection == 2:
             song['rating'] = '1'
 
-        song['lastRatingChangeTimestamp'] = int(round(time() * 1000000))
+        song['lastRatingChangeTimestamp'] = int(round(time.time() * 1000000))
         gmusic.change_song_metadata(song)
 
 @mapper.url('^/clear/cache/$')
 def clear_cache():
     if os.path.exists(_cache_dir):
-        rmtree(_cache_dir)
+        shutil.rmtree(_cache_dir)
 
 @mapper.url('^/clear/search-history/$')
 def clear_search_history():

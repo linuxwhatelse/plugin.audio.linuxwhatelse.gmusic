@@ -4,7 +4,6 @@ from xbmcaddon import Addon
 import mapper
 
 from gmusic import GMusic
-from browse import build_song_listitems, list_songs
 
 # Variables will be set from "default.py"
 url          = None

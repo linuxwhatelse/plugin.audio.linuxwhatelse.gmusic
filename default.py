@@ -7,6 +7,9 @@ import mapper
 
 from utils import notify, translate, get_cache_dir
 
+# Adds all librarys to our path (see lib/__init__.py)
+import lib
+
 addon_handle = int(sys.argv[1])
 url          = sys.argv[0] + sys.argv[2]
 
