@@ -4,9 +4,10 @@ import xbmc
 from xbmcaddon import Addon
 from xbmcgui   import Dialog
 
-from mapper import build_url
+import lib
 
-from lib.gmusic import GMusic
+from mapper import build_url
+from gmusic import GMusic
 
 import utils
 
@@ -26,7 +27,7 @@ def run(track_id):
     ]
 
     selection = dialog.select(utils.translate(30060, _addon), data, 0)
-
+    print(selection, track_id)
     if selection == -1:
         return
 
@@ -42,7 +43,7 @@ def run(track_id):
         track = gmusic.get_track_info(track_id)
 
         if 'artistId' in track and len(track['artistId']) > 0:
-            xbmc.executebuiltin('Container.Update(%s)' % build_url(_addon_path, ['browse', 'artist'], {'artist_id': track['artistId'][0]}))
+            xbmc.executebuiltin('ActivateWindow(music, %s, return)' % build_url(_addon_path, ['browse', 'artist'], {'artist_id': track['artistId'][0]}))
 
     elif selection == 3:  # Go to Album
         gmusic = GMusic(debug_logging=True, validate=True, verify_ssl=True)
@@ -50,7 +51,7 @@ def run(track_id):
         track = gmusic.get_track_info(track_id)
 
         if 'albumId' in track:
-            xbmc.executebuiltin('Container.Update(%s)' % build_url(_addon_path, ['browse', 'album'], {'album_id': track['albumId']}))
+            xbmc.executebuiltin('ActivateWindow(music, %s, return)' % build_url(_addon_path, ['browse', 'album'], {'album_id': track['albumId']}))
 
     elif selection == 4:  # Rate song
         xbmc.executebuiltin('RunPlugin(%s)' % build_url(_addon_path, ['rate'], {'track_id': track_id}))
