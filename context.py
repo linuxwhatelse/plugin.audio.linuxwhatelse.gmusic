@@ -6,7 +6,7 @@ from xbmcgui   import Dialog
 
 from mapper import build_url
 
-from gmusic import GMusic
+from lib.gmusic import GMusic
 
 import utils
 
