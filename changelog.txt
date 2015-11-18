@@ -1,3 +1,6 @@
+v1.2.3
+- Fixed crash for "My Library" section when user uploaded songs to Google Play Music
+
 v1.2.1
 - Fixed context-menu from playlist not working
 
