@@ -213,10 +213,25 @@ class GMusic(Mobileclient):
             with open(songs_cache, 'r') as f:
                 songs = json.loads(f.read())
         else:
-            songs = self.get_all_songs(incremental=True, include_deleted=False)
+            generator = self.get_all_songs(incremental=True, include_deleted=False)
             tmp = []
-            for song in songs:
-                tmp += song
+            for songs in generator:
+                for song in songs:
+                    # If we miss required id's we ignore those entries!
+
+                    if 'artistId' not in song:
+                        continue
+
+                    if 'albumId' not in song:
+                        continue
+
+                    if 'storeId' not in song:
+                        if 'nid' not in song:
+                            continue
+                        else:
+                            song['storeId'] = song['nid']
+
+                    tmp.append(song)
             songs = tmp
 
             with open(songs_cache, 'w+') as f:
@@ -240,10 +255,11 @@ class GMusic(Mobileclient):
             songs = [x for x in songs if x['artistId'][0] not in seen and not seen_add(x['artistId'][0])]
 
             for song in songs:
-                try:
-                    artists.append(self.get_artist_info(artist_id=song['artistId'][0], include_albums=False, max_top_tracks=0, max_rel_artist=0))
-                except:
-                    utils.log('Faild loading artists "%s" with id: "%s"' % (song['artist'], song['artistId'][0]), xbmc.LOGERROR)
+                artists.append({
+                    'artistId':     song['artistId'],
+                    'name':         song['artist'],
+                    'artistArtRef': song['artistArtRef'][0]['url'] if 'artistArtRef' in song and len(song['artistArtRef']) > 0 else ''
+                })
 
             artists = sorted(artists, key=lambda k: k['name'].lower())
             with open(artists_cache, 'w+') as f:
@@ -265,19 +281,17 @@ class GMusic(Mobileclient):
             seen = set()
             seen_add = seen.add
             songs = [x for x in songs if x['albumId'] not in seen and not seen_add(x['albumId'])]
-            for song in songs:
-                if not 'albumId' in song:
-                    continue
 
+            for song in songs:
                 album = {
-                    'name':        song['album']  if 'album'  in song else '',
-                    'artist':      song['artist'] if 'artist' in song else '',
-                    'albumArtist': song['albumArtist'] if 'albumArtist' in song else '',
-                    'albumArtRef': song['albumArtRef'][0]['url'] if len(song['albumArtRef']) > 0 else '',
                     'albumId':     song['albumId'],
-                    'year':        song['year']     if 'year'     in song else '',
-                    'genre':       song['genre']    if 'genre'    in song else '',
-                    'artistId':    song['artistId'] if 'artistId' in song else '',
+                    'artistId':    song['artistId'],
+                    'name':        song['album']       if 'album'       in song else '',
+                    'artist':      song['artist']      if 'artist'      in song else '',
+                    'albumArtist': song['albumArtist'] if 'albumArtist' in song else '',
+                    'year':        song['year']        if 'year'        in song else '',
+                    'genre':       song['genre']       if 'genre'       in song else '',
+                    'albumArtRef': song['albumArtRef'][0]['url'] if 'albumArtRef' in song and len(song['albumArtRef']) > 0 else '',
                 }
 
                 albums.append(album)
