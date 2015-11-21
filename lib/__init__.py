@@ -18,7 +18,7 @@ if _platform == 'linux' or _platform == 'linux2':
     site.addsitedir( lib_unix_dir )
 
 elif _platform == 'darwin':
-    site.addsitedir( lib_win32_dir )
+    site.addsitedir( lib_darwin_dir )
 
 elif _platform == 'win32':
     site.addsitedir( lib_win32_dir )
