@@ -37,7 +37,7 @@
         <summary lang="en">Google Play Music</summary>
         <description lang="en">Plugin that lets you manage and stream music from Google Play Music</description>
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, June 2007</license>
-        <from>http://forum.kodi.tv/showthread.php?tid=245754</from>
+        <forum>http://forum.kodi.tv/showthread.php?tid=245754</forum>
         <source>https://github.com/linuxwhatelse/plugin.audio.linuxwhatelse.gmusic</source>
     </extension>
 
