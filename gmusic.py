@@ -256,7 +256,7 @@ class GMusic(Mobileclient):
 
             for song in songs:
                 artists.append({
-                    'artistId':     song['artistId'],
+                    'artistId':     song['artistId'][0],
                     'name':         song['artist'],
                     'artistArtRef': song['artistArtRef'][0]['url'] if 'artistArtRef' in song and len(song['artistArtRef']) > 0 else ''
                 })
