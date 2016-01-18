@@ -27,7 +27,6 @@ def run(track_id):
     ]
 
     selection = dialog.select(utils.translate(30060, _addon), data, 0)
-    print(selection, track_id)
     if selection == -1:
         return
 

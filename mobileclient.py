@@ -23,8 +23,6 @@ class GetSituations(McListCall):
 
     @classmethod
     def dynamic_data(cls, locale_code):
-        print(type(cls))
-        print(cls)
 
         return json.dumps({
             'requestSignals': {
