@@ -17,11 +17,11 @@ _password  = _addon.getSetting('password')
 
 class GMusic(Mobileclient):
 
-    def _get_android_id(self):
-        android_id = _addon.getSetting('android_id')
+    def _get_device_id(self):
+        device_id = _addon.getSetting('device_id')
 
-        if android_id:
-            return android_id
+        if device_id:
+            return device_id
 
         # We use the webclient so we don't have to spoof a androidid and ensure
         # we don't create new devices in google play music or elsewhere
@@ -47,18 +47,18 @@ class GMusic(Mobileclient):
         selection = action_dialog.select(utils.translate(30042, _addon), dev_list, 0)
 
         if selection >= 0:
-            android_id = devices[selection]['id'].lstrip('0x')
-            _addon.setSetting('android_id', android_id)
-            return android_id
+            device_id = devices[selection]['id'].lstrip('0x')
+            _addon.setSetting('device_id', device_id)
+            return device_id
 
         return None
 
     def login(self):
-        android_id = self._get_android_id()
+        device_id = self._get_device_id()
         authtoken  = _addon.getSetting('authtoken')
 
         if authtoken:
-            self.android_id               = android_id
+            self.device_id               = device_id
             self.session._authtoken       = authtoken
             self.session.is_authenticated = True
 
@@ -71,8 +71,8 @@ class GMusic(Mobileclient):
                 # and go through the login-process again to get a new "authtoken"
                 self.session.is_authenticated = False
 
-        if android_id:
-            if super(GMusic, self).login(_username, _password, android_id):
+        if device_id:
+            if super(GMusic, self).login(_username, _password, device_id):
                 _addon.setSetting('authtoken', self.session._authtoken)
                 return True
 
