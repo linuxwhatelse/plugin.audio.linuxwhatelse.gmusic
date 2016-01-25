@@ -36,9 +36,7 @@ if __name__ == '__main__':
     # On Windows the default directory would be Kodis installation dir where we can
     # NOT assume to have write rights
     chdir(get_cache_dir())
-    addon = Addon()
-    if not addon.getSetting('username') or not addon.getSetting('password'):
-        notify(translate(30046, addon), translate(30047, addon))
-        addon.openSettings()
-    else:
-       mapper.call(url)
+
+    is_setup = mapper.call(mapper.build_url(url=url, paths=['setup'], overwrite_path=True))
+    if is_setup:
+        mapper.call(url)

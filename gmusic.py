@@ -20,45 +20,18 @@ class GMusic(Mobileclient):
     def _get_device_id(self):
         device_id = _addon.getSetting('device_id')
 
-        if device_id:
+        if device_id == 'from_mac_address':
+            return Mobileclient.FROM_MAC_ADDRESS
+        else:
             return device_id
 
-        # We use the webclient so we don't have to spoof a androidid and ensure
-        # we don't create new devices in google play music or elsewhere
-        web = Webclient()
-        if not web.login(_username, _password):
-            return None
-
-        devices = web.get_registered_devices()
-        if not devices:
-            return None
-
-        # Display a dialog to the use to choose one of his android-devices for future requests
-        action_dialog = Dialog()
-        dev_list = []
-        for dev in devices:
-            if 'id' in dev and dev['id']:
-                dev_list.append('%s %s (%s)' % (
-                    dev['carrier'] if 'carrier' in dev else '',
-                    dev['model']   if 'model'   in dev else '',
-                    dev['name']    if 'name'    in dev else '',
-                ))
-
-        selection = action_dialog.select(utils.translate(30042, _addon), dev_list, 0)
-
-        if selection >= 0:
-            device_id = devices[selection]['id'].lstrip('0x')
-            _addon.setSetting('device_id', device_id)
-            return device_id
-
-        return None
 
     def login(self):
         device_id = self._get_device_id()
         authtoken  = _addon.getSetting('authtoken')
 
         if authtoken:
-            self.device_id               = device_id
+            self.android_id               = device_id
             self.session._authtoken       = authtoken
             self.session.is_authenticated = True
 

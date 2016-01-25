@@ -182,7 +182,7 @@ def listen_now_stations():
         # 3 = radio
         if item['type'] != '3':
             continue
-        
+
         art = None
         if 'compositeArtRefs' in item:
             for artref in item['compositeArtRefs']:
@@ -244,7 +244,7 @@ def listen_now_playlists():
                 'id':     playlist['id'],
             }
         )
-    
+
     items = build_playlist_listitems(playlists)
     list_playlists(items)
 
@@ -512,7 +512,7 @@ def browse_stations_subcategories(subcategory_id):
 
     new_stations=[]
     for station in stations:
-        
+
         for artref in station['compositeArtRefs']:
             if artref['aspectRatio'] == '1':
                 break
@@ -697,7 +697,7 @@ def build_album_listitems(albums, my_library=False):
             'genre'   : album['genre']        if 'genre'       in album else '',
             'year'    : album['year']         if 'year'        in album else '',
         })
-        
+
         menu_items=[
             (utils.translate(30033, _addon), 'XBMC.RunPlugin(%s)' % mapper.build_url(url=url, paths=['play', 'album'], \
                 queries={'album_id': album_id}, overwrite_path=True, overwrite_query=True)),

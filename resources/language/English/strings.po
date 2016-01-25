@@ -280,3 +280,87 @@ msgstr ""
 msgctxt "#30069"
 msgid "Really delete this playlist?"
 msgstr ""
+
+msgctxt "#30070"
+msgid "Re-run setup"
+msgstr ""
+
+msgctxt "#30071"
+msgid "2-Factor Authentication"
+msgstr ""
+
+msgctxt "#30072"
+msgid "Do you use 2-Factor Authentication with your account?"
+msgstr ""
+
+msgctxt "#30073"
+msgid "Go to "https://goo.gl/o9JsPP" and create a new App password.\nUse "Other (custom name)""
+msgstr ""
+
+
+
+msgctxt "#30074"
+msgid ""
+msgstr ""
+
+
+
+msgctxt "#30075"
+msgid "Username / E-Mail address"
+msgstr ""
+
+msgctxt "#30076"
+msgid "Password / App password"
+msgstr ""
+
+msgctxt "#30077"
+msgid "Android device available?"
+msgstr ""
+
+msgctxt "#30078"
+msgid "Do you have a Android device connected to your Google Play Music account?"
+msgstr ""
+
+msgctxt "#30079"
+msgid "Spoofing device"
+msgstr ""
+
+msgctxt "#30080"
+msgid "Make sure to select a Android based device in the following list as otherwise this add-on might not work"
+msgstr ""
+
+msgctxt "#30081"
+msgid "Because you use 2-Factor Auth you have to get a Device-ID yourself.\nInstall "https://goo.gl/F1Zh9p" and provide the Device-ID on the next step"
+msgstr ""
+
+msgctxt "#30082"
+msgid "Using MAC-Address instead"
+msgstr ""
+
+msgctxt "#30083"
+msgid "In this case your PC's MAC-Address can be used which might add up to the device limit.\nProceed?"
+msgstr ""
+
+msgctxt "#30084"
+msgid "Android Device ID"
+msgstr ""
+
+msgctxt "#30085"
+msgid "Do you want to run the setup again?"
+msgstr ""
+
+msgctxt "#30086"
+msgid "Login successful"
+msgstr ""
+
+msgctxt "#30087"
+msgid "Enjoy your music :)"
+msgstr ""
+
+msgctxt "#30088"
+msgid "No devices found"
+msgstr ""
+
+msgctxt "#30089"
+msgid "Re-run setup from settings"
+msgstr ""

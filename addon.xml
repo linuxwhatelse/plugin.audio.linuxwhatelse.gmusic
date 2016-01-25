@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.audio.linuxwhatelse.gmusic"
        name="Google Play Music"
-       version="1.2.4"
+       version="1.3.3"
        provider-name="linuxwhatelse">
 
     <requires>
@@ -14,7 +14,7 @@
         <import addon="script.module.requests"             version="2.8.1"/>
         <import addon="script.module.decorator"            version="3.4.0"/>
         <import addon="script.module.linuxwhatelse.mapper" version="1.1.0"/>
-        
+
         <!-- Outdated... include in lib folder
         <import addon="script.module.protobuf"             version="2.5.0"/>
         <import addon="script.module.mutagen"              version="1.22.0"/>

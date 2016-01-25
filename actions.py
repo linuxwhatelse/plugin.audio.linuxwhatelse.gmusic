@@ -14,6 +14,7 @@ import mapper
 import utils
 import browse
 import resources
+import gmusicapi
 from gmusic import GMusic
 
 # Variables will be set from "default.py"
@@ -23,6 +24,104 @@ addon_handle = None
 _addon     = Addon()
 _cache_dir = utils.get_cache_dir()
 gmusic     = GMusic(debug_logging=False, validate=True, verify_ssl=True)
+
+@mapper.url('^/setup/$', {'force' : bool})
+def setup(force=False):
+    is_setup = True if _addon.getSetting('is_setup') == 'true' else False
+
+    print(is_setup, not force)
+    if is_setup and not force:
+        return True
+
+    dialog = xbmcgui.Dialog()
+
+    username = dialog.input(utils.translate(30075), type=xbmcgui.INPUT_ALPHANUM)
+    if not username:
+        return False
+
+    # If 2-Factor Authentication is used
+    is_two_factor = dialog.yesno(utils.translate(30071, _addon), utils.translate(30072, _addon))
+    if is_two_factor:
+        if not dialog.ok(utils.translate(30071, _addon), utils.translate(30073, _addon), utils.translate(30074, _addon)):
+            return False
+
+    password = dialog.input(utils.translate(30076, _addon), type=xbmcgui.INPUT_ALPHANUM, option=xbmcgui.ALPHANUM_HIDE_INPUT)
+    if not password:
+        return False
+
+    # If Android Device available
+    device_id = None
+    if dialog.yesno(utils.translate(30077, _addon), utils.translate(30078, _addon)):
+        if is_two_factor:
+            if not dialog.ok(utils.translate(30079, _addon), utils.translate(30081, _addon)):
+                return False
+
+            device_id = dialog.input(utils.translate(30084, _addon), type=xbmcgui.INPUT_ALPHANUM)
+            if not device_id:
+                return False
+        else:
+            if not dialog.ok(utils.translate(30079, _addon), utils.translate(30080, _addon)):
+                return False
+
+            web = gmusicapi.Webclient()
+            if not web.login(username, password):
+                utils.notify(utils.translate(30048, _addon))
+                return False
+
+            devices = web.get_registered_devices()
+            if not devices:
+                utils.notify(utils.translate(30088, _addon), utils.translate(30089, _addon))
+                return False
+
+            dev_list = []
+            for dev in devices:
+                if 'id' in dev and dev['id']:
+                    dev_list.append('%s %s (%s)' % (
+                        dev['carrier'].strip(' ') if 'carrier' in dev else '',
+                        dev['model'].strip(' ')   if 'model'   in dev else '',
+                        dev['name'].strip(' ')    if 'name'    in dev else '',
+                    ))
+
+            selection = dialog.select(utils.translate(30042, _addon), dev_list, 0)
+
+            if selection >= 0:
+                device_id = devices[selection]['id'].lstrip('0x')
+            else:
+                return False
+
+    else:
+        # If using MAC-Address
+        if dialog.yesno(utils.translate(30082, _addon), utils.translate(30083, _addon)):
+            device_id = gmusicapi.Mobileclient.FROM_MAC_ADDRESS
+        else:
+            return False
+
+    # Test login
+    mobile = gmusicapi.Mobileclient()
+    login_success = mobile.login(username, password, device_id)
+
+    if login_success:
+        _addon.setSetting('username',  username)
+        _addon.setSetting('password',  password)
+        _addon.setSetting('authtoken', mobile.session._authtoken)
+
+        if device_id == gmusicapi.Mobileclient.FROM_MAC_ADDRESS:
+            _addon.setSetting('device_id', 'from_mac_address')
+        else:
+            _addon.setSetting('device_id', device_id)
+
+        _addon.setSetting('is_setup', 'true')
+
+        utils.notify(utils.translate(30086, _addon), utils.translate(30087, _addon))
+
+        return True
+    else:
+        # If re-run setup
+        if dialog.yesno(utils.translate(30048, _addon), utils.translate(30085, _addon)):
+            return setup(force=True)
+        else:
+            return False
+
 
 ##############
 ## PLAYBACK ##
@@ -43,7 +142,7 @@ def play_track(track_id, station_id):
     item[1].setPath(gmusic.get_stream_url(song_id=track_id, quality=_addon.getSetting('stream_quality')))
 
     xbmcplugin.setResolvedUrl(addon_handle, True, item[1])
-    
+
     gmusic.increment_song_playcount(track_id)
 
     # If the current track is from a station and within the last five (5)
@@ -109,7 +208,7 @@ def queue_track(track_id, play_next=False):
 @mapper.url('^/queue/album/$')
 def queue_album(album_id, play_next=False):
     _queue(['album'])
-    
+
 @mapper.url('^/queue/playlist/$')
 def queue_playlist(playlist_id, play_next=False):
     _queue(['playlist'])
@@ -142,7 +241,7 @@ def _queue(path, play_next=False):
 def search(query):
     if not query:
         history_file = os.path.join(_cache_dir,'search_history.json')
-    
+
         history = []
         if os.path.exists(history_file):
             with open(history_file, 'r') as f:
@@ -150,35 +249,35 @@ def search(query):
                     history = json.loads(f.read())
                 except ValueError:
                     pass
-    
-    
+
+
         query = None
         if history:
             history.insert(0, utils.translate(30053, _addon))
             diag = xbmcgui.Dialog()
-    
+
             selection = diag.select(utils.translate(30019, _addon), history, 0)
-    
+
             # User canceled the operation
             if selection == -1:
                 return
-    
+
             # User selected "New Search"
             elif selection == 0:
                 # Now we have to remove the "New search" entry again
                 history.pop(0)
-    
+
             # User selected a history entrie and NOT "New Search"
             elif selection > 0:
                 # We still have to remove the "New search" entry
                 history.pop(0)
                 # This also means that :selection: = :selection: - 1
-                selection -= 1        
-    
+                selection -= 1
+
                 query = history[selection]
 
-    
-    
+
+
         # At this point the user didn't cancel but also didn't select
         # a actuall history entry so we know he either selected "New Search"
         # or a history didn't exist at this point
@@ -440,7 +539,7 @@ def rate(track_id):
         utils.translate(30029, _addon),  # Thumbs down
     ]
 
-    dialog = xbmcgui.Dialog()    
+    dialog = xbmcgui.Dialog()
     selection = dialog.select(utils.translate(30041, _addon), rating, 0)
 
     if selection == -1:
