@@ -37,6 +37,6 @@ if __name__ == '__main__':
     # NOT assume to have write rights
     chdir(get_cache_dir())
 
-    is_setup = mapper.call(mapper.build_url(url=url, paths=['setup'], overwrite_path=True))
+    is_setup = mapper.call(mapper.build_url(url=url, paths=['setup'], overwrite_path=True, overwrite_query=True))
     if is_setup:
         mapper.call(url)
