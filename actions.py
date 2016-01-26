@@ -3,6 +3,8 @@ import json
 import shutil
 import time
 import urlparse
+import re
+import uuid
 
 import xbmc
 import xbmcgui
@@ -125,7 +127,8 @@ def setup(force=False):
         _addon.setSetting('authtoken', mobile.session._authtoken)
 
         if device_id == gmusicapi.Mobileclient.FROM_MAC_ADDRESS:
-            _addon.setSetting('device_id', 'from_mac_address')
+            mac_address = ''.join(re.findall('..', '%012x' % uuid.getnode()))
+            _addon.setSetting('device_id', mac_address)
         else:
             _addon.setSetting('device_id', device_id)
 

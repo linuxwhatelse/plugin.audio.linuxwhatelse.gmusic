@@ -16,18 +16,9 @@ _password  = _addon.getSetting('password')
 
 class GMusic(Mobileclient):
 
-    def _get_device_id(self):
-        device_id = _addon.getSetting('device_id')
-
-        if device_id == 'from_mac_address':
-            return Mobileclient.FROM_MAC_ADDRESS
-        else:
-            return device_id
-
-
     def login(self):
-        device_id = self._get_device_id()
-        authtoken  = _addon.getSetting('authtoken')
+        device_id = _addon.getSetting('device_id')
+        authtoken = _addon.getSetting('authtoken')
 
         if authtoken:
             self.android_id               = device_id
