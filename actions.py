@@ -65,7 +65,7 @@ def setup(force=False):
 
             web = gmusicapi.Webclient()
             if not web.login(username, password):
-                utils.notify(utils.translate(30048, _addon))
+                utils.notify(utils.translate(30048, _addon), '')
                 return False
 
             devices = web.get_registered_devices()
