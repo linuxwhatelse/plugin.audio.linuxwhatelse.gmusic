@@ -3,7 +3,6 @@ import json
 
 import xbmc
 from xbmcaddon import Addon
-from xbmcgui import Dialog
 
 import utils
 
@@ -50,6 +49,7 @@ class GMusic(Mobileclient):
                 return True
 
         utils.notify(utils.translate(30048, _addon), '')
+        _addon.setSetting('is_setup', 'false')
 
         # Prevent further addon execution in case we failed with the login-process
         raise SystemExit

@@ -330,7 +330,7 @@ msgid "Make sure to select a Android based device in the following list as other
 msgstr ""
 
 msgctxt "#30081"
-msgid "Because you use 2-Factor Auth you have to get a Device-ID yourself.\nInstall "https://goo.gl/F1Zh9p" and provide the Device-ID on the next step"
+msgid "Because you use 2-Factor Auth you have to get a Device-ID yourself.\nInstall "https://goo.gl/F1Zh9p" and provide the Device-ID on the next step."
 msgstr ""
 
 msgctxt "#30082"
@@ -363,4 +363,20 @@ msgstr ""
 
 msgctxt "#30089"
 msgid "Re-run setup from settings"
+msgstr ""
+
+msgctxt "#30090"
+msgid "Couldn't get a list of devices or no Android device was found.\nInstall "https://goo.gl/F1Zh9p" and provide the Device-ID on the next step."
+msgstr ""
+
+msgctxt "#30091"
+msgid "No All-Acces subscription"
+msgstr ""
+
+msgctxt "#30092"
+msgid "You don't seem to have a Google Play Music All Access subscription meaning this add-on will not work for you!"
+msgstr ""
+
+msgctxt "#30093"
+msgid "Device ID"
 msgstr ""

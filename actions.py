@@ -29,7 +29,6 @@ gmusic     = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 def setup(force=False):
     is_setup = True if _addon.getSetting('is_setup') == 'true' else False
 
-    print(is_setup, not force)
     if is_setup and not force:
         return True
 
@@ -49,10 +48,11 @@ def setup(force=False):
     if not password:
         return False
 
-    # If Android Device available
+
     device_id = None
-    if dialog.yesno(utils.translate(30077, _addon), utils.translate(30078, _addon)):
-        if is_two_factor:
+    if is_two_factor:
+        # If Android Device available
+        if dialog.yesno(utils.translate(30077, _addon), utils.translate(30078, _addon)):
             if not dialog.ok(utils.translate(30079, _addon), utils.translate(30081, _addon)):
                 return False
 
@@ -60,47 +60,66 @@ def setup(force=False):
             if not device_id:
                 return False
         else:
-            if not dialog.ok(utils.translate(30079, _addon), utils.translate(30080, _addon)):
+            # If using MAC-Address
+            if dialog.yesno(utils.translate(30082, _addon), utils.translate(30083, _addon)):
+                device_id = gmusicapi.Mobileclient.FROM_MAC_ADDRESS
+            else:
                 return False
-
-            web = gmusicapi.Webclient()
-            if not web.login(username, password):
-                utils.notify(utils.translate(30048, _addon), '')
-                return False
-
-            devices = web.get_registered_devices()
-            if not devices:
-                utils.notify(utils.translate(30088, _addon), utils.translate(30089, _addon))
-                return False
-
-            dev_list = []
-            for dev in devices:
-                if 'id' in dev and dev['id']:
-                    dev_list.append('%s %s (%s)' % (
-                        dev['carrier'].strip(' ') if 'carrier' in dev else '',
-                        dev['model'].strip(' ')   if 'model'   in dev else '',
-                        dev['name'].strip(' ')    if 'name'    in dev else '',
-                    ))
-
-            selection = dialog.select(utils.translate(30042, _addon), dev_list, 0)
-
-            if selection >= 0:
-                device_id = devices[selection]['id'].lstrip('0x')
+    else:
+        web = gmusicapi.Webclient()
+        if not web.login(username, password):
+            # If re-run setup due to login failed
+            if dialog.yesno(utils.translate(30048, _addon), utils.translate(30085, _addon)):
+                return setup(force=True)
             else:
                 return False
 
-    else:
-        # If using MAC-Address
-        if dialog.yesno(utils.translate(30082, _addon), utils.translate(30083, _addon)):
-            device_id = gmusicapi.Mobileclient.FROM_MAC_ADDRESS
-        else:
-            return False
+        try:
+            devices = web.get_registered_devices()
+            if not devices:
+                raise
+
+            dev_list = []
+            for dev in devices:
+                # Not an Android Device so we skip as streaming would not work
+                if dev['deviceType'] != 2:
+                    continue
+
+                if 'id' in dev and dev['id']:
+                    dev_list.append('%s - %s' % (
+                        dev['carrier'].strip(' ') if 'carrier' in dev else '',
+                        dev['model'].strip(' ')   if 'model'   in dev else '',
+                    ))
+                    dev_list = sorted(dev_list)
+
+            if len(dev_list) <= 0:
+                raise
+            elif len(dev_list) == 1:
+                device_id = devices[0]['id'].lstrip('0x')
+            else:
+                selection = dialog.select(utils.translate(30042, _addon), dev_list, 0)
+
+                if selection >= 0:
+                    device_id = devices[selection]['id'].lstrip('0x')
+                else:
+                    return False
+        except:
+            if not dialog.ok(utils.translate(30079, _addon), utils.translate(30090, _addon)):
+                return False
+
+            device_id = dialog.input(utils.translate(30084, _addon), type=xbmcgui.INPUT_ALPHANUM)
+            if not device_id:
+                return False
 
     # Test login
     mobile = gmusicapi.Mobileclient()
-    login_success = mobile.login(username, password, device_id)
+    if mobile.login(username, password, device_id):
 
-    if login_success:
+        # Test if this is an all-access account
+        if not mobile.get_all_stations():
+            dialog.ok(utils.translate(30091, _addon), utils.translate(30092, _addon))
+            return False
+
         _addon.setSetting('username',  username)
         _addon.setSetting('password',  password)
         _addon.setSetting('authtoken', mobile.session._authtoken)

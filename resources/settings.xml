@@ -2,8 +2,11 @@
 <settings>
     <!-- General -->
     <category label="30000">
-        <setting   id="username"   type="text"   label="30001" />
-        <setting   id="password"   type="text"   label="30002"   option="hidden" />
+        <setting   id="setup"      type="action"   label="30070"   action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/setup?force=true)" />
+        <setting   type="sep"/>
+        <setting   id="username"   type="text"     label="30001" />
+        <setting   id="password"   type="text"     label="30002"   option="hidden" />
+        <setting   id="device_id"  type="text"     label="30093" />
     </category>
 
     <!-- Playback -->
@@ -14,8 +17,6 @@
 
     <!-- Actions -->
     <category label="30011">
-        <setting   id="setup"                  type="action"   label="30070"   action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/setup?force=true)" />
-        <setting   type="sep"/>
         <setting   id="clear_search_history"   type="action"   label="30012"   action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/clear/search-history)" />
         <setting   id="clear_cache"            type="action"   label="30013"   action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/clear/cache)" />
     </category>
