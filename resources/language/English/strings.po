@@ -338,7 +338,7 @@ msgid "Using MAC-Address instead"
 msgstr ""
 
 msgctxt "#30083"
-msgid "In this case your PC's MAC-Address can be used which might add up to the device limit.\nProceed?"
+msgid "In this case your PC's MAC-Address can be used which might add up to the device limit and ist not guaranteed to work.\nProceed?"
 msgstr ""
 
 msgctxt "#30084"
@@ -374,7 +374,7 @@ msgid "No All-Acces subscription"
 msgstr ""
 
 msgctxt "#30092"
-msgid "You don't seem to have a Google Play Music All Access subscription meaning this add-on will not work for you!"
+msgid "You don't seem to have a Google Play Music All Access subscription meaning this add-on will not work for you."
 msgstr ""
 
 msgctxt "#30093"
