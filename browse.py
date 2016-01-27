@@ -26,6 +26,7 @@ gmusic       = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 #######################
 ## FOLDER: MAIN MENU ##
 #######################
+@mapper.url('^/$')
 @mapper.url('^/browse/$')
 def main_menu():
     items = [

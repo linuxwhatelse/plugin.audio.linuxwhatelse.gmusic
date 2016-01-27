@@ -1,20 +1,16 @@
 from os import chdir
-from urlparse import urlparse
 
 from xbmcaddon import Addon
 
 import mapper
 
-from utils import notify, translate, get_cache_dir
+import utils
 
 # Adds all librarys to our path (see lib/__init__.py)
 import lib
 
 addon_handle = int(sys.argv[1])
 url          = sys.argv[0] + sys.argv[2]
-
-if urlparse(url).path == '/':
-    url = mapper.build_url(url, ['browse'])
 
 
 # Includes some more routs for the mapper
@@ -35,7 +31,7 @@ if __name__ == '__main__':
     # will be written into our cache dir
     # On Windows the default directory would be Kodis installation dir where we can
     # NOT assume to have write rights
-    chdir(get_cache_dir())
+    chdir(utils.get_cache_dir())
 
     is_setup = mapper.call(mapper.build_url(url=url, paths=['setup'], overwrite_path=True, overwrite_query=True))
     if is_setup:
