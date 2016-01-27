@@ -15,7 +15,7 @@ import mapper
 
 import utils
 import browse
-import resources
+import thumbs
 import gmusicapi
 from gmusic import GMusic
 
@@ -332,24 +332,24 @@ def search(query):
         if 'artist_hits' in result and len(result['artist_hits']) > 0:
             items.append(
                 ( mapper.build_url(url, ['artists']), xbmcgui.ListItem(label='%s (%s)' % (utils.translate(30022, _addon), \
-                    len(result['artist_hits'])), iconImage=resources.IMG_ARTIST, thumbnailImage=resources.IMG_ARTIST), True )
+                    len(result['artist_hits'])), iconImage=thumbs.IMG_ARTIST, thumbnailImage=thumbs.IMG_ARTIST), True )
             )
         if 'album_hits' in result and len(result['album_hits']) > 0:
             items.append(
                 ( mapper.build_url(url, ['albums']),  xbmcgui.ListItem(label='%s (%s)' % (utils.translate(30023, _addon), \
-                    len(result['album_hits'])), iconImage=resources.IMG_ALBUM, thumbnailImage=resources.IMG_ALBUM), True )
+                    len(result['album_hits'])), iconImage=thumbs.IMG_ALBUM, thumbnailImage=thumbs.IMG_ALBUM), True )
             )
 
         if 'playlist_hits' in result and len(result['playlist_hits']) > 0:
             items.append(
                 ( mapper.build_url(url, ['playlists']),   xbmcgui.ListItem(label='%s (%s)' % (utils.translate(30020, _addon), \
-                    len(result['playlist_hits'])), iconImage=resources.IMG_PLAYLIST, thumbnailImage=resources.IMG_PLAYLIST), True )
+                    len(result['playlist_hits'])), iconImage=thumbs.IMG_PLAYLIST, thumbnailImage=thumbs.IMG_PLAYLIST), True )
             )
 
         if 'song_hits' in result and len(result['song_hits']) > 0:
             items.append(
                 ( mapper.build_url(url, ['songs']),   xbmcgui.ListItem(label='%s (%s)' % (utils.translate(30024, _addon), \
-                    len(result['song_hits'])), iconImage=resources.IMG_TRACK, thumbnailImage=resources.IMG_TRACK), True )
+                    len(result['song_hits'])), iconImage=thumbs.IMG_TRACK, thumbnailImage=thumbs.IMG_TRACK), True )
             )
 
         for item in items:

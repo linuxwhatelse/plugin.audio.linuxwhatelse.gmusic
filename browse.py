@@ -10,7 +10,7 @@ from xbmcaddon import Addon
 import mapper
 
 import utils
-import resources
+import thumbs
 from gmusic import GMusic
 
 # Variables will be set from "default.py"
@@ -26,17 +26,16 @@ gmusic       = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 #######################
 ## FOLDER: MAIN MENU ##
 #######################
-@mapper.url('^/$')
 @mapper.url('^/browse/$')
 def main_menu():
     items = [
         # URL , ListItem, isFolder
-        ( mapper.build_url(url, ['listen-now']),       xbmcgui.ListItem(label=utils.translate(30014, _addon), iconImage=resources.IMG_HEADPHONES, thumbnailImage=resources.IMG_HEADPHONES), True ),
-        ( mapper.build_url(url, ['top-charts']),       xbmcgui.ListItem(label=utils.translate(30015, _addon), iconImage=resources.IMG_STAR,       thumbnailImage=resources.IMG_STAR),       True ),
-        ( mapper.build_url(url, ['new-releases']),     xbmcgui.ListItem(label=utils.translate(30016, _addon), iconImage=resources.IMG_RELEASES,   thumbnailImage=resources.IMG_RELEASES),   True ),
-        ( mapper.build_url(url, ['my-library']),       xbmcgui.ListItem(label=utils.translate(30017, _addon), iconImage=resources.IMG_LIBRARY,    thumbnailImage=resources.IMG_LIBRARY),    True ),
-        ( mapper.build_url(url, ['browse-stations']),  xbmcgui.ListItem(label=utils.translate(30018, _addon), iconImage=resources.IMG_STATION,    thumbnailImage=resources.IMG_STATION),    True ),
-        ( mapper.build_url(url, ['search'], {}, True), xbmcgui.ListItem(label=utils.translate(30019, _addon), iconImage=resources.IMG_SEARCH,     thumbnailImage=resources.IMG_SEARCH),     True ),
+        ( mapper.build_url(url, ['listen-now']),       xbmcgui.ListItem(label=utils.translate(30014, _addon), iconImage=thumbs.IMG_HEADPHONES, thumbnailImage=thumbs.IMG_HEADPHONES), True ),
+        ( mapper.build_url(url, ['top-charts']),       xbmcgui.ListItem(label=utils.translate(30015, _addon), iconImage=thumbs.IMG_STAR,       thumbnailImage=thumbs.IMG_STAR),       True ),
+        ( mapper.build_url(url, ['new-releases']),     xbmcgui.ListItem(label=utils.translate(30016, _addon), iconImage=thumbs.IMG_RELEASES,   thumbnailImage=thumbs.IMG_RELEASES),   True ),
+        ( mapper.build_url(url, ['my-library']),       xbmcgui.ListItem(label=utils.translate(30017, _addon), iconImage=thumbs.IMG_LIBRARY,    thumbnailImage=thumbs.IMG_LIBRARY),    True ),
+        ( mapper.build_url(url, ['browse-stations']),  xbmcgui.ListItem(label=utils.translate(30018, _addon), iconImage=thumbs.IMG_STATION,    thumbnailImage=thumbs.IMG_STATION),    True ),
+        ( mapper.build_url(url, ['search'], {}, True), xbmcgui.ListItem(label=utils.translate(30019, _addon), iconImage=thumbs.IMG_SEARCH,     thumbnailImage=thumbs.IMG_SEARCH),     True ),
     ]
 
     addon_settings = (utils.translate(30049, _addon), 'Addon.OpenSettings(%s)' % _addon.getAddonInfo('id'))
@@ -61,10 +60,10 @@ def listen_now():
     items = [
         # URL , ListItem, isFolder
         ( mapper.build_url(url=url, paths=['play', 'station'], queries={'station_id': 'IFL'}, overwrite_path=True, \
-            overwrite_query=True),              xbmcgui.ListItem(label=utils.translate(30045, _addon), iconImage=resources.IMG_IFL,      thumbnailImage=resources.IMG_IFL),      True ),
-        ( mapper.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023, _addon), iconImage=resources.IMG_ALBUM,    thumbnailImage=resources.IMG_ALBUM),    True ),
-        ( mapper.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021, _addon), iconImage=resources.IMG_STATION,  thumbnailImage=resources.IMG_STATION),  True ),
-        ( mapper.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020, _addon), iconImage=resources.IMG_PLAYLIST, thumbnailImage=resources.IMG_PLAYLIST), True ),
+            overwrite_query=True),              xbmcgui.ListItem(label=utils.translate(30045, _addon), iconImage=thumbs.IMG_IFL,      thumbnailImage=thumbs.IMG_IFL),      True ),
+        ( mapper.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023, _addon), iconImage=thumbs.IMG_ALBUM,    thumbnailImage=thumbs.IMG_ALBUM),    True ),
+        ( mapper.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021, _addon), iconImage=thumbs.IMG_STATION,  thumbnailImage=thumbs.IMG_STATION),  True ),
+        ( mapper.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020, _addon), iconImage=thumbs.IMG_PLAYLIST, thumbnailImage=thumbs.IMG_PLAYLIST), True ),
 
     ]
 
@@ -75,7 +74,7 @@ def listen_now():
     with open(os.path.join(_cache_dir, 'situations.json'), 'w+') as f:
         f.write(json.dumps(situations, indent=2))
 
-    items.insert(1, ( mapper.build_url(url, ['situations']), xbmcgui.ListItem(label=situations['primaryHeader'], iconImage=resources.IMG_ALBUM, thumbnailImage=resources.IMG_ALBUM),    True ))
+    items.insert(1, ( mapper.build_url(url, ['situations']), xbmcgui.ListItem(label=situations['primaryHeader'], iconImage=thumbs.IMG_ALBUM, thumbnailImage=thumbs.IMG_ALBUM),    True ))
 
     for item in items:
         item[1].addContextMenuItems([],True)
@@ -256,8 +255,8 @@ def listen_now_playlists():
 @mapper.url('^/browse/top-charts/$')
 def top_charts():
     items = [
-        ( mapper.build_url(url, ['songs']),  xbmcgui.ListItem(label=utils.translate(30024, _addon), iconImage=resources.IMG_TRACK, thumbnailImage=resources.IMG_TRACK), True ),
-        ( mapper.build_url(url, ['albums']), xbmcgui.ListItem(label=utils.translate(30023, _addon), iconImage=resources.IMG_ALBUM, thumbnailImage=resources.IMG_ALBUM), True ),
+        ( mapper.build_url(url, ['songs']),  xbmcgui.ListItem(label=utils.translate(30024, _addon), iconImage=thumbs.IMG_TRACK, thumbnailImage=thumbs.IMG_TRACK), True ),
+        ( mapper.build_url(url, ['albums']), xbmcgui.ListItem(label=utils.translate(30023, _addon), iconImage=thumbs.IMG_ALBUM, thumbnailImage=thumbs.IMG_ALBUM), True ),
     ]
     for item in items:
         item[1].addContextMenuItems([],True)
@@ -297,12 +296,12 @@ def new_releases():
 def my_library():
     items = [
         # URL , ListItem, isFolder
-        ( mapper.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020, _addon), iconImage=resources.IMG_PLAYLIST, thumbnailImage=resources.IMG_PLAYLIST), True ),
-        ( mapper.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021, _addon), iconImage=resources.IMG_STATION,  thumbnailImage=resources.IMG_STATION),  True ),
-        ( mapper.build_url(url, ['artists']),   xbmcgui.ListItem(label=utils.translate(30022, _addon), iconImage=resources.IMG_ARTIST,   thumbnailImage=resources.IMG_ARTIST),   True ),
-        ( mapper.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023, _addon), iconImage=resources.IMG_ALBUM,    thumbnailImage=resources.IMG_ALBUM),    True ),
-        ( mapper.build_url(url, ['songs']),     xbmcgui.ListItem(label=utils.translate(30024, _addon), iconImage=resources.IMG_TRACK,    thumbnailImage=resources.IMG_TRACK),    True ),
-        ( mapper.build_url(url, ['genres']),    xbmcgui.ListItem(label=utils.translate(30025, _addon), iconImage=resources.IMG_GENRE,    thumbnailImage=resources.IMG_GENRE),    True ),
+        ( mapper.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020, _addon), iconImage=thumbs.IMG_PLAYLIST, thumbnailImage=thumbs.IMG_PLAYLIST), True ),
+        ( mapper.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021, _addon), iconImage=thumbs.IMG_STATION,  thumbnailImage=thumbs.IMG_STATION),  True ),
+        ( mapper.build_url(url, ['artists']),   xbmcgui.ListItem(label=utils.translate(30022, _addon), iconImage=thumbs.IMG_ARTIST,   thumbnailImage=thumbs.IMG_ARTIST),   True ),
+        ( mapper.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023, _addon), iconImage=thumbs.IMG_ALBUM,    thumbnailImage=thumbs.IMG_ALBUM),    True ),
+        ( mapper.build_url(url, ['songs']),     xbmcgui.ListItem(label=utils.translate(30024, _addon), iconImage=thumbs.IMG_TRACK,    thumbnailImage=thumbs.IMG_TRACK),    True ),
+        ( mapper.build_url(url, ['genres']),    xbmcgui.ListItem(label=utils.translate(30025, _addon), iconImage=thumbs.IMG_GENRE,    thumbnailImage=thumbs.IMG_GENRE),    True ),
     ]
 
     for item in items:
@@ -317,10 +316,10 @@ def my_library_playlists():
     # Auto playlists
     items = [
         ( mapper.build_url(url=url, paths=['browse', 'my-library', 'playlist'], queries={'playlist_id': 'thumbsup'}, overwrite_path=True, overwrite_query=True), \
-            xbmcgui.ListItem(label=utils.translate(30027, _addon), iconImage=resources.IMG_THUMB_UP, thumbnailImage=resources.IMG_THUMB_UP), True ),
+            xbmcgui.ListItem(label=utils.translate(30027, _addon), iconImage=thumbs.IMG_THUMB_UP, thumbnailImage=thumbs.IMG_THUMB_UP), True ),
 
         ( mapper.build_url(url=url, paths=['browse', 'my-library', 'playlist'], queries={'playlist_id': 'lastadded'}, overwrite_path=True, overwrite_query=True),\
-            xbmcgui.ListItem(label=utils.translate(30026, _addon), iconImage=resources.IMG_CLOCK, thumbnailImage=resources.IMG_CLOCK), True ),
+            xbmcgui.ListItem(label=utils.translate(30026, _addon), iconImage=thumbs.IMG_CLOCK, thumbnailImage=thumbs.IMG_CLOCK), True ),
     ]
 
     for item, playlist_id in zip(items, ['thumbsup', 'lastadded']):
@@ -385,8 +384,8 @@ def my_library_artist(artist_id):
         gmusic.login()
 
         items = [
-            ( mapper.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       overwrite_path=True), xbmcgui.ListItem(label=utils.translate(30066, _addon), iconImage=resources.IMG_STAR,   thumbnailImage=resources.IMG_STAR), True ),
-            ( mapper.build_url(url=url, paths=['browse', 'artist', 'related-artists'], overwrite_path=True), xbmcgui.ListItem(label=utils.translate(30067, _addon), iconImage=resources.IMG_ARTIST, thumbnailImage=resources.IMG_ARTIST),     True ),
+            ( mapper.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       overwrite_path=True), xbmcgui.ListItem(label=utils.translate(30066, _addon), iconImage=thumbs.IMG_STAR,   thumbnailImage=thumbs.IMG_STAR), True ),
+            ( mapper.build_url(url=url, paths=['browse', 'artist', 'related-artists'], overwrite_path=True), xbmcgui.ListItem(label=utils.translate(30067, _addon), iconImage=thumbs.IMG_ARTIST, thumbnailImage=thumbs.IMG_ARTIST),     True ),
         ]
 
         items += build_album_listitems(gmusic.get_user_artist_albums(artist_id=artist_id), True)
@@ -464,7 +463,7 @@ def browse_stations():
         items.append(
             ( mapper.build_url(url=url, paths=['browse', 'browse-stations', 'categories'], \
                 queries={'category_id': category['id']}, overwrite_path=True, overwrite_query=True), \
-                xbmcgui.ListItem(label=category['display_name'], iconImage=resources.IMG_STATION, thumbnailImage=resources.IMG_STATION), True )
+                xbmcgui.ListItem(label=category['display_name'], iconImage=thumbs.IMG_STATION, thumbnailImage=thumbs.IMG_STATION), True )
         )
 
     for item in items:
@@ -497,7 +496,7 @@ def browse_stations_categories(category_id):
                 items.append(
                     ( mapper.build_url(url=url, paths=['browse', 'browse-stations', 'subcategories'], \
                         queries={'subcategory_id': sub['id']}, overwrite_path=True, overwrite_query=True), \
-                        xbmcgui.ListItem(label=sub['display_name'], iconImage=resources.IMG_STATION, thumbnailImage=resources.IMG_STATION), True )
+                        xbmcgui.ListItem(label=sub['display_name'], iconImage=thumbs.IMG_STATION, thumbnailImage=thumbs.IMG_STATION), True )
                 )
 
         for item in items:
@@ -554,8 +553,8 @@ def artist(artist_id, allow_view_overwrite=True):
         gmusic.login()
 
         items = [
-            ( mapper.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       overwrite_path=True), xbmcgui.ListItem(label=utils.translate(30066, _addon), iconImage=resources.IMG_STAR,   thumbnailImage=resources.IMG_STAR), True ),
-            ( mapper.build_url(url=url, paths=['browse', 'artist', 'related-artists'], overwrite_path=True), xbmcgui.ListItem(label=utils.translate(30067, _addon), iconImage=resources.IMG_ARTIST, thumbnailImage=resources.IMG_ARTIST),     True ),
+            ( mapper.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       overwrite_path=True), xbmcgui.ListItem(label=utils.translate(30066, _addon), iconImage=thumbs.IMG_STAR,   thumbnailImage=thumbs.IMG_STAR), True ),
+            ( mapper.build_url(url=url, paths=['browse', 'artist', 'related-artists'], overwrite_path=True), xbmcgui.ListItem(label=utils.translate(30067, _addon), iconImage=thumbs.IMG_ARTIST, thumbnailImage=thumbs.IMG_ARTIST),     True ),
         ]
 
         items += build_album_listitems(gmusic.get_artist_info(artist_id=artist_id, include_albums=True, max_top_tracks=0, max_rel_artist=0)['albums'])
@@ -635,7 +634,7 @@ def build_artist_listitems(artists, my_library=False):
 
         artist_id   = artist['artistId']
         artist_name = artist['name']
-        artist_art  = artist['artistArtRef'] if 'artistArtRef' in artist else resources.IMG_ARTIST_FLAT
+        artist_art  = artist['artistArtRef'] if 'artistArtRef' in artist else thumbs.IMG_ARTIST_FLAT
 
         item = xbmcgui.ListItem(
             label           = artist_name,
@@ -684,7 +683,7 @@ def build_album_listitems(albums, my_library=False):
 
         album_id   = album['albumId']
         album_name = album['name']
-        album_art  = album['albumArtRef'] if 'albumArtRef' in album else resources.IMG_ALBUM
+        album_art  = album['albumArtRef'] if 'albumArtRef' in album else thumbs.IMG_ALBUM
 
         item = xbmcgui.ListItem(
             label           = album_name,
@@ -768,7 +767,7 @@ def build_playlist_listitems(playlists):
         shared_token  = None
         playlist_id   = None
         playlist_name = playlist['name']
-        playlist_art  = playlist['images'][0]['url'] if 'images' in playlist and len(playlist['images']) > 0 else resources.IMG_PLAYLIST
+        playlist_art  = playlist['images'][0]['url'] if 'images' in playlist and len(playlist['images']) > 0 else thumbs.IMG_PLAYLIST
 
         if 'sharedToken' in playlist['id']:
             shared_token = playlist['id']['sharedToken']
@@ -823,7 +822,7 @@ def build_station_listitems(stations):
             continue
 
         station_name = station['name']
-        station_art  = station['imageUrls'][0]['url'] if 'imageUrls' in station and len(station['imageUrls']) > 0 else resources.IMG_STATION
+        station_art  = station['imageUrls'][0]['url'] if 'imageUrls' in station and len(station['imageUrls']) > 0 else thumbs.IMG_STATION
 
         item = xbmcgui.ListItem(
             label           = station_name,
@@ -885,7 +884,7 @@ def build_situation_listitems(situations):
     for situation in situations:
         situation_id    = situation['id']
         situation_title = situation['title']
-        situation_art   = situation['imageUrl'] if 'imageUrl' in situation else resources.IMG_ALBUM
+        situation_art   = situation['imageUrl'] if 'imageUrl' in situation else thumbs.IMG_ALBUM
 
         item = xbmcgui.ListItem(
             label           = situation_title,
@@ -925,7 +924,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
 
         track_id    = track['trackId'] if 'trackId' in track else track['storeId']
         track_title = track['title']
-        album_art   = track['albumArtRef'][0]['url'] if 'albumArtRef' in track and len(track['albumArtRef']) > 0 else resources.IMG_TRACK
+        album_art   = track['albumArtRef'][0]['url'] if 'albumArtRef' in track and len(track['albumArtRef']) > 0 else thumbs.IMG_TRACK
 
         item = xbmcgui.ListItem(
             label           = track_title,

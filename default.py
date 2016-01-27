@@ -1,4 +1,5 @@
 from os import chdir
+from urlparse import urlparse
 
 from xbmcaddon import Addon
 
@@ -7,11 +8,13 @@ import mapper
 import utils
 
 # Adds all librarys to our path (see lib/__init__.py)
-import lib
+import resources.libs
 
 addon_handle = int(sys.argv[1])
 url          = sys.argv[0] + sys.argv[2]
 
+if urlparse(url).path == '/':
+    url = mapper.build_url(url, ['browse'])
 
 # Includes some more routs for the mapper
 import browse
