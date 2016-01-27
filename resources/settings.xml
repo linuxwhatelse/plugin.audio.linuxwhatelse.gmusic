@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
     <setting   id="is_setup"    type="bool"   visible="0"   default="false" />
-    <setting   id="device_id"   type="text"   visible="0"   default="" />
     <setting   id="authtoken"   type="text"   visible="0"   default="" />
 
     <!-- General -->
