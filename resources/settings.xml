@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
+    <setting   id="is_setup"    type="bool"   visible="0"   default="false" />
+    <setting   id="device_id"   type="text"   visible="0"   default="" />
+    <setting   id="authtoken"   type="text"   visible="0"   default="" />
+
     <!-- General -->
     <category label="30000">
         <setting   id="setup"      type="action"   label="30070"   action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/setup?force=true)" />
@@ -31,8 +35,4 @@
         <setting   id="view_id_stations"    type="number"   label="30058"   default="50"    enable="eq(-5,true)" />
         <setting   id="view_id_songs"       type="number"   label="30059"   default="506"   enable="eq(-6,true)" />
     </category>
-
-    <setting   id="is_setup"    type="bool"   visible="0"   default="false" />
-    <setting   id="device_id"   type="text"   visible="0"   default="" />
-    <setting   id="authtoken"   type="text"   visible="0"   default="" />
 </settings>
