@@ -14,7 +14,6 @@ from xbmcaddon import Addon
 import mapper
 
 import utils
-import browse
 import thumbs
 import gmusicapi
 from gmusic import GMusic
@@ -22,6 +21,7 @@ from gmusic import GMusic
 # Variables will be set from "default.py"
 url          = None
 addon_handle = None
+listing      = None
 
 _addon     = Addon()
 _cache_dir = utils.get_cache_dir()
@@ -160,7 +160,7 @@ def play_track(track_id, station_id):
     else:
         track = gmusic.get_track_info(store_track_id=track_id)
 
-    item = browse.build_song_listitems([track])[0]
+    item = listing.build_song_listitems([track])[0]
     item[1].setPath(gmusic.get_stream_url(song_id=track_id, quality=_addon.getSetting('stream_quality')))
 
     xbmcplugin.setResolvedUrl(addon_handle, True, item[1])
@@ -217,7 +217,7 @@ def _play(path):
 def queue_track(track_id, play_next=False):
     gmusic.login()
 
-    listitem = browse.build_song_listitems([gmusic.get_track_info(track_id)])[0]
+    listitem = listing.build_song_listitems([gmusic.get_track_info(track_id)])[0]
 
 
     playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
@@ -355,7 +355,7 @@ def search(query):
         for item in items:
             item[1].addContextMenuItems([],True)
 
-        browse.list_items(items)
+        listing.list_items(items)
 
 @mapper.url('^/search/artists/$')
 def search_artists(query):
@@ -371,8 +371,8 @@ def search_artists(query):
                 pass
 
     if result:
-        items = browse.build_artist_listitems(result['artist_hits'])
-        browse.list_artists(items)
+        items = listing.build_artist_listitems(result['artist_hits'])
+        listing.list_artists(items)
 
 @mapper.url('^/search/albums/$')
 def search_artists(query):
@@ -388,8 +388,8 @@ def search_artists(query):
                 pass
 
     if result:
-        items = browse.build_album_listitems(result['album_hits'])
-        browse.list_albums(items)
+        items = listing.build_album_listitems(result['album_hits'])
+        listing.list_albums(items)
 
 @mapper.url('^/search/playlists/$')
 def search_artists(query):
@@ -405,8 +405,8 @@ def search_artists(query):
                 pass
 
     if result:
-        items = browse.build_playlist_listitems(result['playlist_hits'])
-        browse.list_playlists(items)
+        items = listing.build_playlist_listitems(result['playlist_hits'])
+        listing.list_playlists(items)
 
 @mapper.url('^/search/songs/$')
 def search_artists(query):
@@ -422,8 +422,8 @@ def search_artists(query):
                 pass
 
     if result:
-        items = browse.build_song_listitems(result['song_hits'])
-        browse.list_songs(items)
+        items = listing.build_song_listitems(result['song_hits'])
+        listing.list_songs(items)
 
 def _perform_search(query):
     gmusic.login()
