@@ -14,7 +14,7 @@ import utils
 
 _addon = xbmcaddon.Addon()
 
-_addon_path = 'plugin://plugin.audio.linuxwhatelse.gmusic'
+_addon_path = 'plugin://%s' % _addon.getAddonInfo('id')
 
 def run(track_id):
     dialog = xbmcgui.Dialog()
