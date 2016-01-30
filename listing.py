@@ -72,7 +72,13 @@ class Listing:
         return items
     def list_artists(self, listitems, allow_view_overwrite=True):
         xbmcplugin.setContent(self.addon_handle, 'artists')
-        self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_artists')))
+
+        sort_methods = [
+            xbmcplugin.SORT_METHOD_UNSORTED,
+            xbmcplugin.SORT_METHOD_ARTIST,
+        ]
+
+        self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_artists')), sort_methods)
 
     def build_album_listitems(self, albums, my_library=False):
         items = []
@@ -155,7 +161,15 @@ class Listing:
         return items
     def list_albums(self, listitems, allow_view_overwrite=True):
         xbmcplugin.setContent(self.addon_handle, 'albums')
-        self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_albums')))
+
+        sort_methods = [
+            xbmcplugin.SORT_METHOD_UNSORTED,
+            xbmcplugin.SORT_METHOD_ALBUM,
+            xbmcplugin.SORT_METHOD_ARTIST,
+            xbmcplugin.SORT_METHOD_GENRE,
+        ]
+
+        self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_albums')), sort_methods)
 
     def build_playlist_listitems(self, playlists):
         items=[]
@@ -216,6 +230,7 @@ class Listing:
         return items
     def list_playlists(self, listitems, allow_view_overwrite=True):
         xbmcplugin.setContent(self.addon_handle, 'albums')
+
         self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_playlists')))
 
     def build_station_listitems(self, stations):
@@ -280,7 +295,7 @@ class Listing:
         return items
     def list_stations(self, listitems, allow_view_overwrite=True):
         xbmcplugin.setContent(self.addon_handle, 'albums')
-        self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_stations')), False)
+        self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_stations')), None, False)
 
     def build_situation_listitems(self, situations):
         items = []
@@ -405,6 +420,8 @@ class Listing:
             item.addContextMenuItems(items=menu_items, replaceItems=True)
 
             item.setProperty('IsPlayable','true')
+            item.setProperty('Music', 'true')
+            item.setProperty('mimetype', 'audio/mpeg')
 
 
             queries = {'track_id':track_id}
@@ -424,18 +441,38 @@ class Listing:
         return items
     def list_songs(self, listitems, allow_view_overwrite=True):
         xbmcplugin.setContent(self.addon_handle, 'songs')
-        self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_songs')))
+
+        sort_methods = [
+            xbmcplugin.SORT_METHOD_UNSORTED,
+            xbmcplugin.SORT_METHOD_TRACKNUM,
+            xbmcplugin.SORT_METHOD_TITLE,
+            xbmcplugin.SORT_METHOD_ALBUM,
+            xbmcplugin.SORT_METHOD_ARTIST,
+            xbmcplugin.SORT_METHOD_PLAYCOUNT,
+            xbmcplugin.SORT_METHOD_DURATION,
+            xbmcplugin.SORT_METHOD_SONG_RATING,
+            xbmcplugin.SORT_METHOD_GENRE,
+        ]
+
+        self.list_items(listitems, allow_view_overwrite, int(self._addon.getSetting('view_id_songs')), sort_methods)
 
 
-    def list_items(self, listitems, allow_view_overwrite=True, view_mode_id=None, cacheToDisc=True):
+    def list_items(self, listitems, allow_view_overwrite=True, view_mode_id=None, sort_methods=None, cacheToDisc=True):
+        cacheToDisc=False
         if not view_mode_id:
             view_mode_id = int(self._addon.getSetting('view_id_list'))
+
+        if not sort_methods:
+            sort_methods = []
 
         xbmcplugin.addDirectoryItems(
             handle=self.addon_handle,
             items=listitems,
             totalItems=len(listitems)
         )
+
+        for sort_method in sort_methods:
+            xbmcplugin.addSortMethod(self.addon_handle, sort_method)
 
         if allow_view_overwrite and self._addon.getSetting('overwrite_views') == 'true':
             xbmc.executebuiltin('Container.SetViewMode(%d)' % view_mode_id)
