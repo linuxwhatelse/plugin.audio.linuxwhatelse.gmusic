@@ -216,12 +216,12 @@ class GMusic(Mobileclient):
             # Uniquify all songs by artistId
             seen = set()
             seen_add = seen.add
-            songs = [x for x in songs if x['artistId'][0] not in seen and not seen_add(x['artistId'][0])]
+            songs = [x for x in songs if x['albumArtist'] not in seen and not seen_add(x['albumArtist'])]
 
             for song in songs:
                 artists.append({
                     'artistId':     song['artistId'][0],
-                    'name':         song['artist'],
+                    'name':         song['albumArtist'],
                     'artistArtRef': song['artistArtRef'][0]['url'] if 'artistArtRef' in song and len(song['artistArtRef']) > 0 else ''
                 })
 
