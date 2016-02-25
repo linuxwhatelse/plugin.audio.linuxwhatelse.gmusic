@@ -11,12 +11,12 @@ import mobileclient
 
 _addon     = Addon()
 _cache_dir = utils.get_cache_dir(_addon)
-_username  = _addon.getSetting('username')
-_password  = _addon.getSetting('password')
 
 class GMusic(Mobileclient):
 
     def login(self):
+        username  = _addon.getSetting('username')
+        password  = _addon.getSetting('password')
         device_id = _addon.getSetting('device_id')
         authtoken = _addon.getSetting('authtoken')
 
@@ -35,7 +35,7 @@ class GMusic(Mobileclient):
                 self.session.is_authenticated = False
 
         if device_id:
-            if super(GMusic, self).login(_username, _password, device_id):
+            if super(GMusic, self).login(username, password, device_id):
                 _addon.setSetting('authtoken', self.session._authtoken)
                 return True
 
