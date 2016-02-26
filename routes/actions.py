@@ -410,7 +410,7 @@ def search_artists(query):
         listing.list_artists(items)
 
 @mapper.url('^/search/albums/$')
-def search_artists(query):
+def search_albums(query):
     result = None
     if query:
         result = _perform_search(query)
@@ -427,7 +427,7 @@ def search_artists(query):
         listing.list_albums(items)
 
 @mapper.url('^/search/playlists/$')
-def search_artists(query):
+def search_playlists(query):
     result = None
     if query:
         result = _perform_search(query)
@@ -444,7 +444,7 @@ def search_artists(query):
         listing.list_playlists(items)
 
 @mapper.url('^/search/songs/$')
-def search_artists(query):
+def search_songs(query):
     result = None
     if query:
         result = _perform_search(query)
