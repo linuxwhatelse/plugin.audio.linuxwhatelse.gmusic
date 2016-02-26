@@ -25,6 +25,8 @@
         <provides>audio</provides>
     </extension>
 
+    <extension point="xbmc.service" library="service.py" start="login"/>
+
     <extension point="kodi.context.item" library="context.py">
         <item>
             <label>30060</label>
