@@ -1,5 +1,6 @@
 import os
 import json
+import urlparse
 
 import xbmc
 from xbmcaddon import Addon
@@ -24,13 +25,30 @@ def get_cache_dir(addon=None, sub_dir=None):
 
     if not addon:
         addon = Addon()
-    
+
     cache_dir = xbmc.translatePath(os.path.join(addon.getAddonInfo('profile'), '.cache', *sub_dir))
 
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
 
     return cache_dir
+
+def get_current_track_id(key_name='track_id'):
+    playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+    playlist_item = playlist[playlist.getposition()]
+
+    path = playlist_item.getfilename()
+
+    query = urlparse.parse_qs(urlparse.urlparse(path).query)
+
+    if not query:
+        return None
+
+    if key_name in query:
+        return query[key_name][0]
+
+    else:
+        return None
 
 def execute_jsonrpc(method, params=None):
     data = {}
