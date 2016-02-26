@@ -622,9 +622,11 @@ def rate(track_id):
 def clear_cache():
     if os.path.exists(_cache_dir):
         shutil.rmtree(_cache_dir)
+    utils.notify(utils.translate(30094), '', display_time=1000)
 
 @mapper.url('^/clear/search-history/$')
 def clear_search_history():
     history_file = os.path.join(_cache_dir,'search_history.json')
     if os.path.exists(history_file):
         os.remove(history_file)
+    utils.notify(utils.translate(30095), '', display_time=1000)

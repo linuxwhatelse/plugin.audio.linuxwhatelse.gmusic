@@ -380,3 +380,11 @@ msgstr ""
 msgctxt "#30093"
 msgid "Device ID"
 msgstr ""
+
+msgctxt "#30094"
+msgid "Cache cleared..."
+msgstr ""
+
+msgctxt "#30095"
+msgid "Search history cleared..."
+msgstr ""

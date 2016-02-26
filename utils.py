@@ -8,11 +8,11 @@ from xbmcaddon import Addon
 def log(message, level=xbmc.LOGDEBUG):
     xbmc.log('%s: %s' % (Addon().getAddonInfo('name'), message), level)
 
-def notify(title, message, icon=None):
+def notify(title, message, icon=None, display_time=5000):
     if not icon:
         icon = os.path.join(Addon().getAddonInfo('path'), 'icon.png')
 
-    xbmc.executebuiltin('Notification(%s, %s, 5000, %s)' % (title, message, icon))
+    xbmc.executebuiltin('Notification(%s, %s, %s, %s)' % (title, message, display_time, icon))
 
 def translate(id, addon=None):
     if not addon:
