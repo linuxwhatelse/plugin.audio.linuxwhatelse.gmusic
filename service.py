@@ -28,6 +28,9 @@ if __name__ == '__main__':
         except:
             library_last_updated = 0
 
+        if update_interval == 0:
+            continue
+
         if time.time() >= library_last_updated + update_interval:
             gmusic.login()
 
