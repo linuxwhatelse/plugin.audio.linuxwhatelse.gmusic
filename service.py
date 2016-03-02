@@ -23,6 +23,8 @@ if __name__ == '__main__':
         except:
             update_interval = 0
 
+        update_interval = update_interval * 60 * 60  # We need seconds
+
         try:
             library_last_updated = int(addon.getSetting('library_last_updated'))
         except:
