@@ -10,6 +10,8 @@ import resources.libs
 
 from gmusic import GMusic
 
+addon  = xbmcaddon.Addon()
+
 def _get_update_interval():
     try:
         update_interval = int(addon.getSetting('update_interval'))
@@ -27,7 +29,6 @@ def _get_library_last_updated():
     return library_last_updated
 
 if __name__ == '__main__':
-    addon  = xbmcaddon.Addon()
     gmusic = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 
     monitor = xbmc.Monitor()
