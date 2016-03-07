@@ -10,23 +10,34 @@ import resources.libs
 
 from gmusic import GMusic
 
+def _get_update_interval():
+    try:
+        update_interval = int(addon.getSetting('update_interval'))
+    except:
+        update_interval = 0
+
+    return update_interval * 60 * 60  # We need seconds
+
+def _get_library_last_updated():
+    try:
+        library_last_updated = int(addon.getSetting('library_last_updated'))
+    except:
+        library_last_updated = 0
+
+    return library_last_updated
+
 if __name__ == '__main__':
     addon  = xbmcaddon.Addon()
     gmusic = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 
     monitor = xbmc.Monitor()
     while not monitor.abortRequested():
-        try:
-            update_interval = int(addon.getSetting('update_interval'))
-        except:
-            update_interval = 0
+        if monitor.waitForAbort(30):
+            # Abort was requested while waiting. We should exit
+            break
 
-        update_interval = update_interval * 60 * 60  # We need seconds
-
-        try:
-            library_last_updated = int(addon.getSetting('library_last_updated'))
-        except:
-            library_last_updated = 0
+        update_interval      = _get_update_interval()
+        library_last_updated = _get_library_last_updated()
 
         if update_interval == 0:
             continue
@@ -39,7 +50,3 @@ if __name__ == '__main__':
             gmusic.get_my_library_albums(from_cache=False)
 
             addon.setSetting('library_last_updated', str(int(time.time())))
-
-        if monitor.waitForAbort(1):
-            # Abort was requested while waiting. We should exit
-            break
