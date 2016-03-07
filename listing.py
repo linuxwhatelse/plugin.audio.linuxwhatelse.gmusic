@@ -181,13 +181,19 @@ class Listing:
             if 'id' not in playlist or 'name' not in playlist:
                 continue
 
-            shared_token  = None
+            playlist_token  = None
             playlist_id   = None
             playlist_name = playlist['name']
             playlist_art  = playlist['images'][0]['url'] if 'images' in playlist and len(playlist['images']) > 0 else thumbs.IMG_PLAYLIST
 
-            if 'sharedToken' in playlist['id']:
-                shared_token = playlist['id']['sharedToken']
+            if 'shareToken' in playlist:
+                playlist_token = playlist['shareToken']
+            elif 'shareToken' in playlist['id']:
+                playlist_token = playlist['id']['shareToken']
+            elif 'sharedToken' in playlist:
+                playlist_token = playlist['sharedToken']
+            elif 'sharedToken' in playlist['id']:
+                playlist_token = playlist['id']['sharedToken']
             else:
                 playlist_id   = playlist['id']
 
@@ -206,14 +212,20 @@ class Listing:
             if playlist_id:
                 paths = ['browse', 'my-library', 'playlist']
                 query['playlist_id'] = playlist_id
-            elif shared_token:
+            elif playlist_token:
                 paths = ['browse', 'shared-playlist']
-                query['shared_token'] = shared_token
+                query['playlist_token'] = playlist_token
 
             menu_items = [
                 (utils.translate(30033, self._addon), 'XBMC.RunPlugin(%s)' % \
                     mapper.build_url(url=self.url, paths=['play', 'playlist'], queries=query, overwrite_path=True, overwrite_query=True))
             ]
+
+            if playlist_token:
+                menu_items.append(
+                    (utils.translate(30036, self._addon), 'XBMC.RunPlugin(%s)' % \
+                        mapper.build_url(url=self.url, paths=['play', 'station'], queries={'playlist_token': playlist_token}, overwrite_path=True, overwrite_query=True))
+                )
 
             if playlist_id:  # Only user playlists have a playlist_id
                 menu_items.append(

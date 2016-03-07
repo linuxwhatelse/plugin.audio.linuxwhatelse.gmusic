@@ -56,10 +56,10 @@ def album(album_id, allow_view_overwrite=True):
         listing.list_songs(items, allow_view_overwrite)
 
 @mapper.url('^/browse/shared-playlist/$')
-def listen_now_shared_playlist(shared_token):
-    if shared_token:
+def listen_now_shared_playlist(playlist_token):
+    if playlist_token:
         gmusic.login()
-        playlist_content = gmusic.get_shared_playlist_contents(share_token=shared_token)
+        playlist_content = gmusic.get_shared_playlist_contents(share_token=playlist_token)
 
         tracks=[]
         for item in playlist_content:
@@ -69,17 +69,18 @@ def listen_now_shared_playlist(shared_token):
         listing.list_songs(items)
 
 @mapper.url('^/browse/station/$')
-def station(station_id, station_name, artist_id, album_id, track_id, genre_id, curated_station_id, allow_view_overwrite=True):
+def station(station_id, station_name, artist_id, album_id, track_id, genre_id, curated_station_id, playlist_token, allow_view_overwrite=True):
     allow_view_overwrite = False if allow_view_overwrite == 'False' else True
 
     gmusic.login()
 
-    if not station_id and station_name:
-        station_id = gmusic.create_station(name=station_name, artist_id=artist_id, album_id=album_id, track_id=track_id, genre_id=genre_id, curated_station_id=curated_station_id)
+    if not station_id:
+        station_id = gmusic.create_station(name=station_name, artist_id=artist_id, album_id=album_id, track_id=track_id, genre_id=genre_id, curated_station_id=curated_station_id, playlist_token=playlist_token)
 
         if not station_id:
             utils.notify(utils.translate(30050, _addon), utils.translate(30051, _addon))
             return
+
 
     tracks = gmusic.get_station_tracks(station_id=station_id, num_tracks=25)
 

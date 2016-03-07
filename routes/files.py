@@ -27,13 +27,13 @@ def album(album_id):
     mapper.call(mapper.build_url(url=url, paths=['browse', 'album'], queries={'allow_view_overwrite': False}, overwrite_path=True))
 
 @mapper.url('^/playlist/$')
-def playlist(playlist_id, shared_token):
+def playlist(playlist_id, playlist_token):
     if playlist_id:
         mapper.call(mapper.build_url(url=url, paths=['browse', 'my-library', 'playlist'], queries={'allow_view_overwrite': False}, overwrite_path=True))
 
-    elif shared_token:
+    elif playlist_token:
         mapper.call(mapper.build_url(url=url, paths=['browse', 'shared-playlist'], queries={'allow_view_overwrite': False}, overwrite_path=True))
 
 @mapper.url('^/station/$')
-def station(station_id, station_name, artist_id, album_id, genre_id, track_id, curated_station_id):
+def station(station_id, station_name, artist_id, album_id, genre_id, track_id, curated_station_id, playlist_token):
     mapper.call(mapper.build_url(url=url, paths=['browse', 'station'], queries={'allow_view_overwrite': False}, overwrite_path=True))

@@ -48,7 +48,7 @@ class GMusic(Mobileclient):
     ##
     ## Overloaded to add some stuff
     ##
-    def create_station(self, name, track_id=None, artist_id=None, album_id=None, genre_id=None, curated_station_id=None):
+    def create_station(self, name, track_id=None, artist_id=None, album_id=None, genre_id=None, curated_station_id=None, playlist_token=None):
         """Creates an All Access radio station and returns its id.
 
         :param name: the name of the station to create
@@ -76,6 +76,9 @@ class GMusic(Mobileclient):
         if genre_id is not None:
             seed['genreId'] = genre_id
             seed['seedType'] = 5
+        if playlist_token is not None:
+            seed['playlistShareToken'] = playlist_token
+            seed['seedType'] = 8
         if curated_station_id is not None:
             seed['curatedStationId'] = curated_station_id
             seed['seedType'] = 9

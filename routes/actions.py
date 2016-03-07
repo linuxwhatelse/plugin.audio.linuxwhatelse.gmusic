@@ -213,13 +213,13 @@ def play_album(album_id):
         utils.execute_jsonrpc('GUI.SetFullscreen', {'fullscreen':True})
 
 @mapper.url('^/play/playlist/$')
-def play_playlist(playlist_id, shared_token):
+def play_playlist(playlist_id, playlist_token):
     _play(['playlist'])
     if _addon.getSetting('auto_fullscreen') == 'true':
         utils.execute_jsonrpc('GUI.SetFullscreen', {'fullscreen':True})
 
 @mapper.url('^/play/station/$')
-def play_station(station_id, station_name, artist_id, album_id, genre_id, track_id, curated_station_id):
+def play_station(station_id, station_name, artist_id, album_id, genre_id, track_id, curated_station_id, playlist_token):
     # Shuffle and Repeat make no sense what so ever when starting a station
     utils.execute_jsonrpc('Player.SetShuffle', {'playerid': xbmc.PLAYLIST_MUSIC, 'shuffle' : False})
     utils.execute_jsonrpc('Player.SetRepeat',  {'playerid': xbmc.PLAYLIST_MUSIC, 'repeat' : 'off'})
