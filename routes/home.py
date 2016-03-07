@@ -5,7 +5,6 @@ import mapper
 
 import utils
 import thumbs
-from gmusic import GMusic
 
 # Variables will be set from "default.py"
 url          = None
@@ -13,7 +12,6 @@ addon_handle = None
 listing      = None
 
 _addon       = xbmcaddon.Addon()
-gmusic       = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 
 
 @mapper.url('^/browse/$')
