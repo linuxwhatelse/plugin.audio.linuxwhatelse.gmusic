@@ -1,7 +1,14 @@
+from __future__ import print_function, division, absolute_import, unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from past.builtins import basestring
+from builtins import *  # noqa
 import os
 from socket import gethostname
 import time
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 from uuid import getnode as getmac
 import webbrowser
 
@@ -11,7 +18,7 @@ import oauth2client.file
 
 import gmusicapi
 from gmusicapi.clients.shared import _Base
-from gmusicapi.compat import my_appdirs
+from gmusicapi.appdirs import my_appdirs
 from gmusicapi.exceptions import CallFailure, NotLoggedIn
 from gmusicapi.protocol import musicmanager, upload_pb2, locker_pb2
 from gmusicapi.utils import utils
@@ -74,19 +81,18 @@ class Musicmanager(_Base):
         flow = OAuth2WebServerFlow(*musicmanager.oauth)
 
         auth_uri = flow.step1_get_authorize_url()
-        print
-        print "Visit the following url:\n %s" % auth_uri
+        print()
+        print("Visit the following url:\n %s" % auth_uri)
 
         if open_browser:
-            print
-            print 'Opening your browser to it now...',
+            print()
+            print('Opening your browser to it now...', end=' ')
             webbrowser.open(auth_uri)
-            print 'done.'
-            print "If you don't see your browser, you can just copy and paste the url."
-            print
+            print('done.')
+            print("If you don't see your browser, you can just copy and paste the url.")
+            print()
 
-        code = raw_input("Follow the prompts,"
-                         " then paste the auth code here and hit enter: ")
+        code = input("Follow the prompts, then paste the auth code here and hit enter: ")
 
         credentials = flow.step2_exchange(code)
 
@@ -258,7 +264,7 @@ class Musicmanager(_Base):
     def get_uploaded_songs(self, incremental=False):
         """Returns a list of dictionaries, each with the following keys:
         ``('id', 'title', 'album', 'album_artist', 'artist', 'track_number',
-        'track_size')``.
+        'track_size', 'disc_number', 'total_disc_count')``.
 
         All Access tracks that were added to the library will not be included,
         only tracks uploaded/matched by the user.
@@ -276,6 +282,26 @@ class Musicmanager(_Base):
 
         return to_return
 
+    # mostly copy-paste from Webclient.get_all_songs.
+    # not worried about overlap in this case; the logic of either could change.
+    def get_purchased_songs(self, incremental=False):
+        """Returns a list of dictionaries, each with the following keys:
+        ``('id', 'title', 'album', 'album_artist', 'artist', 'track_number',
+        'track_size', 'disc_number', 'total_disc_count')``.
+
+        :param incremental: if True, return a generator that yields lists
+          of at most 1000 dictionaries
+          as they are retrieved from the server. This can be useful for
+          presenting a loading bar to a user.
+        """
+
+        to_return = self._get_all_songs(export_type=2)
+
+        if not incremental:
+            to_return = [song for chunk in to_return for song in chunk]
+
+        return to_return
+
     @staticmethod
     def _track_info_to_dict(track_info):
         """Given a download_pb2.DownloadTrackInfo, return a dictionary."""
@@ -284,9 +310,10 @@ class Musicmanager(_Base):
 
         return dict((field, getattr(track_info, field)) for field in
                     ('id', 'title', 'album', 'album_artist', 'artist',
-                     'track_number', 'track_size'))
+                     'track_number', 'track_size', 'disc_number',
+                     'total_disc_count'))
 
-    def _get_all_songs(self):
+    def _get_all_songs(self, export_type=1):
         """Return a generator of song chunks."""
 
         get_next_chunk = True
@@ -300,7 +327,8 @@ class Musicmanager(_Base):
         while get_next_chunk:
             lib_chunk = self._make_call(musicmanager.ListTracks,
                                         self.uploader_id,
-                                        lib_chunk.continuation_token)
+                                        lib_chunk.continuation_token,
+                                        export_type)
 
             yield [self._track_info_to_dict(info)
                    for info in lib_chunk.download_track_info]
@@ -345,8 +373,7 @@ class Musicmanager(_Base):
 
         cd_header = response.headers['content-disposition']
 
-        filename = urllib.unquote(cd_header.split("filename*=UTF-8''")[-1])
-        filename = filename.decode('utf-8')
+        filename = urllib.parse.unquote(cd_header.split("filename*=UTF-8''")[-1])
 
         return (filename, response.content)
 
@@ -398,9 +425,6 @@ class Musicmanager(_Base):
 
         All Google-supported filetypes are supported; see `Google's documentation
         <http://support.google.com/googleplay/bin/answer.py?hl=en&answer=1100462>`__.
-
-        Unlike Google's Music Manager, this function will currently allow the same song to
-        be uploaded more than once if its tags are changed. This is subject to change in the future.
 
         If ``PERMANENT_ERROR`` is given as a not_uploaded reason, attempts to reupload will never
         succeed. The file will need to be changed before the server will reconsider it; the easiest
@@ -463,7 +487,7 @@ class Musicmanager(_Base):
 
             bogus_sample = None
             if not enable_matching:
-                bogus_sample = ''  # just send empty bytes
+                bogus_sample = b''  # just send empty bytes
 
             try:
                 res = self._make_call(musicmanager.ProvideSample,
@@ -485,10 +509,10 @@ class Musicmanager(_Base):
             if sample_res.response_code == upload_pb2.TrackSampleResponse.MATCHED:
                 self.logger.info("matched '%s' to sid %s", path, sample_res.server_track_id)
 
-                if enable_matching:
-                    matched[path] = sample_res.server_track_id
-                else:
-                    self.logger.exception("'%s' was matched without matching enabled", path)
+                matched[path] = sample_res.server_track_id
+
+                if not enable_matching:
+                    self.logger.error("'%s' was matched without matching enabled", path)
 
             elif sample_res.response_code == upload_pb2.TrackSampleResponse.UPLOAD_REQUESTED:
                 to_upload[sample_res.server_track_id] = (path, track, False)
