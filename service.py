@@ -16,8 +16,6 @@ if __name__ == '__main__':
 
     monitor = xbmc.Monitor()
     while not monitor.abortRequested():
-        time.sleep(1)
-
         try:
             update_interval = int(addon.getSetting('update_interval'))
         except:
@@ -41,3 +39,7 @@ if __name__ == '__main__':
             gmusic.get_my_library_albums(from_cache=False)
 
             addon.setSetting('library_last_updated', str(int(time.time())))
+
+        if monitor.waitForAbort(1):
+            # Abort was requested while waiting. We should exit
+            break
