@@ -24,13 +24,9 @@
 
 """A cryptographically strong version of Python's standard "random" module."""
 
-__revision__ = "$Id$"
 __all__ = ['StrongRandom', 'getrandbits', 'randrange', 'randint', 'choice', 'shuffle', 'sample']
 
 from Crypto import Random
-import sys
-if sys.version_info[0] == 2 and sys.version_info[1] == 1:
-    from Crypto.Util.py21compat import *
 
 class StrongRandom(object):
     def __init__(self, rng=None, randfunc=None):
@@ -47,7 +43,7 @@ class StrongRandom(object):
         """Return a python long integer with k random bits."""
         if self._randfunc is None:
             self._randfunc = Random.new().read
-        mask = (1L << k) - 1
+        mask = (1 << k) - 1
         return mask & bytes_to_long(self._randfunc(ceil_div(k, 8)))
 
     def randrange(self, *args):
@@ -103,13 +99,13 @@ class StrongRandom(object):
 
     def shuffle(self, x):
         """Shuffle the sequence in place."""
-        # Make a (copy) of the list of objects we want to shuffle
-        items = list(x)
-
-        # Choose a random item (without replacement) until all the items have been
-        # chosen.
-        for i in xrange(len(x)):
-            x[i] = items.pop(self.randrange(len(items)))
+        # Fisher-Yates shuffle.  O(n)
+        # See http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
+        # Working backwards from the end of the array, we choose a random item
+        # from the remaining items until all items have been chosen.
+        for i in xrange(len(x)-1, 0, -1):   # iterate from len(x)-1 downto 1
+            j = self.randrange(0, i+1)      # choose random j such that 0 <= j <= i
+            x[i], x[j] = x[j], x[i]         # exchange x[i] and x[j]
 
     def sample(self, population, k):
         """Return a k-length list of unique elements chosen from the population sequence."""

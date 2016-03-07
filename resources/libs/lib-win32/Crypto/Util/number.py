@@ -24,15 +24,11 @@
 # ===================================================================
 #
 
-__revision__ = "$Id$"
-
-from Crypto.pct_warnings import GetRandomNumber_DeprecationWarning, PowmInsecureWarning
 from warnings import warn as _warn
 import math
 import sys
 from Crypto.Util.py3compat import *
 
-bignum = long
 try:
     from Crypto.PublicKey import _fastmath
 except ImportError:
@@ -53,7 +49,7 @@ except ImportError:
     _fastmath = None
 
 # You need libgmp v5 or later to get mpz_powm_sec.  Warn if it's not available.
-if _fastmath is not None and not _fastmath.HAVE_DECL_MPZ_POWM_SEC:
+if _fastmath is not None and not (hasattr(_fastmath, "HAVE_DECL_MPZ_POWM_SEC") and _fastmath.HAVE_DECL_MPZ_POWM_SEC):
     _warn("Not using mpz_powm_sec.  You should rebuild using libgmp >= 5 to avoid timing attack vulnerability.", PowmInsecureWarning)
 
 # New functions
@@ -81,12 +77,6 @@ def size (N):
         bits += 1
     return bits
 
-def getRandomNumber(N, randfunc=None):
-    """Deprecated.  Use getRandomInteger or getRandomNBitInteger instead."""
-    warnings.warn("Crypto.Util.number.getRandomNumber has confusing semantics"+
-    "and has been deprecated.  Use getRandomInteger or getRandomNBitInteger instead.",
-        GetRandomNumber_DeprecationWarning)
-    return getRandomNBitInteger(N, randfunc)
 
 def getRandomInteger(N, randfunc=None):
     """getRandomInteger(N:int, randfunc:callable):long
@@ -136,7 +126,7 @@ def getRandomNBitInteger(N, randfunc=None):
     the future.
     """
     value = getRandomInteger (N-1, randfunc)
-    value |= 2L ** (N-1)                # Ensure high bit is set
+    value |= 2 ** (N-1)                # Ensure high bit is set
     assert size(value) >= N
     return value
 
@@ -154,9 +144,9 @@ def inverse(u, v):
     Return the inverse of u mod v.
     """
     u3, v3 = long(u), long(v)
-    u1, v1 = 1L, 0L
+    u1, v1 = 1, 0
     while v3 > 0:
-        q=divmod(u3, v3)[0]
+        q = u3 // v3
         u1, v1 = v1, u1 - v1*q
         u3, v3 = v3, u3 - v3*q
     while u1<0:
@@ -259,6 +249,10 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
     # which by the time of writing could be freely downloaded here:
     # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.17.2713&rep=rep1&type=pdf
 
+    if randfunc is None:
+        _import_Random()
+        randfunc = Random.new().read
+
     # Use the accelerator if available
     if _fastmath is not None:
         return _fastmath.getStrongPrime(long(N), long(e), false_positive_prob,
@@ -275,9 +269,8 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
     x = (N - 512) >> 7;
     # We need to approximate the sqrt(2) in the lower_bound by an integer
     # expression because floating point math overflows with these numbers
-    lower_bound = divmod(14142135623730950489L * (2L ** (511 + 128*x)),
-                         10000000000000000000L)[0]
-    upper_bound = (1L << (512 + 128*x)) - 1
+    lower_bound = (14142135623730950489 * (2 ** (511 + 128*x))) //  10000000000000000000
+    upper_bound = (1 << (512 + 128*x)) - 1
     # Randomly choose X in calculated range
     X = getRandomRange (lower_bound, upper_bound, randfunc)
 
@@ -333,10 +326,10 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
         # the public exponent e
         if e and is_possible_prime:
             if e & 1:
-                if GCD (e, X-1) != 1:
+                if GCD(e, X-1) != 1:
                     is_possible_prime = 0
             else:
-                if GCD (e, divmod((X-1),2)[0]) != 1:
+                if GCD(e, (X-1) // 2) != 1:
                     is_possible_prime = 0
 
         # do some Rabin-Miller-Tests
@@ -347,7 +340,7 @@ def getStrongPrime(N, e=0, false_positive_prob=1e-6, randfunc=None):
         X += increment
 		# abort when X has more bits than requested
 		# TODO: maybe we shouldn't abort but rather start over.
-        if X >= 1L << N:
+        if X >= 1 << N:
             raise RuntimeError ("Couln't find prime in field. "
                                 "Developer: Increase field_size")
     return X
@@ -364,6 +357,11 @@ def isPrime(N, false_positive_prob=1e-6, randfunc=None):
 
     If randfunc is omitted, then Random.new().read is used.
     """
+
+    if randfunc is None:
+        _import_Random()
+        randfunc = Random.new().read
+
     if _fastmath is not None:
         return _fastmath.isPrime(long(N), false_positive_prob, randfunc)
 
@@ -394,7 +392,7 @@ def long_to_bytes(n, blocksize=0):
     """
     # after much testing, this algorithm was deemed to be the fastest
     s = b('')
-    n = long(n)
+    n = int(n)
     pack = struct.pack
     while n > 0:
         s = pack('>I', n & 0xffffffffL) + s
@@ -416,11 +414,11 @@ def long_to_bytes(n, blocksize=0):
 
 def bytes_to_long(s):
     """bytes_to_long(string) : long
-    Convert a byte string to a long integer.
+    Convert a byte string to a long integer (big endian).
 
     This is (essentially) the inverse of long_to_bytes().
     """
-    acc = 0L
+    acc = 0
     unpack = struct.unpack
     length = len(s)
     if length % 4:
@@ -430,6 +428,7 @@ def bytes_to_long(s):
     for i in range(0, length, 4):
         acc = (acc << 32) + unpack('>I', s[i:i+4])[0]
     return acc
+
 
 # For backwards compatibility...
 import warnings

@@ -43,7 +43,7 @@ Encryption algorithm
 The security of the ElGamal encryption scheme is based on the computational
 Diffie-Hellman problem (CDH_). Given a cyclic group, a generator *g*,
 and two integers *a* and *b*, it is difficult to find
-the element *g^{ab}* when only *g^a* and *g^b* are known, and not *a* and *b*. 
+the element *g^{ab}* when only *g^a* and *g^b* are known, and not *a* and *b*.
 
 As before, the group is the largest multiplicative sub-group of the integers
 modulo *p*, with *p* prime.
@@ -82,17 +82,16 @@ them from known components. ElGamal keys allows you to perform basic signing,
 verification, encryption, and decryption.
 
     >>> from Crypto import Random
-    >>> from Crypto.Random import random
     >>> from Crypto.PublicKey import ElGamal
-    >>> from Crypto.Util.number import GCD
     >>> from Crypto.Hash import SHA
+    >>> from Crypto.Math import Number
     >>>
     >>> message = "Hello"
     >>> key = ElGamal.generate(1024, Random.new().read)
     >>> h = SHA.new(message).digest()
     >>> while 1:
-    >>>     k = random.StrongRandom().randint(1,key.p-1)
-    >>>     if GCD(k,key.p-1)==1: break
+    >>>     k = Number.random_range(min_inclusive=1, min_exclusive=key.p-1)
+    >>>     if k.gcd(key.p-1)==1: break
     >>> sig = key.sign(h,k)
     >>> ...
     >>> if key.verify(h,sig):
@@ -105,18 +104,15 @@ verification, encryption, and decryption.
 .. _ECRYPT: http://www.ecrypt.eu.org/documents/D.SPA.17.pdf
 """
 
-__revision__ = "$Id$"
+__all__ = ['generate', 'construct', 'ElGamalKey']
 
-__all__ = ['generate', 'construct', 'error', 'ElGamalobj']
-
-from Crypto.PublicKey.pubkey import *
-from Crypto.Util import number
-
-class error (Exception):
-    pass
+from Crypto import Random
+from Crypto.Math.Primality import ( generate_probable_safe_prime,
+                                    test_probable_prime, COMPOSITE )
+from Crypto.Math.Numbers import Integer
 
 # Generate an ElGamal key with N bits
-def generate(bits, randfunc, progress_func=None):
+def generate(bits, randfunc):
     """Randomly generate a fresh, new ElGamal key.
 
     The key will be safe for use for both encryption and signature
@@ -130,39 +126,31 @@ def generate(bits, randfunc, progress_func=None):
             Random number generation function; it should accept
             a single integer N and return a string of random data
             N bytes long.
-        progress_func : callable
-            Optional function that will be called with a short string
-            containing the key parameter currently being generated;
-            it's useful for interactive applications where a user is
-            waiting for a key to be generated.
 
     :attention: You should always use a cryptographically secure random number generator,
         such as the one defined in the ``Crypto.Random`` module; **don't** just use the
         current time and the ``random`` module.
 
-    :Return: An ElGamal key object (`ElGamalobj`).
+    :Return: An ElGamal key object (`ElGamalKey`).
     """
-    obj=ElGamalobj()
+    obj=ElGamalKey()
     # Generate a safe prime p
     # See Algorithm 4.86 in Handbook of Applied Cryptography
-    if progress_func:
-        progress_func('p\n')
-    while 1:
-        q = bignum(getPrime(bits-1, randfunc))
-        obj.p = 2*q+1
-        if number.isPrime(obj.p, randfunc=randfunc):
-            break
+
+    obj.p = generate_probable_safe_prime(exact_bits=bits, randfunc=randfunc)
+    q = (obj.p - 1) >> 1
+
     # Generate generator g
     # See Algorithm 4.80 in Handbook of Applied Cryptography
     # Note that the order of the group is n=p-1=2q, where q is prime
-    if progress_func:
-        progress_func('g\n')
     while 1:
         # We must avoid g=2 because of Bleichenbacher's attack described
         # in "Generating ElGamal signatures without knowning the secret key",
         # 1996
         #
-        obj.g = number.getRandomRange(3, obj.p, randfunc)
+        obj.g = Integer.random_range(min_inclusive=3,
+                                     max_exclusive=obj.p,
+                                     randfunc=randfunc)
         safe = 1
         if pow(obj.g, 2, obj.p)==1:
             safe=0
@@ -170,23 +158,21 @@ def generate(bits, randfunc, progress_func=None):
             safe=0
         # Discard g if it divides p-1 because of the attack described
         # in Note 11.67 (iii) in HAC
-        if safe and divmod(obj.p-1, obj.g)[1]==0:
+        if safe and (obj.p-1) % obj.g == 0:
             safe=0
         # g^{-1} must not divide p-1 because of Khadir's attack
         # described in "Conditions of the generator for forging ElGamal
         # signature", 2011
-        ginv = number.inverse(obj.g, obj.p)
-        if safe and divmod(obj.p-1, ginv)[1]==0:
+        ginv = obj.g.inverse(obj.p)
+        if safe and (obj.p-1) % ginv == 0:
             safe=0
         if safe:
             break
     # Generate private key x
-    if progress_func:
-        progress_func('x\n')
-    obj.x=number.getRandomRange(2, obj.p-1, randfunc)
+    obj.x = Integer.random_range(min_inclusive=2,
+                                 max_exclusive=obj.p-1,
+                                 randfunc=randfunc)
     # Generate public key y
-    if progress_func:
-        progress_func('y\n')
     obj.y = pow(obj.g, obj.x, obj.p)
     return obj
 
@@ -212,18 +198,32 @@ def construct(tup):
             3. Public key (*y*).
             4. Private key (*x*). Optional.
 
-    :Return: An ElGamal key object (`ElGamalobj`).
+    :Raise PublicKey.ValueError:
+        When the key being imported fails the most basic ElGamal validity checks.
+    :Return: An ElGamal key object (`ElGamalKey`).
     """
 
-    obj=ElGamalobj()
+    obj=ElGamalKey()
     if len(tup) not in [3,4]:
         raise ValueError('argument for construct() wrong length')
     for i in range(len(tup)):
-        field = obj.keydata[i]
-        setattr(obj, field, tup[i])
+        field = obj._keydata[i]
+        setattr(obj, field, Integer(tup[i]))
+
+    fmt_error = test_probable_prime(obj.p) == COMPOSITE
+    fmt_error |= obj.g<=1 or obj.g>=obj.p
+    fmt_error |= pow(obj.g, obj.p-1, obj.p)!=1
+    fmt_error |= obj.y<1 or obj.y>=obj.p
+    if len(tup)==4:
+        fmt_error |= obj.x<=1 or obj.x>=obj.p
+        fmt_error |= pow(obj.g, obj.x, obj.p)!=obj.y
+
+    if fmt_error:
+        raise ValueError("Invalid ElGamal key components")
+
     return obj
 
-class ElGamalobj(pubkey):
+class ElGamalKey(object):
     """Class defining an ElGamal key.
 
     :undocumented: __getstate__, __setstate__, __repr__, __getattr__
@@ -240,114 +240,45 @@ class ElGamalobj(pubkey):
     #: A private key will also have:
     #:
     #:  - **x**, the private key.
-    keydata=['p', 'g', 'y', 'x']
+    _keydata=['p', 'g', 'y', 'x']
 
-    def encrypt(self, plaintext, K):
-        """Encrypt a piece of data with ElGamal.
-
-        :Parameter plaintext: The piece of data to encrypt with ElGamal.
-         It must be numerically smaller than the module (*p*).
-        :Type plaintext: byte string or long
-
-        :Parameter K: A secret number, chosen randomly in the closed
-         range *[1,p-2]*.
-        :Type K: long (recommended) or byte string (not recommended)
-
-        :Return: A tuple with two items. Each item is of the same type as the
-         plaintext (string or long).
-
-        :attention: selection of *K* is crucial for security. Generating a
-         random number larger than *p-1* and taking the modulus by *p-1* is
-         **not** secure, since smaller values will occur more frequently.
-         Generating a random number systematically smaller than *p-1*
-         (e.g. *floor((p-1)/8)* random bytes) is also **not** secure.
-         In general, it shall not be possible for an attacker to know
-         the value of any bit of K.
-
-        :attention: The number *K* shall not be reused for any other
-         operation and shall be discarded immediately.
-        """
-        return pubkey.encrypt(self, plaintext, K)
- 
-    def decrypt(self, ciphertext):
-        """Decrypt a piece of data with ElGamal.
-
-        :Parameter ciphertext: The piece of data to decrypt with ElGamal.
-        :Type ciphertext: byte string, long or a 2-item tuple as returned
-         by `encrypt`
-
-        :Return: A byte string if ciphertext was a byte string or a tuple
-         of byte strings. A long otherwise.
-        """
-        return pubkey.decrypt(self, ciphertext)
-
-    def sign(self, M, K):
-        """Sign a piece of data with ElGamal.
-
-        :Parameter M: The piece of data to sign with ElGamal. It may
-         not be longer in bit size than *p-1*.
-        :Type M: byte string or long
-
-        :Parameter K: A secret number, chosen randomly in the closed
-         range *[1,p-2]* and such that *gcd(k,p-1)=1*.
-        :Type K: long (recommended) or byte string (not recommended)
-
-        :attention: selection of *K* is crucial for security. Generating a
-         random number larger than *p-1* and taking the modulus by *p-1* is
-         **not** secure, since smaller values will occur more frequently.
-         Generating a random number systematically smaller than *p-1*
-         (e.g. *floor((p-1)/8)* random bytes) is also **not** secure.
-         In general, it shall not be possible for an attacker to know
-         the value of any bit of K.
-
-        :attention: The number *K* shall not be reused for any other
-         operation and shall be discarded immediately.
-
-        :attention: M must be be a cryptographic hash, otherwise an
-         attacker may mount an existential forgery attack.
-
-        :Return: A tuple with 2 longs.
-        """
-        return pubkey.sign(self, M, K)
-
-    def verify(self, M, signature):
-        """Verify the validity of an ElGamal signature.
-
-        :Parameter M: The expected message.
-        :Type M: byte string or long
-
-        :Parameter signature: The ElGamal signature to verify.
-        :Type signature: A tuple with 2 longs as return by `sign`
-
-        :Return: True if the signature is correct, False otherwise.
-        """
-        return pubkey.verify(self, M, signature)
+    def __init__(self, randfunc=None):
+        if randfunc is None:
+            randfunc = Random.new().read
+        self._randfunc = randfunc
 
     def _encrypt(self, M, K):
         a=pow(self.g, K, self.p)
-        b=( M*pow(self.y, K, self.p) ) % self.p
-        return ( a,b )
+        b=( pow(self.y, K, self.p)*M ) % self.p
+        return map(int, ( a,b ))
 
     def _decrypt(self, M):
         if (not hasattr(self, 'x')):
             raise TypeError('Private key not available in this object')
-        ax=pow(M[0], self.x, self.p)
-        plaintext=(M[1] * inverse(ax, self.p ) ) % self.p
-        return plaintext
+        r = Integer.random_range(min_inclusive=2,
+                                 max_exclusive=self.p-1,
+                                 randfunc=self._randfunc)
+        a_blind = (pow(self.g, r, self.p) * M[0]) % self.p
+        ax=pow(a_blind, self.x, self.p)
+        plaintext_blind = (ax.inverse(self.p) * M[1] ) % self.p
+        plaintext = (plaintext_blind * pow(self.y, r, self.p)) % self.p
+        return int(plaintext)
 
     def _sign(self, M, K):
         if (not hasattr(self, 'x')):
             raise TypeError('Private key not available in this object')
         p1=self.p-1
-        if (GCD(K, p1)!=1):
+        K = Integer(K)
+        if (K.gcd(p1)!=1):
             raise ValueError('Bad K value: GCD(K,p-1)!=1')
         a=pow(self.g, K, self.p)
-        t=(M-self.x*a) % p1
+        t=(Integer(M)-self.x*a) % p1
         while t<0: t=t+p1
-        b=(t*inverse(K, p1)) % p1
-        return (a, b)
+        b=(t*K.inverse(p1)) % p1
+        return map(int, (a, b))
 
     def _verify(self, M, sig):
+        sig = map(Integer, sig)
         if sig[0]<1 or sig[0]>self.p-1:
             return 0
         v1=pow(self.y, sig[0], self.p)
@@ -357,17 +288,58 @@ class ElGamalobj(pubkey):
             return 1
         return 0
 
-    def size(self):
-        return number.size(self.p) - 1
-
     def has_private(self):
         if hasattr(self, 'x'):
             return 1
         else:
             return 0
 
+    def can_encrypt(self):
+        return True
+
+    def can_sign(self):
+        return True
+
     def publickey(self):
         return construct((self.p, self.g, self.y))
 
+    def __eq__(self, other):
+        if bool(self.has_private()) != bool(other.has_private()):
+            return False
 
-object=ElGamalobj
+        result = True
+        for comp in self._keydata:
+            result = result and (getattr(self.key, comp, None) ==
+                                 getattr(other.key, comp, None))
+        return result
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __getstate__(self):
+        # ElGamal key is not pickable
+        from pickle import PicklingError
+        raise PicklingError
+
+    # Methods defined in PyCrypto that we don't support anymore
+
+    def sign(self, M, K):
+        raise NotImplementedError
+
+    def verify(self, M, signature):
+        raise NotImplementedError
+
+    def encrypt(self, plaintext, K):
+        raise NotImplementedError
+
+    def decrypt(self, ciphertext):
+        raise NotImplementedError
+
+    def blind(self, M, B):
+        raise NotImplementedError
+
+    def unblind(self, M, B):
+        raise NotImplementedError
+
+    def size():
+        raise NotImplementedError

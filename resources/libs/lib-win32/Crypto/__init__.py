@@ -26,26 +26,22 @@ and protocols.
 Subpackages:
 
 Crypto.Cipher
- Secret-key (AES, DES, ARC4) and public-key encryption (RSA PKCS#1) algorithms
+ Secret-key (AES, TDES, Salsa20, ChaCha20, CAST, Blowfish, ARC4) and public-key encryption (RSA PKCS#1) algorithms
 Crypto.Hash
- Hashing algorithms (MD5, SHA, HMAC)
+ Hashing algorithms (SHA-1, SHA-2, SHA-3, BLAKE2, HMAC, MD5)
+Crypto.IO
+ Encodings useful for cryptographic data (PEM, PKCS#8)
 Crypto.Protocol
- Cryptographic protocols (Chaffing, all-or-nothing transform, key derivation
- functions). This package does not contain any network protocols.
+ Cryptographic protocols (key derivation functions, Shamir's Secret Sharing scheme)
 Crypto.PublicKey
- Public-key encryption and signature algorithms (RSA, DSA)
+ Public-key generation, import, export (RSA, DSA, ECC)
 Crypto.Signature
- Public-key signature algorithms (RSA PKCS#1) 
+ Public-key signature algorithms (RSA PKCS#1, DSA, ECDSA)
 Crypto.Util
- Various useful modules and functions (long-to-string conversion, random number
- generation, number theoretic functions)
+ Various useful modules and functions (padding, ASN.1, XOR)
 """
 
-__all__ = ['Cipher', 'Hash', 'Protocol', 'PublicKey', 'Util', 'Signature']
+__all__ = ['Cipher', 'Hash', 'Protocol', 'PublicKey', 'Util', 'Signature',
+           'IO', 'Math']
 
-__version__ = '2.6.1'     # See also below and setup.py
-__revision__ = "$Id$"
-
-# New software should look at this instead of at __version__ above.
-version_info = (2, 6, 1, 'final', 0)    # See also above and setup.py
-
+version_info = (3, 4, None)

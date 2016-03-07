@@ -31,45 +31,123 @@ It produces the 256 bit digest of a message.
 
 *SHA* stands for Secure Hash Algorithm.
 
-.. _SHA-2: http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
+.. _SHA-2: http://csrc.nist.gov/publications/fips/fips180-2/fips180-4.pdf
 """
 
-_revision__ = "$Id$"
-
-__all__ = ['new', 'digest_size', 'SHA256Hash' ]
-
 from Crypto.Util.py3compat import *
-from Crypto.Hash.hashalgo import HashAlgo
 
-try:
-    import hashlib
-    hashFactory = hashlib.sha256
+from Crypto.Util._raw_api import (load_pycryptodome_raw_lib,
+                                  VoidPointer, SmartPointer,
+                                  create_string_buffer,
+                                  get_raw_buffer, c_size_t,
+                                  expect_byte_string)
 
-except ImportError:
-    from Crypto.Hash import _SHA256
-    hashFactory = _SHA256
+_raw_sha256_lib = load_pycryptodome_raw_lib("Crypto.Hash._SHA256",
+                        """
+                        int SHA256_init(void **shaState);
+                        int SHA256_destroy(void *shaState);
+                        int SHA256_update(void *hs,
+                                          const uint8_t *buf,
+                                          size_t len);
+                        int SHA256_digest(const void *shaState,
+                                          uint8_t digest[32]);
+                        int SHA256_copy(const void *src, void *dst);
+                        """)
 
-class SHA256Hash(HashAlgo):
+class SHA256Hash(object):
     """Class that implements a SHA-256 hash
-    
-    :undocumented: block_size
     """
 
-    #: ASN.1 Object identifier (OID)::
-    #:
-    #:  id-sha256    OBJECT IDENTIFIER ::= {
-    #: 	    joint-iso-itu-t(2) country(16) us(840) organization(1)
-    #: 	     gov(101) csor(3) nistalgorithm(4) hashalgs(2) 1
-    #:  }
-    #:
-    #: This value uniquely identifies the SHA-256 algorithm.
-    oid = b('\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01')
-
+    #: The size of the resulting hash in bytes.
     digest_size = 32
+    #: The internal block size of the hash algorithm in bytes.
     block_size = 64
+    #: ASN.1 Object ID
+    oid = "2.16.840.1.101.3.4.2.1"
 
     def __init__(self, data=None):
-        HashAlgo.__init__(self, hashFactory, data)
+        state = VoidPointer()
+        result = _raw_sha256_lib.SHA256_init(state.address_of())
+        if result:
+            raise ValueError("Error %d while instantiating SHA256"
+                             % result)
+        self._state = SmartPointer(state.get(),
+                                   _raw_sha256_lib.SHA256_destroy)
+        if data:
+            self.update(data)
+
+    def update(self, data):
+        """Continue hashing of a message by consuming the next chunk of data.
+
+        Repeated calls are equivalent to a single call with the concatenation
+        of all the arguments. In other words:
+
+           >>> m.update(a); m.update(b)
+
+        is equivalent to:
+
+           >>> m.update(a+b)
+
+        :Parameters:
+          data : byte string
+            The next chunk of the message being hashed.
+        """
+
+        expect_byte_string(data)
+        result = _raw_sha256_lib.SHA256_update(self._state.get(),
+                                               data,
+                                               c_size_t(len(data)))
+        if result:
+            raise ValueError("Error %d while instantiating SHA256"
+                             % result)
+
+    def digest(self):
+        """Return the **binary** (non-printable) digest of the message that has been hashed so far.
+
+        This method does not change the state of the hash object.
+        You can continue updating the object after calling this function.
+
+        :Return: A byte string of `digest_size` bytes. It may contain non-ASCII
+         characters, including null bytes.
+        """
+
+        bfr = create_string_buffer(self.digest_size)
+        result = _raw_sha256_lib.SHA256_digest(self._state.get(),
+                                               bfr)
+        if result:
+            raise ValueError("Error %d while instantiating SHA256"
+                             % result)
+
+        return get_raw_buffer(bfr)
+
+    def hexdigest(self):
+        """Return the **printable** digest of the message that has been hashed so far.
+
+        This method does not change the state of the hash object.
+
+        :Return: A string of 2* `digest_size` characters. It contains only
+         hexadecimal ASCII digits.
+        """
+
+        return "".join(["%02x" % bord(x) for x in self.digest()])
+
+    def copy(self):
+        """Return a copy ("clone") of the hash object.
+
+        The copy will have the same internal state as the original hash
+        object.
+        This can be used to efficiently compute the digests of strings that
+        share a common initial substring.
+
+        :Return: A hash object of the same type
+        """
+
+        clone = SHA256Hash()
+        result = _raw_sha256_lib.SHA256_copy(self._state.get(),
+                                             clone._state.get())
+        if result:
+            raise ValueError("Error %d while copying SHA256" % result)
+        return clone
 
     def new(self, data=None):
         return SHA256Hash(data)

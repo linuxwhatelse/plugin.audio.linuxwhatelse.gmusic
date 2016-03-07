@@ -58,8 +58,6 @@ tobytes(s)
     a byte string and make a byte string.
 """
 
-__revision__ = "$Id$"
-
 import sys
 
 if sys.version_info[0] == 2:
@@ -71,18 +69,19 @@ if sys.version_info[0] == 2:
         return str(s)
     def bord(s):
         return ord(s)
-    if sys.version_info[1] == 1:
-        def tobytes(s):
-            try:
-                return s.encode('latin-1')
-            except:
-                return ''.join(s)
-    else:
-        def tobytes(s):
-            if isinstance(s, unicode):
-                return s.encode("latin-1")
-            else:
-                return ''.join(s)
+    def tobytes(s):
+        if isinstance(s, unicode):
+            return s.encode("latin-1")
+        else:
+            return ''.join(s)
+    def tostr(bs):
+        return bs
+    def byte_string(s):
+        return isinstance(s, str)
+    from binascii import hexlify, unhexlify
+    # In Pyton 2.x, StringIO is a stand-alone module
+    from StringIO import StringIO as BytesIO
+    from sys import maxint
 else:
     def b(s):
        return s.encode("latin-1") # utf-8 would cause some side-effects we don't want
@@ -102,6 +101,26 @@ else:
             if isinstance(s,str):
                 return s.encode("latin-1")
             else:
-                return bytes(s)
+                return bytes([s])
+    def tostr(bs):
+        return bs.decode("latin-1")
+    def byte_string(s):
+        return isinstance(s, bytes)
 
-# vim:set ts=4 sw=4 sts=4 expandtab:
+    # With Python 3.[0-2], unhexlify only accepts bytes.
+    # Starting from Python 3.3, strings can be passed too.
+    import binascii
+    hexlify = binascii.hexlify
+    if sys.version_info[1] <= 2:
+        _unhexlify = binascii.unhexlify
+        def unhexlify(x):
+            return _unhexlify(tobytes(x))
+    else:
+        unhexlify = binascii.unhexlify
+    del binascii
+
+    # In Pyton 3.x, StringIO is a sub-module of io
+    from io import BytesIO
+    from sys import maxsize as maxint
+
+del sys
