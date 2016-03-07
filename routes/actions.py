@@ -181,7 +181,9 @@ def play_track(track_id, station_id):
         player  = xbmc.Player()
 
         while not monitor.abortRequested():
-            time.sleep(1)
+            if monitor.waitForAbort(1):
+                # Abort was requested while waiting. We should exit
+                break
 
             # Check wheter or not the same track is still playing.
             # If not the user either stoped or skipped to the next/previous
