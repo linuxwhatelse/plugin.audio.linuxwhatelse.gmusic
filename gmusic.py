@@ -14,6 +14,16 @@ _cache_dir = utils.get_cache_dir(_addon)
 
 class GMusic(Mobileclient):
 
+    def _make_call(self, protocol, *args, **kwargs):
+        try:
+            return super(GMusic, self)._make_call(protocol, *args, **kwargs)
+        except:
+            # ToDo: Show notification to user that something went wrong and he might try again
+            # or report a bug
+            utils.notify(utils.translate(30050, _addon), utils.translate(30051, _addon))
+            return None
+
+
     def login(self):
         username  = _addon.getSetting('username')
         password  = _addon.getSetting('password')
