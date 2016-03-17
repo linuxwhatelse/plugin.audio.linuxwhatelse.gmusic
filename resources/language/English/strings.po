@@ -338,7 +338,7 @@ msgid "Using MAC-Address instead"
 msgstr ""
 
 msgctxt "#30083"
-msgid "In this case your PC's MAC-Address can be used which might add up to the device limit and ist not guaranteed to work.\nProceed?"
+msgid "In this case your PC's MAC-Address can be used which might add up to the device limit and is not guaranteed to work.\nProceed?"
 msgstr ""
 
 msgctxt "#30084"
@@ -391,4 +391,8 @@ msgstr ""
 
 msgctxt "#30096"
 msgid "Auto-update "My Library" every n hours (0 = never)"
+msgstr ""
+
+msgctxt "#30097"
+msgid "No devices found.\nYour PC's MAC-Address can be used instead which might add up to the device limit and is not guaranteed to work.\nProceed?"
 msgstr ""

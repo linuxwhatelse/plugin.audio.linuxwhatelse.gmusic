@@ -107,12 +107,11 @@ def setup(force=False):
                 else:
                     return False
         except:
-            if not dialog.ok(utils.translate(30079, _addon), utils.translate(30090, _addon)):
+            # If use MAC-Address instead due to no devices found
+            if not dialog.yesno(utils.translate(30079, _addon), utils.translate(30097, _addon)):
                 return False
 
-            device_id = dialog.input(utils.translate(30084, _addon), type=xbmcgui.INPUT_ALPHANUM)
-            if not device_id:
-                return False
+            device_id = gmusicapi.Mobileclient.FROM_MAC_ADDRESS
 
     # Test login
     mobile = gmusicapi.Mobileclient()
