@@ -284,7 +284,7 @@ def _queue(path, play_next=False):
     query = dict(urlparse.parse_qsl(urlparse.urlparse(url).query))
     if 'play_next' in query:
         del query['play_next']
-        position = playlist.getposition()+1
+        position = playlist.getposition() + 1
 
     utils.execute_jsonrpc(
         method='Playlist.Insert',

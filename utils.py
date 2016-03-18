@@ -35,6 +35,10 @@ def get_cache_dir(addon=None, sub_dir=None):
 
 def get_current_track_id(key_name='track_id'):
     playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+
+    if len(playlist) <= 0:
+        return None
+
     playlist_item = playlist[playlist.getposition()]
 
     path = playlist_item.getfilename()
