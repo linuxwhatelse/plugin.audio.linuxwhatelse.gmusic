@@ -338,7 +338,7 @@ class Listing:
 
         return items
     def list_situations(self, listitems, allow_view_overwrite=True):
-        list_albums(listitems, allow_view_overwrite)
+        self.list_albums(listitems, allow_view_overwrite)
 
     def build_song_listitems(self, tracks, station_id=None, my_library=False, my_library_playlist=False):
         items = []
