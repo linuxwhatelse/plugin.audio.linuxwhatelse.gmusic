@@ -190,7 +190,7 @@ msgid "Setting(s) needed"
 msgstr ""
 
 msgctxt "#30047"
-msgid "Username and Password are requiered..."
+msgid "Username and Password are required..."
 msgstr ""
 
 msgctxt "#30048"
@@ -370,7 +370,7 @@ msgid "Couldn't get a list of devices or no Android device was found.\nInstall "
 msgstr ""
 
 msgctxt "#30091"
-msgid "No All-Acces subscription"
+msgid "No All-Access subscription"
 msgstr ""
 
 msgctxt "#30092"
