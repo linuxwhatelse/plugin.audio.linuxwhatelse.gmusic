@@ -3,6 +3,7 @@
     <setting   id="is_setup"               type="bool"   visible="0"   default="false" />
     <setting   id="authtoken"              type="text"   visible="0"   default="" />
     <setting   id="library_last_updated"   type="number" visible="0"   default="0" />
+    <setting   id="last_login_check"       type="number" visible="0"   default="0" />
 
     <!-- General -->
     <category label="30000">
