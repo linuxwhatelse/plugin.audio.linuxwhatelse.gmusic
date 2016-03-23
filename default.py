@@ -1,8 +1,6 @@
 from os import chdir
 from urlparse import urlparse
 
-from xbmcaddon import Addon
-
 import mapper
 
 import listing
