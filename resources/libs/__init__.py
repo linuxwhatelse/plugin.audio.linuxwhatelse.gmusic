@@ -25,3 +25,8 @@ try:
     import unittest
 except ImportError:
     site.addsitedir( os.path.join(lib_sys_dir, 'unittest') )
+
+try:
+    import lib2to3
+except ImportError:
+    site.addsitedir( os.path.join(lib_sys_dir, 'lib2to3') )
