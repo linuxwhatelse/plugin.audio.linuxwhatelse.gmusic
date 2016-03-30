@@ -1,16 +1,11 @@
 import time
 
 import xbmc
-import xbmcaddon
 
-import utils
+from addon import addon
+from addon import utils
+from addon import gmusic
 
-# Adds all librarys to our path (see lib/__init__.py)
-import resources.libs
-
-from gmusic import GMusic
-
-addon  = xbmcaddon.Addon()
 
 def _get_update_interval():
     try:
@@ -29,8 +24,6 @@ def _get_library_last_updated():
     return library_last_updated
 
 if __name__ == '__main__':
-    gmusic = GMusic(debug_logging=False, validate=True, verify_ssl=True)
-
     monitor = xbmc.Monitor()
     while not monitor.abortRequested():
         if monitor.waitForAbort(30):
@@ -44,7 +37,7 @@ if __name__ == '__main__':
             continue
 
         if time.time() >= library_last_updated + update_interval:
-            gmusic.login()
+            gmusic.login(validate=True)
 
             gmusic.get_my_library_songs(from_cache=False)
             gmusic.get_my_library_artists(from_cache=False)

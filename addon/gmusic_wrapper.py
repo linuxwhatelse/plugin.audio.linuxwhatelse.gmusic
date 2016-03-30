@@ -3,30 +3,30 @@ import json
 import time
 
 import xbmc
-from xbmcaddon import Addon
-
-import utils
+import xbmcaddon
 
 from gmusicapi import Mobileclient, Webclient
-import mobileclient
 
-_addon     = Addon()
-_cache_dir = utils.get_cache_dir(_addon)
+from addon import mobileclient
+from addon import utils
+
+from addon import addon
+
+_cache_dir = utils.get_cache_dir(addon)
 
 class GMusic(Mobileclient):
+    _is_logged_in = False
 
     def _make_call(self, protocol, *args, **kwargs):
         try:
             return super(GMusic, self)._make_call(protocol, *args, **kwargs)
         except:
-            # ToDo: Show notification to user that something went wrong and he might try again
-            # or report a bug
-            utils.notify(utils.translate(30050, _addon), utils.translate(30051, _addon))
+            utils.notify(utils.translate(30050, addon), utils.translate(30051, addon))
             return None
 
     def _should_test_login(self):
         try:
-            last_login_check = int(_addon.getSetting('last_login_check'))
+            last_login_check = int(addon.getSetting('last_login_check'))
         except:
             last_login_check = 0
 
@@ -40,12 +40,14 @@ class GMusic(Mobileclient):
         else:
             return False
 
-    def login(self):
-        username  = _addon.getSetting('username')
-        password  = _addon.getSetting('password')
-        device_id = _addon.getSetting('device_id')
-        authtoken = _addon.getSetting('authtoken')
+    def login(self, validate=False):
+        if self._is_logged_in and not validate:
+            return True
 
+        username  = addon.getSetting('username')
+        password  = addon.getSetting('password')
+        device_id = addon.getSetting('device_id')
+        authtoken = addon.getSetting('authtoken')
 
         if authtoken:
             self.android_id               = device_id
@@ -53,13 +55,15 @@ class GMusic(Mobileclient):
             self.session.is_authenticated = True
 
             if not self._should_test_login():
+                self._is_logged_in = True
                 return True
 
             else:
-                _addon.setSetting('last_login_check', str(int(time.time())))
+                addon.setSetting('last_login_check', str(int(time.time())))
                 try:
                     # Send a test request to ensure our authtoken is still valide and working
                     self.get_registered_devices()
+                    self._is_logged_in = True
                     return True
                 except:
                     # Faild with the test-request so we set "is_authenticated=False"
@@ -68,11 +72,12 @@ class GMusic(Mobileclient):
 
         if device_id:
             if super(GMusic, self).login(username, password, device_id):
-                _addon.setSetting('authtoken', self.session._authtoken)
+                addon.setSetting('authtoken', self.session._authtoken)
+                self._is_logged_in = True
                 return True
 
-        utils.notify(utils.translate(30048, _addon), '')
-        _addon.setSetting('is_setup', 'false')
+        utils.notify(utils.translate(30048, addon), '')
+        addon.setSetting('is_setup', 'false')
 
         # Prevent further addon execution in case we failed with the login-process
         raise SystemExit
@@ -125,7 +130,7 @@ class GMusic(Mobileclient):
         return res['mutate_response'][0]['id']
 
     def get_station_tracks(self, station_id, num_tracks=25, recently_played_ids=None):
-        stations_cache = utils.get_cache_dir(_addon, ['station-ids'])
+        stations_cache = utils.get_cache_dir(addon, ['station-ids'])
         station_ids_cache = os.path.join(stations_cache, '%s.json' % station_id)
 
         if not recently_played_ids:
@@ -148,7 +153,7 @@ class GMusic(Mobileclient):
                 elif 'storeId' in track:
                     track_ids.append(track['storeId'])
 
-            f.write(json.dumps(track_ids, indent=2))
+            f.write(json.dumps(track_ids))
 
         return tracks
 
@@ -234,7 +239,7 @@ class GMusic(Mobileclient):
             songs = tmp
 
             with open(songs_cache, 'w+') as f:
-                f.write(json.dumps(songs, indent=2))
+                f.write(json.dumps(songs))
 
         return songs
 
@@ -262,7 +267,7 @@ class GMusic(Mobileclient):
 
             artists = sorted(artists, key=lambda k: k['name'].lower())
             with open(artists_cache, 'w+') as f:
-                f.write(json.dumps(artists, indent=2))
+                f.write(json.dumps(artists))
 
         return artists
 
@@ -297,7 +302,7 @@ class GMusic(Mobileclient):
 
             albums = sorted(albums, key=lambda k: k['name'].lower())
             with open(albums_cache, 'w+') as f:
-                f.write(json.dumps(albums, indent=2))
+                f.write(json.dumps(albums))
 
         return albums
 

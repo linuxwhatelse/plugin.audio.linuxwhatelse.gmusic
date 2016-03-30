@@ -5,35 +5,32 @@ import locale
 import xbmcgui
 import xbmcaddon
 
-import mapper
+from addon import utils
+from addon import thumbs
 
-import utils
-import thumbs
-from gmusic import GMusic
+from addon import addon
+from addon import mpr
+from addon import url
+from addon import addon_handle
+from addon import listing
+from addon import gmusic
 
-# Variables will be set from "default.py"
-url          = None
-addon_handle = None
-listing      = None
 
-_addon       = xbmcaddon.Addon()
 _cache_dir   = utils.get_cache_dir()
 _locale_code = locale.getdefaultlocale()[0]
-gmusic       = GMusic(debug_logging=False, validate=True, verify_ssl=True)
 
-@mapper.url('^/browse/browse-stations/$')
+
+@mpr.url('^/browse/browse-stations/$')
 def browse_stations():
-    gmusic.login()
-
     categories = gmusic.get_station_categories()
     with open(os.path.join(_cache_dir,'categories.json'), 'w+') as f:
-        f.write(json.dumps(categories, indent=4))
+        f.write(json.dumps(categories))
 
     items = []
     for category in categories:
         items.append(
-            ( mapper.build_url(url=url, paths=['browse', 'browse-stations', 'categories'], \
-                queries={'category_id': category['id']}, overwrite_path=True, overwrite_query=True), \
+            ( utils.build_url(url=url, paths=['browse', 'browse-stations', 'categories'], \
+                queries={'category_id': category['id']}, r_path=True, r_query=True), \
                 xbmcgui.ListItem(label=category['display_name'], iconImage=thumbs.IMG_STATION, thumbnailImage=thumbs.IMG_STATION), True )
         )
 
@@ -42,10 +39,8 @@ def browse_stations():
 
     listing.list_items(items)
 
-@mapper.url('^/browse/browse-stations/categories/$')
+@mpr.url('^/browse/browse-stations/categories/$')
 def browse_stations_categories(category_id):
-    gmusic.login()
-
     categories = None
 
     categories_cache = os.path.join(_cache_dir,'categories.json')
@@ -65,8 +60,8 @@ def browse_stations_categories(category_id):
             subcategories = category['subcategories']
             for sub in subcategories:
                 items.append(
-                    ( mapper.build_url(url=url, paths=['browse', 'browse-stations', 'subcategories'], \
-                        queries={'subcategory_id': sub['id']}, overwrite_path=True, overwrite_query=True), \
+                    ( utils.build_url(url=url, paths=['browse', 'browse-stations', 'subcategories'], \
+                        queries={'subcategory_id': sub['id']}, r_path=True, r_query=True), \
                         xbmcgui.ListItem(label=sub['display_name'], iconImage=thumbs.IMG_STATION, thumbnailImage=thumbs.IMG_STATION), True )
                 )
 
@@ -75,10 +70,8 @@ def browse_stations_categories(category_id):
 
     listing.list_items(items)
 
-@mapper.url('^/browse/browse-stations/subcategories/$')
+@mpr.url('^/browse/browse-stations/subcategories/$')
 def browse_stations_subcategories(subcategory_id):
-    gmusic.login()
-
     stations = gmusic.get_stations(station_subcategory_id=subcategory_id, location_code=_locale_code)
 
     new_stations=[]
@@ -102,14 +95,13 @@ def browse_stations_subcategories(subcategory_id):
     #ToDo: double-check the list_items here. Shouldn't we use list_stations?
     listing.list_items(items)
 
-@mapper.url('^/browse/browse-stations/station/$')
+@mpr.url('^/browse/browse-stations/station/$')
 def browse_stations_subcategories(station_name, curated_station_id):
     if station_name:
-        gmusic.login()
         station_id = gmusic.create_station(name=station_name, curated_station_id=curated_station_id)
 
         if not station_id:
-            utils.notify(utils.translate(30050, _addon), utils.translate(30051, _addon))
+            utils.notify(utils.translate(30050, addon), utils.translate(30051, addon))
             return
 
         items = listing.build_song_listitems(gmusic.get_station_tracks(station_id=station_id, num_tracks=25))
