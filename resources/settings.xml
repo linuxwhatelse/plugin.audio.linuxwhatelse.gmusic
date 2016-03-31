@@ -4,14 +4,13 @@
     <setting   id="authtoken"              type="text"   visible="0"   default="" />
     <setting   id="library_last_updated"   type="number" visible="0"   default="0" />
     <setting   id="last_login_check"       type="number" visible="0"   default="0" />
+    <setting   id="username"        type="text"     label="30001" visible="0" />
+    <setting   id="password"        type="text"     label="30002" visible="0"   option="hidden" />
+    <setting   id="device_id"       type="text"     label="30093" visible="0" />
 
     <!-- General -->
     <category label="30000">
         <setting   id="setup"           type="action"   label="30070"   action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/setup?force=true)" />
-        <setting   type="sep"/>
-        <setting   id="username"        type="text"     label="30001" />
-        <setting   id="password"        type="text"     label="30002"   option="hidden" />
-        <setting   id="device_id"       type="text"     label="30093" />
         <setting   type="sep"/>
         <setting   id="update_interval" type="number"   label="30096"   default="0"/>
     </category>

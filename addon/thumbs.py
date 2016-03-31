@@ -1,6 +1,6 @@
 from os.path import dirname, abspath, join
 
-base  = join(dirname(abspath(__file__)), 'resources')
+base  = join(dirname(abspath(__file__)), '..', 'resources')
 media = join(base, 'media')
 
 
