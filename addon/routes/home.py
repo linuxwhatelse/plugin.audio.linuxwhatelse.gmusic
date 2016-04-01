@@ -16,7 +16,7 @@ def main_menu():
     items = [
         (utils.build_url(url, ['listen-now']),
             xbmcgui.ListItem(
-                label=utils.translate(30014, addon),
+                label=utils.translate(30014),
                 iconImage=thumbs.IMG_HEADPHONES,
                 thumbnailImage=thumbs.IMG_HEADPHONES
             ),
@@ -25,7 +25,7 @@ def main_menu():
 
         (utils.build_url(url, ['top-charts']),
             xbmcgui.ListItem(
-                label=utils.translate(30015, addon),
+                label=utils.translate(30015),
                 iconImage=thumbs.IMG_STAR,
                 thumbnailImage=thumbs.IMG_STAR
             ),
@@ -34,7 +34,7 @@ def main_menu():
 
         (utils.build_url(url, ['new-releases']),
             xbmcgui.ListItem(
-                label=utils.translate(30016, addon),
+                label=utils.translate(30016),
                 iconImage=thumbs.IMG_RELEASES,
                 thumbnailImage=thumbs.IMG_RELEASES
             ),
@@ -43,7 +43,7 @@ def main_menu():
 
         (utils.build_url(url, ['my-library']),
             xbmcgui.ListItem(
-                label=utils.translate(30017, addon),
+                label=utils.translate(30017),
                 iconImage=thumbs.IMG_LIBRARY,
                 thumbnailImage=thumbs.IMG_LIBRARY
             ),
@@ -52,7 +52,7 @@ def main_menu():
 
         (utils.build_url(url, ['browse-stations']),
             xbmcgui.ListItem(
-                label=utils.translate(30018, addon),
+                label=utils.translate(30018),
                 iconImage=thumbs.IMG_STATION,
                 thumbnailImage=thumbs.IMG_STATION
             ),
@@ -61,7 +61,7 @@ def main_menu():
 
         (utils.build_url(url, ['search', 'history'], r_path=True),
             xbmcgui.ListItem(
-                label=utils.translate(30019, addon),
+                label=utils.translate(30019),
                 iconImage=thumbs.IMG_SEARCH,
                 thumbnailImage=thumbs.IMG_SEARCH
             ),
@@ -71,7 +71,7 @@ def main_menu():
 
     # "My Library" entry
     items[3][1].addContextMenuItems([(
-        utils.translate(30030, addon),
+        utils.translate(30030),
         'XBMC.RunPlugin(%s)' % utils.build_url(
             url=url,
             paths=['my-library', 'update'],
@@ -81,7 +81,7 @@ def main_menu():
 
     # "Search" entry
     items[5][1].addContextMenuItems([(
-        utils.translate(30012, addon),
+        utils.translate(30012),
         'XBMC.RunPlugin(%s)' % utils.build_url(
             url=url,
             paths=['clear', 'search-history'],

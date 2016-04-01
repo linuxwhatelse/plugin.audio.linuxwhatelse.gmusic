@@ -42,12 +42,12 @@ def setup(force=False):
         return False
 
     # If 2-Factor Authentication is used
-    is_two_factor = dialog.yesno(utils.translate(30071, addon), utils.translate(30072, addon))
+    is_two_factor = dialog.yesno(utils.translate(30071), utils.translate(30072))
     if is_two_factor:
-        if not dialog.ok(utils.translate(30071, addon), utils.translate(30073, addon), utils.translate(30074, addon)):
+        if not dialog.ok(utils.translate(30071), utils.translate(30073), utils.translate(30074)):
             return False
 
-    password = dialog.input(utils.translate(30076, addon), type=xbmcgui.INPUT_ALPHANUM, option=xbmcgui.ALPHANUM_HIDE_INPUT)
+    password = dialog.input(utils.translate(30076), type=xbmcgui.INPUT_ALPHANUM, option=xbmcgui.ALPHANUM_HIDE_INPUT)
     if not password:
         return False
 
@@ -55,16 +55,16 @@ def setup(force=False):
     device_id = None
     if is_two_factor:
         # If Android Device available
-        if dialog.yesno(utils.translate(30077, addon), utils.translate(30078, addon)):
-            if not dialog.ok(utils.translate(30079, addon), utils.translate(30081, addon)):
+        if dialog.yesno(utils.translate(30077), utils.translate(30078)):
+            if not dialog.ok(utils.translate(30079), utils.translate(30081)):
                 return False
 
-            device_id = dialog.input(utils.translate(30084, addon), type=xbmcgui.INPUT_ALPHANUM)
+            device_id = dialog.input(utils.translate(30084), type=xbmcgui.INPUT_ALPHANUM)
             if not device_id:
                 return False
         else:
             # If using MAC-Address
-            if dialog.yesno(utils.translate(30082, addon), utils.translate(30083, addon)):
+            if dialog.yesno(utils.translate(30082), utils.translate(30083)):
                 device_id = gmusicapi.Mobileclient.FROM_MAC_ADDRESS
             else:
                 return False
@@ -72,7 +72,7 @@ def setup(force=False):
         web = gmusicapi.Webclient()
         if not web.login(username, password):
             # If re-run setup due to login failed
-            if dialog.yesno(utils.translate(30048, addon), utils.translate(30085, addon)):
+            if dialog.yesno(utils.translate(30048), utils.translate(30085)):
                 return setup(force=True)
             else:
                 return False
@@ -100,7 +100,7 @@ def setup(force=False):
             elif len(dev_list) == 1:
                 device_id = devices[0]['id'].lstrip('0x')
             else:
-                selection = dialog.select(utils.translate(30042, addon), dev_list, 0)
+                selection = dialog.select(utils.translate(30042), dev_list, 0)
 
                 if selection >= 0:
                     device_id = devices[selection]['id'].lstrip('0x')
@@ -108,7 +108,7 @@ def setup(force=False):
                     return False
         except:
             # If use MAC-Address instead due to no devices found
-            if not dialog.yesno(utils.translate(30079, addon), utils.translate(30097, addon)):
+            if not dialog.yesno(utils.translate(30079), utils.translate(30097)):
                 return False
 
             device_id = gmusicapi.Mobileclient.FROM_MAC_ADDRESS
@@ -119,7 +119,7 @@ def setup(force=False):
 
         # Test if this is an all-access account
         if not mobile.get_all_stations():
-            dialog.ok(utils.translate(30091, addon), utils.translate(30092, addon))
+            dialog.ok(utils.translate(30091), utils.translate(30092))
             return False
 
         addon.setSetting('username',  username)
@@ -134,12 +134,12 @@ def setup(force=False):
 
         addon.setSetting('is_setup', 'true')
 
-        utils.notify(utils.translate(30086, addon), utils.translate(30087, addon))
+        utils.notify(utils.translate(30086), utils.translate(30087))
 
         return True
     else:
         # If re-run setup
-        if dialog.yesno(utils.translate(30048, addon), utils.translate(30085, addon)):
+        if dialog.yesno(utils.translate(30048), utils.translate(30085)):
             return setup(force=True)
         else:
             return False
@@ -150,7 +150,7 @@ def setup(force=False):
 ##############
 @mpr.url('^/play/track/$')
 def play_track(track_id, station_id=None):
-    cache = os.path.join(utils.get_cache_dir(sub_dir=['tracks']), track_id)
+    cache = os.path.join(utils.get_cache_dir(['tracks']), track_id)
     if os.path.exists(cache):
         with open(cache, 'r') as f:
             track = json.loads(f.read())
@@ -307,7 +307,7 @@ def search_history():
     items = [(
         utils.build_url(url, ['search'], r_path=True, r_query=True),
         xbmcgui.ListItem(
-            label=utils.translate(30053, addon),
+            label=utils.translate(30053),
             iconImage=thumbs.IMG_SEARCH,
             thumbnailImage=thumbs.IMG_SEARCH
         ),
@@ -362,7 +362,7 @@ def search(query=None):
         items.append((
             utils.build_url(url, ['artists'], r_query=True),
             xbmcgui.ListItem(
-                label='%s (%s)' % (utils.translate(30022, addon),
+                label='%s (%s)' % (utils.translate(30022),
                     len(result['artist_hits'])),
                 iconImage=thumbs.IMG_ARTIST,
                 thumbnailImage=thumbs.IMG_ARTIST
@@ -374,7 +374,7 @@ def search(query=None):
         items.append((
             utils.build_url(url, ['albums'], r_query=True),
             xbmcgui.ListItem(
-                label='%s (%s)' % (utils.translate(30023, addon),
+                label='%s (%s)' % (utils.translate(30023),
                     len(result['album_hits'])),
                 iconImage=thumbs.IMG_ALBUM,
                 thumbnailImage=thumbs.IMG_ALBUM
@@ -386,7 +386,7 @@ def search(query=None):
         items.append((
             utils.build_url(url, ['playlists'], r_query=True),
                 xbmcgui.ListItem(
-                    label='%s (%s)' % (utils.translate(30020, addon),
+                    label='%s (%s)' % (utils.translate(30020),
                         len(result['playlist_hits'])),
                     iconImage=thumbs.IMG_PLAYLIST,
                     thumbnailImage=thumbs.IMG_PLAYLIST
@@ -398,7 +398,7 @@ def search(query=None):
         items.append((
             utils.build_url(url, ['songs'], r_query=True),
                 xbmcgui.ListItem(
-                    label='%s (%s)' % (utils.translate(30024, addon),
+                    label='%s (%s)' % (utils.translate(30024),
                         len(result['song_hits'])),
                     iconImage=thumbs.IMG_TRACK,
                     thumbnailImage=thumbs.IMG_TRACK
@@ -508,13 +508,13 @@ def _perform_search(query):
 ###################
 @mpr.url('^/my-library/update/$')
 def my_library_update():
-    utils.notify(utils.translate(30030, addon), utils.translate(30043, addon))
+    utils.notify(utils.translate(30030), utils.translate(30043))
 
     gmusic.get_my_library_songs(from_cache=False)
     gmusic.get_my_library_artists(from_cache=False)
     gmusic.get_my_library_albums(from_cache=False)
 
-    utils.notify(utils.translate(30030, addon), utils.translate(30044, addon))
+    utils.notify(utils.translate(30030), utils.translate(30044))
 
     xbmc.executebuiltin('Container.Refresh')
 
@@ -563,8 +563,8 @@ def my_library_playlist_add(playlist_id=None, album_id=None, track_id=None):
             playlist_names.append(playlist['name'])
             playlist_ids.append(playlist['id'])
 
-        playlist_names.insert(0, utils.translate(30052, addon))
-        selection = action_dialog.select(utils.translate(30020, addon), playlist_names, 0)
+        playlist_names.insert(0, utils.translate(30052))
+        selection = action_dialog.select(utils.translate(30020), playlist_names, 0)
         if selection == -1:
             return
 
@@ -607,13 +607,13 @@ def my_library_playlist_delete(playlist_id):
 @mpr.url('^/rate/$')
 def rate(track_id):
     rating = [
-        utils.translate(30027, addon),  # Thumbs up
-        utils.translate(30028, addon),  # No Thumbs
-        utils.translate(30029, addon),  # Thumbs down
+        utils.translate(30027),  # Thumbs up
+        utils.translate(30028),  # No Thumbs
+        utils.translate(30029),  # Thumbs down
     ]
 
     dialog = xbmcgui.Dialog()
-    selection = dialog.select(utils.translate(30041, addon), rating, 0)
+    selection = dialog.select(utils.translate(30041), rating, 0)
 
     if selection == -1:
         return

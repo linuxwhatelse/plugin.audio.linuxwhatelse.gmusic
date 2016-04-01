@@ -101,7 +101,7 @@ def browse_stations_subcategories(station_name, curated_station_id):
         station_id = gmusic.create_station(name=station_name, curated_station_id=curated_station_id)
 
         if not station_id:
-            utils.notify(utils.translate(30050, addon), utils.translate(30051, addon))
+            utils.notify(utils.translate(30050), utils.translate(30051))
             return
 
         items = listing.build_song_listitems(gmusic.get_station_tracks(station_id=station_id, num_tracks=25))

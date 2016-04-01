@@ -4,28 +4,25 @@ import urllib
 import urlparse
 
 import xbmc
-from xbmcaddon import Addon
+import xbmcaddon
+
+addon = xbmcaddon.Addon()
 
 def log(message, level=xbmc.LOGDEBUG):
-    xbmc.log('%s: %s' % (Addon().getAddonInfo('name'), message), level)
+    xbmc.log('%s: %s' % (addon.getAddonInfo('name'), message), level)
 
 def notify(title, message, icon=None, display_time=5000):
     if not icon:
-        icon = os.path.join(Addon().getAddonInfo('path'), 'icon.png')
+        icon = os.path.join(addon.getAddonInfo('path'), 'icon.png')
 
     xbmc.executebuiltin('Notification(%s, %s, %s, %s)' % (title, message, display_time, icon))
 
-def translate(id, addon=None):
-    if not addon:
-        addon = Addon()
+def translate(id):
     return addon.getLocalizedString(id)
 
-def get_cache_dir(addon=None, sub_dir=None):
+def get_cache_dir(sub_dir=None):
     if not sub_dir:
         sub_dir = []
-
-    if not addon:
-        addon = Addon()
 
     cache_dir = xbmc.translatePath(os.path.join(addon.getAddonInfo('profile'), '.cache', *sub_dir))
 

@@ -16,8 +16,8 @@ from addon import gmusic
 def artist(artist_id, allow_view_overwrite=True):
     if artist_id:
         items = [
-            ( utils.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       r_path=True), xbmcgui.ListItem(label=utils.translate(30066, addon), iconImage=thumbs.IMG_STAR,   thumbnailImage=thumbs.IMG_STAR), True ),
-            ( utils.build_url(url=url, paths=['browse', 'artist', 'related-artists'], r_path=True), xbmcgui.ListItem(label=utils.translate(30067, addon), iconImage=thumbs.IMG_ARTIST, thumbnailImage=thumbs.IMG_ARTIST),     True ),
+            ( utils.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       r_path=True), xbmcgui.ListItem(label=utils.translate(30066), iconImage=thumbs.IMG_STAR,   thumbnailImage=thumbs.IMG_STAR), True ),
+            ( utils.build_url(url=url, paths=['browse', 'artist', 'related-artists'], r_path=True), xbmcgui.ListItem(label=utils.translate(30067), iconImage=thumbs.IMG_ARTIST, thumbnailImage=thumbs.IMG_ARTIST),     True ),
         ]
 
         items += listing.build_album_listitems(gmusic.get_artist_info(artist_id=artist_id, include_albums=True, max_top_tracks=0, max_rel_artist=0)['albums'])
@@ -68,7 +68,7 @@ def station(station_id=None, station_name=None, artist_id=None, album_id=None,
             curated_station_id=curated_station_id, playlist_token=playlist_token)
 
         if not station_id:
-            utils.notify(utils.translate(30050, addon), utils.translate(30051, addon))
+            utils.notify(utils.translate(30050), utils.translate(30051))
             return
 
 

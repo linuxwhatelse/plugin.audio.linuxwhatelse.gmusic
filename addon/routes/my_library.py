@@ -16,12 +16,12 @@ from addon import gmusic
 def my_library():
     items = [
         # URL , ListItem, isFolder
-        ( utils.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020, addon), iconImage=thumbs.IMG_PLAYLIST, thumbnailImage=thumbs.IMG_PLAYLIST), True ),
-        ( utils.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021, addon), iconImage=thumbs.IMG_STATION,  thumbnailImage=thumbs.IMG_STATION),  True ),
-        ( utils.build_url(url, ['artists']),   xbmcgui.ListItem(label=utils.translate(30022, addon), iconImage=thumbs.IMG_ARTIST,   thumbnailImage=thumbs.IMG_ARTIST),   True ),
-        ( utils.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023, addon), iconImage=thumbs.IMG_ALBUM,    thumbnailImage=thumbs.IMG_ALBUM),    True ),
-        ( utils.build_url(url, ['songs']),     xbmcgui.ListItem(label=utils.translate(30024, addon), iconImage=thumbs.IMG_TRACK,    thumbnailImage=thumbs.IMG_TRACK),    True ),
-        ( utils.build_url(url, ['genres']),    xbmcgui.ListItem(label=utils.translate(30025, addon), iconImage=thumbs.IMG_GENRE,    thumbnailImage=thumbs.IMG_GENRE),    True ),
+        ( utils.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020), iconImage=thumbs.IMG_PLAYLIST, thumbnailImage=thumbs.IMG_PLAYLIST), True ),
+        ( utils.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021), iconImage=thumbs.IMG_STATION,  thumbnailImage=thumbs.IMG_STATION),  True ),
+        ( utils.build_url(url, ['artists']),   xbmcgui.ListItem(label=utils.translate(30022), iconImage=thumbs.IMG_ARTIST,   thumbnailImage=thumbs.IMG_ARTIST),   True ),
+        ( utils.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023), iconImage=thumbs.IMG_ALBUM,    thumbnailImage=thumbs.IMG_ALBUM),    True ),
+        ( utils.build_url(url, ['songs']),     xbmcgui.ListItem(label=utils.translate(30024), iconImage=thumbs.IMG_TRACK,    thumbnailImage=thumbs.IMG_TRACK),    True ),
+        ( utils.build_url(url, ['genres']),    xbmcgui.ListItem(label=utils.translate(30025), iconImage=thumbs.IMG_GENRE,    thumbnailImage=thumbs.IMG_GENRE),    True ),
     ]
 
     for item in items:
@@ -34,16 +34,16 @@ def my_library_playlists():
     # Auto playlists
     items = [
         ( utils.build_url(url=url, paths=['browse', 'my-library', 'playlist'], queries={'playlist_id': 'thumbsup'}, r_path=True, r_query=True), \
-            xbmcgui.ListItem(label=utils.translate(30027, addon), iconImage=thumbs.IMG_THUMB_UP, thumbnailImage=thumbs.IMG_THUMB_UP), True ),
+            xbmcgui.ListItem(label=utils.translate(30027), iconImage=thumbs.IMG_THUMB_UP, thumbnailImage=thumbs.IMG_THUMB_UP), True ),
 
         ( utils.build_url(url=url, paths=['browse', 'my-library', 'playlist'], queries={'playlist_id': 'lastadded'}, r_path=True, r_query=True),\
-            xbmcgui.ListItem(label=utils.translate(30026, addon), iconImage=thumbs.IMG_CLOCK, thumbnailImage=thumbs.IMG_CLOCK), True ),
+            xbmcgui.ListItem(label=utils.translate(30026), iconImage=thumbs.IMG_CLOCK, thumbnailImage=thumbs.IMG_CLOCK), True ),
     ]
 
     for item, playlist_id in zip(items, ['thumbsup', 'lastadded']):
         item[1].addContextMenuItems(
             items=[
-                (utils.translate(30033, addon), 'XBMC.RunPlugin(%s)' % utils.build_url(url, ['play', 'playlist'], {'playlist_id': playlist_id}, True, True))
+                (utils.translate(30033), 'XBMC.RunPlugin(%s)' % utils.build_url(url, ['play', 'playlist'], {'playlist_id': playlist_id}, True, True))
             ],
             replaceItems=True
         )
@@ -95,8 +95,8 @@ def my_library_artists():
 def my_library_artist(artist_id):
     if artist_id:
         items = [
-            ( utils.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       r_path=True), xbmcgui.ListItem(label=utils.translate(30066, addon), iconImage=thumbs.IMG_STAR,   thumbnailImage=thumbs.IMG_STAR), True ),
-            ( utils.build_url(url=url, paths=['browse', 'artist', 'related-artists'], r_path=True), xbmcgui.ListItem(label=utils.translate(30067, addon), iconImage=thumbs.IMG_ARTIST, thumbnailImage=thumbs.IMG_ARTIST),     True ),
+            ( utils.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       r_path=True), xbmcgui.ListItem(label=utils.translate(30066), iconImage=thumbs.IMG_STAR,   thumbnailImage=thumbs.IMG_STAR), True ),
+            ( utils.build_url(url=url, paths=['browse', 'artist', 'related-artists'], r_path=True), xbmcgui.ListItem(label=utils.translate(30067), iconImage=thumbs.IMG_ARTIST, thumbnailImage=thumbs.IMG_ARTIST),     True ),
         ]
 
         items += listing.build_album_listitems(gmusic.get_user_artist_albums(artist_id=artist_id), True)

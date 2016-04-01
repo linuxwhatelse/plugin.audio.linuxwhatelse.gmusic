@@ -25,10 +25,10 @@ def listen_now():
     items = [
         # URL , ListItem, isFolder
         ( utils.build_url(url=url, paths=['play', 'station'], queries={'station_id': 'IFL'}, r_path=True, \
-            r_query=True),              xbmcgui.ListItem(label=utils.translate(30045, addon), iconImage=thumbs.IMG_IFL,      thumbnailImage=thumbs.IMG_IFL),      True ),
-        ( utils.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023, addon), iconImage=thumbs.IMG_ALBUM,    thumbnailImage=thumbs.IMG_ALBUM),    True ),
-        ( utils.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021, addon), iconImage=thumbs.IMG_STATION,  thumbnailImage=thumbs.IMG_STATION),  True ),
-        ( utils.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020, addon), iconImage=thumbs.IMG_PLAYLIST, thumbnailImage=thumbs.IMG_PLAYLIST), True ),
+            r_query=True),              xbmcgui.ListItem(label=utils.translate(30045), iconImage=thumbs.IMG_IFL,      thumbnailImage=thumbs.IMG_IFL),      True ),
+        ( utils.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023), iconImage=thumbs.IMG_ALBUM,    thumbnailImage=thumbs.IMG_ALBUM),    True ),
+        ( utils.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021), iconImage=thumbs.IMG_STATION,  thumbnailImage=thumbs.IMG_STATION),  True ),
+        ( utils.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020), iconImage=thumbs.IMG_PLAYLIST, thumbnailImage=thumbs.IMG_PLAYLIST), True ),
 
     ]
 
@@ -46,7 +46,7 @@ def listen_now():
 
     # Add "Play All" to I'm feeling lucky context menu
     items[0][1].addContextMenuItems(
-        [(utils.translate(30033, addon), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['play', 'station'], queries={'station_id': 'IFL'}, r_path=True, r_query=True))], True
+        [(utils.translate(30033), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['play', 'station'], queries={'station_id': 'IFL'}, r_path=True, r_query=True))], True
     )
 
     listing.list_items(items)

@@ -12,7 +12,7 @@ from addon import utils
 
 from addon import addon
 
-_cache_dir = utils.get_cache_dir(addon)
+_cache_dir = utils.get_cache_dir()
 
 class GMusic(Mobileclient):
     _is_logged_in = False
@@ -21,7 +21,7 @@ class GMusic(Mobileclient):
         try:
             return super(GMusic, self)._make_call(protocol, *args, **kwargs)
         except:
-            utils.notify(utils.translate(30050, addon), utils.translate(30051, addon))
+            utils.notify(utils.translate(30050), utils.translate(30051))
             return None
 
     def _should_test_login(self):
@@ -76,7 +76,7 @@ class GMusic(Mobileclient):
                 self._is_logged_in = True
                 return True
 
-        utils.notify(utils.translate(30048, addon), '')
+        utils.notify(utils.translate(30048), '')
         addon.setSetting('is_setup', 'false')
 
         # Prevent further addon execution in case we failed with the login-process
@@ -130,7 +130,7 @@ class GMusic(Mobileclient):
         return res['mutate_response'][0]['id']
 
     def get_station_tracks(self, station_id, num_tracks=25, recently_played_ids=None):
-        stations_cache = utils.get_cache_dir(addon, ['station-ids'])
+        stations_cache = utils.get_cache_dir(['station-ids'])
         station_ids_cache = os.path.join(stations_cache, '%s.json' % station_id)
 
         if not recently_played_ids:

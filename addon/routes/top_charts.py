@@ -15,8 +15,8 @@ from addon import gmusic
 @mpr.url('^/browse/top-charts/$')
 def top_charts():
     items = [
-        ( utils.build_url(url, ['songs']),  xbmcgui.ListItem(label=utils.translate(30024, addon), iconImage=thumbs.IMG_TRACK, thumbnailImage=thumbs.IMG_TRACK), True ),
-        ( utils.build_url(url, ['albums']), xbmcgui.ListItem(label=utils.translate(30023, addon), iconImage=thumbs.IMG_ALBUM, thumbnailImage=thumbs.IMG_ALBUM), True ),
+        ( utils.build_url(url, ['songs']),  xbmcgui.ListItem(label=utils.translate(30024), iconImage=thumbs.IMG_TRACK, thumbnailImage=thumbs.IMG_TRACK), True ),
+        ( utils.build_url(url, ['albums']), xbmcgui.ListItem(label=utils.translate(30023), iconImage=thumbs.IMG_ALBUM, thumbnailImage=thumbs.IMG_ALBUM), True ),
     ]
     for item in items:
         item[1].addContextMenuItems([],True)

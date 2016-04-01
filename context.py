@@ -15,14 +15,14 @@ def run(track_id):
     dialog = xbmcgui.Dialog()
 
     data = [
-        utils.translate(30037, addon),  # Add to my Library
-        utils.translate(30038, addon),  # Add to Playlist
-        utils.translate(30034, addon),  # Go to Artist
-        utils.translate(30035, addon),  # Go to Album
-        utils.translate(30041, addon),  # Rate song
+        utils.translate(30037),  # Add to my Library
+        utils.translate(30038),  # Add to Playlist
+        utils.translate(30034),  # Go to Artist
+        utils.translate(30035),  # Go to Album
+        utils.translate(30041),  # Rate song
     ]
 
-    selection = dialog.select(utils.translate(30060, addon), data, 0)
+    selection = dialog.select(utils.translate(30060), data, 0)
     if selection == -1:
         return
 
