@@ -19,13 +19,6 @@ if _platform == 'linux' or _platform == 'linux2':
 elif _platform == 'win32':
     site.addsitedir( lib_win32_dir )
 
-
-# Add dependencies if missing on a plattform (e.g. OpenELEC)
-try:
-    import unittest
-except ImportError:
-    site.addsitedir( os.path.join(lib_sys_dir, 'unittest') )
-
 try:
     import lib2to3
 except ImportError:
