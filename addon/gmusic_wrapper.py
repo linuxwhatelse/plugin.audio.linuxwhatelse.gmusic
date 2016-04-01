@@ -33,8 +33,8 @@ class GMusic(Mobileclient):
         if last_login_check == 0:
             return True
 
-        # We check every 24 hours
-        elif (last_login_check + 86400) < time.time():
+        # We check every 3 hours
+        elif (last_login_check + 10800) < time.time():
             return True
 
         else:
