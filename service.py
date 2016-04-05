@@ -37,10 +37,13 @@ if __name__ == '__main__':
             continue
 
         if time.time() >= library_last_updated + update_interval:
-            gmusic.login(validate=True)
-
-            gmusic.get_my_library_songs(from_cache=False)
-            gmusic.get_my_library_artists(from_cache=False)
-            gmusic.get_my_library_albums(from_cache=False)
-
             addon.setSetting('library_last_updated', str(int(time.time())))
+
+            try:
+                if gmusic.login(validate=True):
+                    gmusic.get_my_library_songs(from_cache=False)
+                    gmusic.get_my_library_artists(from_cache=False)
+                    gmusic.get_my_library_albums(from_cache=False)
+
+            except:
+                continue
