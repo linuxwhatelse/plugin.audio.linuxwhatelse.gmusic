@@ -32,4 +32,3 @@ os.chdir(utils.get_cache_dir())
 
 from gmusic_wrapper import GMusic
 gmusic = GMusic(debug_logging=False, validate=True, verify_ssl=True)
-gmusic.login()
