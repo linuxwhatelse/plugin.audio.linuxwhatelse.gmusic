@@ -2,51 +2,120 @@ import os
 import json
 import locale
 
+import xbmc
 import xbmcgui
 import xbmcaddon
 
 from addon import utils
 from addon import thumbs
 
-from addon import addon
 from addon import mpr
 from addon import url
-from addon import addon_handle
 from addon import listing
 from addon import gmusic
 
 
 _cache_dir   = utils.get_cache_dir()
-_locale_code = locale.getdefaultlocale()[0]
-
 
 @mpr.url('^/browse/listen-now/$')
 def listen_now():
     items = [
-        # URL , ListItem, isFolder
-        ( utils.build_url(url=url, paths=['play', 'station'], queries={'station_id': 'IFL'}, r_path=True, \
-            r_query=True),              xbmcgui.ListItem(label=utils.translate(30045), iconImage=thumbs.IMG_IFL,      thumbnailImage=thumbs.IMG_IFL),      True ),
-        ( utils.build_url(url, ['albums']),    xbmcgui.ListItem(label=utils.translate(30023), iconImage=thumbs.IMG_ALBUM,    thumbnailImage=thumbs.IMG_ALBUM),    True ),
-        ( utils.build_url(url, ['stations']),  xbmcgui.ListItem(label=utils.translate(30021), iconImage=thumbs.IMG_STATION,  thumbnailImage=thumbs.IMG_STATION),  True ),
-        ( utils.build_url(url, ['playlists']), xbmcgui.ListItem(label=utils.translate(30020), iconImage=thumbs.IMG_PLAYLIST, thumbnailImage=thumbs.IMG_PLAYLIST), True ),
+        (
+            utils.build_url(
+                url=url,
+                paths=['play', 'station'],
+                queries={'station_id': 'IFL'},
+                r_path=True,
+                r_query=True
+            ),
+            xbmcgui.ListItem(
+                label          = utils.translate(30045),
+                iconImage      = thumbs.IMG_IFL,
+                thumbnailImage = thumbs.IMG_IFL
+            ),
+            True
+        ),
+        (
+            utils.build_url(
+                url   = url,
+                paths = ['albums']
+            ),
+            xbmcgui.ListItem(
+                label          = utils.translate(30023),
+                iconImage      = thumbs.IMG_ALBUM,
+                thumbnailImage = thumbs.IMG_ALBUM),
+            True
+        ),
+        (
+            utils.build_url(
+                url   = url,
+                paths = ['stations']
+            ),
+            xbmcgui.ListItem(
+                label          = utils.translate(30021),
+                iconImage      = thumbs.IMG_STATION,
+                thumbnailImage = thumbs.IMG_STATION),
+            True
+        ),
+        (
+            utils.build_url(
+                url   = url,
+                paths = ['playlists']
+            ),
+            xbmcgui.ListItem(
+                label          = utils.translate(30020),
+                iconImage      = thumbs.IMG_PLAYLIST,
+                thumbnailImage = thumbs.IMG_PLAYLIST),
+            True
+        ),
 
     ]
 
-    # Get current situation and add it to the list
-    situations = gmusic.get_situations(_locale_code)
+    locale_code = xbmc.getLanguage(xbmc.ISO_639_1)
+    locale_code = locale.normalize(locale_code).split('.')[0]
 
-    # We save the current response so we don't have to fetch it again when the users selects it
-    with open(os.path.join(_cache_dir, 'situations.json'), 'w+') as f:
-        f.write(json.dumps(situations))
+    if not locale_code or locale_code == xbmc.getLanguage(xbmc.ISO_639_1):
+        locale_code = 'en_US'
+        utils.log('Could not retrieve your locale. Using "%s" instead' % locale_code, xbmc.LOGERROR)
 
-    items.insert(1, ( utils.build_url(url, ['situations']), xbmcgui.ListItem(label=situations['primaryHeader'], iconImage=thumbs.IMG_ALBUM, thumbnailImage=thumbs.IMG_ALBUM),    True ))
+    situations = gmusic.get_situations(locale_code)
+
+    if situations and 'primaryHeader' in situations:
+        # We save the current response so we don't have to fetch it again when the users selects it
+        with open(os.path.join(_cache_dir, 'situations.json'), 'w+') as f:
+            f.write(json.dumps(situations))
+
+        items.insert(1, (
+            utils.build_url(
+                url   = url,
+                paths = ['situations']
+            ),
+            xbmcgui.ListItem(
+                label          = situations['primaryHeader'],
+                iconImage      = thumbs.IMG_ALBUM,
+                thumbnailImage = thumbs.IMG_ALBUM),
+            True
+        ))
+
+    else:
+        utils.log('Failed retrieving situations. Locale is %s' % locale_code, xbmc.LOGERROR)
 
     for item in items:
         item[1].addContextMenuItems([],True)
 
     # Add "Play All" to I'm feeling lucky context menu
     items[0][1].addContextMenuItems(
-        [(utils.translate(30033), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['play', 'station'], queries={'station_id': 'IFL'}, r_path=True, r_query=True))], True
+        [(
+            utils.translate(30033),
+            'XBMC.RunPlugin(%s)' % utils.build_url(
+                url=url,
+                paths=['play', 'station'],
+                queries={'station_id': 'IFL'},
+                r_path=True,
+                r_query=True
+            )
+        )],
+        True
     )
 
     listing.list_items(items)

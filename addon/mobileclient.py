@@ -23,7 +23,6 @@ class GetSituations(McListCall):
 
     @classmethod
     def dynamic_data(cls, locale_code):
-
         return json.dumps({
             'requestSignals': {
                 'timeZoneOffsetSecs': calendar.timegm(time.localtime()) - calendar.timegm(time.gmtime())
