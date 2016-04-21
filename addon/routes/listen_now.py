@@ -4,7 +4,6 @@ import locale
 
 import xbmc
 import xbmcgui
-import xbmcaddon
 
 from addon import utils
 from addon import thumbs
@@ -15,18 +14,18 @@ from addon import listing
 from addon import gmusic
 
 
-_cache_dir   = utils.get_cache_dir()
+_cache_dir = utils.get_cache_dir()
 
 @mpr.url('^/browse/listen-now/$')
 def listen_now():
     items = [
         (
             utils.build_url(
-                url=url,
-                paths=['play', 'station'],
-                queries={'station_id': 'IFL'},
-                r_path=True,
-                r_query=True
+                url     = url,
+                paths   = ['play', 'station'],
+                queries = {'station_id': 'IFL'},
+                r_path  = True,
+                r_query = True
             ),
             xbmcgui.ListItem(
                 label          = utils.translate(30045),
@@ -76,12 +75,16 @@ def listen_now():
 
     if not locale_code or locale_code == xbmc.getLanguage(xbmc.ISO_639_1):
         locale_code = 'en_US'
-        utils.log('Could not retrieve your locale. Using "%s" instead' % locale_code, xbmc.LOGERROR)
+        utils.log(
+            'Could not retrieve your locale. Using "%s" instead' %locale_code,
+            xbmc.LOGERROR
+        )
 
     situations = gmusic.get_situations(locale_code)
 
     if situations and 'primaryHeader' in situations:
-        # We save the current response so we don't have to fetch it again when the users selects it
+        # We save the current response so we don't have to
+        # fetch it again when the users selects it
         with open(os.path.join(_cache_dir, 'situations.json'), 'w+') as f:
             f.write(json.dumps(situations))
 
@@ -98,7 +101,10 @@ def listen_now():
         ))
 
     else:
-        utils.log('Failed retrieving situations. Locale is %s' % locale_code, xbmc.LOGERROR)
+        utils.log(
+            'Failed retrieving situations. Locale is %s' % locale_code,
+            xbmc.LOGERROR
+        )
 
     for item in items:
         item[1].addContextMenuItems([],True)
@@ -141,8 +147,9 @@ def listen_now_situation(situation_id):
 
     for situation in situations['situations']:
         if situation_id != situation['id']:
-            # In some cases, a situation can have situations as childs (not stations),
-            # therefore we have to check if one of the sub-situations matches our id
+            # In some cases, a situation can have situations as childes
+            # (not stations), therefore we have to check if one of the
+            # sub-situations matches our id
             if 'situations' in situation:
                 for situation in situation['situations']:
                     if situation_id != situation['id']:
