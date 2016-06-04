@@ -179,7 +179,7 @@ class Musicmanager(_Base):
 
             oauth_credentials = storage.get()
             if oauth_credentials is None:
-                self.logger.warning("could not retrieve oauth credentials from '%s'", oauth_file)
+                self.logger.warning("could not retrieve oauth credentials from '%r'", oauth_file)
                 return False
 
         if not self.session.login(oauth_credentials):
@@ -385,7 +385,8 @@ class Musicmanager(_Base):
 
     @utils.accept_singleton(basestring)
     @utils.empty_arg_shortcircuit(return_code='{}')
-    def upload(self, filepaths, transcode_quality='320k', enable_matching=False):
+    def upload(self, filepaths, enable_matching=False,
+               enable_transcoding=True, transcode_quality='320k'):
         """Uploads the given filepaths.
 
         All non-mp3 files will be transcoded before being uploaded.
@@ -405,11 +406,6 @@ class Musicmanager(_Base):
             )
 
         :param filepaths: a list of filepaths, or a single filepath.
-        :param transcode_quality: if int, pass to ffmpeg/avconv ``-q:a`` for libmp3lame
-          (`lower-better int,
-          <http://trac.ffmpeg.org/wiki/Encoding%20VBR%20(Variable%20Bit%20Rate)%20mp3%20audio>`__).
-          If string, pass to ffmpeg/avconv ``-b:a`` (eg ``'128k'`` for an average bitrate of 128k).
-          The default is 320kbps cbr (the highest possible quality).
 
         :param enable_matching: if ``True``, attempt to use `scan and match
           <http://support.google.com/googleplay/bin/answer.py?hl=en&answer=2920799&topic=2450455>`__
@@ -422,6 +418,17 @@ class Musicmanager(_Base):
           (or with the Music Manager).
           Fixing matches from gmusicapi may be supported in a future release; see issue `#89
           <https://github.com/simon-weber/gmusicapi/issues/89>`__.
+
+        :param enable_transcoding:
+          if ``False``, non-MP3 files that aren't matched using `scan and match
+          <http://support.google.com/googleplay/bin/answer.py?hl=en&answer=2920799&topic=2450455>`__
+          will not be uploaded.
+
+        :param transcode_quality: if int, pass to ffmpeg/avconv ``-q:a`` for libmp3lame
+          (`lower-better int,
+          <http://trac.ffmpeg.org/wiki/Encoding%20VBR%20(Variable%20Bit%20Rate)%20mp3%20audio>`__).
+          If string, pass to ffmpeg/avconv ``-b:a`` (eg ``'128k'`` for an average bitrate of 128k).
+          The default is 320kbps cbr (the highest possible quality).
 
         All Google-supported filetypes are supported; see `Google's documentation
         <http://support.google.com/googleplay/bin/answer.py?hl=en&answer=1100462>`__.
@@ -495,7 +502,7 @@ class Musicmanager(_Base):
                                       self.uploader_id, bogus_sample)
 
             except (IOError, ValueError) as e:
-                self.logger.warning("couldn't create scan and match sample for '%s': %s",
+                self.logger.warning("couldn't create scan and match sample for '%r': %s",
                                     path, str(e))
                 not_uploaded[path] = str(e)
             else:
@@ -507,12 +514,12 @@ class Musicmanager(_Base):
             path, track = local_info[sample_res.client_track_id]
 
             if sample_res.response_code == upload_pb2.TrackSampleResponse.MATCHED:
-                self.logger.info("matched '%s' to sid %s", path, sample_res.server_track_id)
+                self.logger.info("matched '%r' to sid %s", path, sample_res.server_track_id)
 
                 matched[path] = sample_res.server_track_id
 
                 if not enable_matching:
-                    self.logger.error("'%s' was matched without matching enabled", path)
+                    self.logger.error("'%r' was matched without matching enabled", path)
 
             elif sample_res.response_code == upload_pb2.TrackSampleResponse.UPLOAD_REQUESTED:
                 to_upload[sample_res.server_track_id] = (path, track, False)
@@ -531,7 +538,7 @@ class Musicmanager(_Base):
                     # tests - being surrounded by parens is how it's matched
                     err_msg += "(%s)" % sample_res.server_track_id
 
-                self.logger.warning("upload of '%s' rejected: %s", path, err_msg)
+                self.logger.warning("upload of '%r' rejected: %s", path, err_msg)
                 not_uploaded[path] = err_msg
 
         # Send upload requests.
@@ -554,7 +561,7 @@ class Musicmanager(_Base):
                         musicmanager.GetUploadSession.process_session(session)
 
                     if got_session:
-                        self.logger.info("got an upload session for '%s'", path)
+                        self.logger.info("got an upload session for '%r'", path)
                         break
 
                     should_retry, reason, error_code = error_details
@@ -570,7 +577,7 @@ class Musicmanager(_Base):
                 else:
                     err_msg = "GetUploadSession error %s: %s" % (error_code, reason)
 
-                    self.logger.warning("giving up on upload session for '%s': %s", path, err_msg)
+                    self.logger.warning("giving up on upload session for '%r': %s", path, err_msg)
                     not_uploaded[path] = err_msg
 
                     continue  # to next upload
@@ -584,12 +591,16 @@ class Musicmanager(_Base):
                 content_type = external.get('content_type', 'audio/mpeg')
 
                 if track.original_content_type != locker_pb2.Track.MP3:
-                    try:
-                        self.logger.info("transcoding '%s' to mp3", path)
-                        contents = utils.transcode_to_mp3(path, quality=transcode_quality)
-                    except (IOError, ValueError) as e:
-                        self.logger.warning("error transcoding %s: %s", path, e)
-                        not_uploaded[path] = "transcoding error: %s" % e
+                    if enable_transcoding:
+                        try:
+                            self.logger.info("transcoding '%r' to mp3", path)
+                            contents = utils.transcode_to_mp3(path, quality=transcode_quality)
+                        except (IOError, ValueError) as e:
+                            self.logger.warning("error transcoding %r: %s", path, e)
+                            not_uploaded[path] = "transcoding error: %s" % e
+                            continue
+                    else:
+                        not_uploaded[path] = "transcoding disabled"
                         continue
                 else:
                     with open(path, 'rb') as f:
@@ -603,7 +614,7 @@ class Musicmanager(_Base):
                     uploaded[path] = server_id
                 else:
                     # 404 == already uploaded? serverside check on clientid?
-                    self.logger.debug("could not finalize upload of '%s'. response: %s",
+                    self.logger.debug("could not finalize upload of '%r'. response: %s",
                                       path, upload_response)
                     not_uploaded[path] = 'could not finalize upload; details in log'
 

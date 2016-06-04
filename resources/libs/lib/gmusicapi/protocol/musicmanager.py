@@ -3,7 +3,7 @@
 """Calls made by the Music Manager (related to uploading)."""
 from __future__ import print_function, division, absolute_import, unicode_literals
 from future import standard_library
-from future.utils import raise_from
+from six import raise_from
 
 standard_library.install_aliases()
 from builtins import *  # noqa
@@ -156,19 +156,23 @@ class UploadMetadata(MmCall):
 
             # delete=False is needed because the NamedTemporaryFile
             # can't be opened by name a second time on Windows otherwise.
-            with open(filepath, 'rb') as f, NamedTemporaryFile(suffix=ext, delete=False) as temp:
-                shutil.copy(f.name, temp.name)
+            with NamedTemporaryFile(suffix=ext, delete=False) as temp:
+                shutil.copy(filepath, temp.name)
 
                 audio = mutagen.File(temp.name, easy=True)
                 audio.delete()
                 audio.save()
 
-                m.update(temp.read())
+                while True:
+                    data = temp.read(65536)
+                    if not data:
+                        break
+                    m.update(data)
         finally:
             try:
                 os.remove(temp.name)
             except OSError:
-                log.exception("Could not remove temporary file %s", temp.name)
+                log.exception("Could not remove temporary file %r", temp.name)
 
         return base64.encodestring(m.digest())[:-3]
 
@@ -248,7 +252,7 @@ class UploadMetadata(MmCall):
             success = utils.pb_set(msg, field_name, val)
 
             if not success:
-                log.info("could not pb_set track.%s = %r for '%s'", field_name, val, filepath)
+                log.info("could not pb_set track.%s = %r for '%r'", field_name, val, filepath)
 
             return success
 
@@ -271,7 +275,7 @@ class UploadMetadata(MmCall):
             except (ValueError, TypeError) as e:
                 # TypeError provides compatibility with:
                 #  https://bugs.launchpad.net/dateutil/+bug/1247643
-                log.warning("could not parse date md for '%s': (%s)", filepath, e)
+                log.warning("could not parse date md for '%r': (%s)", filepath, e)
             else:
                 track_set('year', datetime.year)
 

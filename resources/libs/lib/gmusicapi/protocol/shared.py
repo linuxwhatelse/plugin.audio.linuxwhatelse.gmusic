@@ -5,6 +5,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 from future import standard_library
 standard_library.install_aliases()
 from builtins import *  # noqa
+from six import raise_from
 
 from collections import namedtuple
 
@@ -17,7 +18,7 @@ from gmusicapi.exceptions import (
 from gmusicapi.utils import utils
 
 import requests
-from future.utils import with_metaclass, raise_from
+from future.utils import with_metaclass
 
 log = utils.DynamicClientLogger(__name__)
 
@@ -256,7 +257,7 @@ class Call(with_metaclass(BuildRequestMeta, object)):
             err_msg = ("{e_message}\n"
                        "(requests kwargs: {req_kwargs!r})\n"
                        "(response was: {content!r})").format(
-                           e_message=e.message,
+                           e_message=str(e),
                            req_kwargs=safe_req_kwargs,
                            content=response.text)
             raise_from(CallFailure(err_msg, e.callname), e)

@@ -3,12 +3,13 @@
 """Calls made by the mobile client."""
 from __future__ import print_function, division, absolute_import, unicode_literals
 from future import standard_library
-from future.utils import raise_from
+from six import raise_from
 
 standard_library.install_aliases()
 from builtins import *  # noqa
 
 import base64
+import calendar
 import copy
 from datetime import datetime
 from hashlib import sha1
@@ -24,15 +25,60 @@ from gmusicapi.protocol.shared import Call, authtypes
 from gmusicapi.utils import utils
 
 # URL for sj service
-sj_url = 'https://mclients.googleapis.com/sj/v1.11/'
+sj_url = 'https://mclients.googleapis.com/sj/v2.4/'
 
 # shared schemas
+sj_image_color_styles = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'primary': {'type': 'object',
+                    'additionalProperties': False,
+                    'properties': {
+                        'red': {'type': 'integer'},
+                        'green': {'type': 'integer'},
+                        'blue': {'type': 'integer'}
+                    }},
+        'scrim': {'type': 'object',
+                  'additionalProperties': False,
+                  'properties': {
+                      'red': {'type': 'integer'},
+                      'green': {'type': 'integer'},
+                      'blue': {'type': 'integer'}
+                  }},
+        'accent': {'type': 'object',
+                   'additionalProperties': False,
+                   'properties': {
+                       'red': {'type': 'integer'},
+                       'green': {'type': 'integer'},
+                       'blue': {'type': 'integer'}
+                   }}
+    }
+}
+
+sj_image = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'kind': {'type': 'string'},
+        'url': {'type': 'string'},
+        'aspectRatio': {'type': 'string',
+                        'required': False},
+        'autogen': {'type': 'boolean',
+                    'required': False},
+        'colorStyles': sj_image_color_styles.copy()
+    }
+}
+
+sj_image['properties']['colorStyles']['required'] = False
+
 sj_video = {
     'type': 'object',
     'additionalProperties': False,
     'properties': {
         'kind': {'type': 'string'},
         'id': {'type': 'string'},
+        'title': {'type': 'string', 'required': False},
         'thumbnails': {'type': 'array',
                        'items': {'type': 'object', 'properties': {
                            'url': {'type': 'string'},
@@ -83,6 +129,8 @@ sj_track = {
         'lastRatingChangeTimestamp': {'type': 'string', 'required': False},
         'primaryVideo': sj_video.copy(),
         'lastModifiedTimestamp': {'type': 'string', 'required': False},
+        'explicitType': {'type': 'string', 'required': False},
+        'contentType': {'type': 'string', 'required': False}
     }
 }
 sj_track['properties']['primaryVideo']['required'] = False
@@ -123,6 +171,8 @@ sj_playlist = {
         'description': {'type': 'string',
                         'blank': True,
                         'required': False},
+        'explicitType': {'type': 'string', 'required': False},
+        'contentType': {'type': 'string', 'required': False}
     }
 }
 
@@ -173,6 +223,8 @@ sj_album = {
         'tracks': {'type': 'array', 'items': sj_track, 'required': False},
         'description': {'type': 'string', 'required': False},
         'description_attribution': sj_attribution.copy(),
+        'explicitType': {'type': 'string', 'required': False},
+        'contentType': {'type': 'string', 'required': False}
     }
 }
 sj_album['properties']['description_attribution']['required'] = False
@@ -184,6 +236,9 @@ sj_artist = {
         'kind': {'type': 'string'},
         'name': {'type': 'string'},
         'artistArtRef': {'type': 'string', 'required': False},
+        'artistArtRefs': {'type': 'array',
+                          'items': sj_image,
+                          'required': False},
         'artistBio': {'type': 'string', 'required': False},
         'artistId': {'type': 'string', 'blank': True, 'required': False},
         'albums': {'type': 'array', 'items': sj_album, 'required': False},
@@ -200,6 +255,53 @@ sj_artist['properties']['related_artists'] = {
     'required': False
 }
 
+sj_genre = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'kind': {'type': 'string'},
+        'id': {'type': 'string'},
+        'name': {'type': 'string'},
+        'children': {
+            'type': 'array',
+            'required': False,
+            'items': {'type': 'string'}
+        },
+        'parentId': {
+            'type': 'string',
+            'required': False,
+        },
+        'images': {
+            'type': 'array',
+            'required': False,
+            'items': {
+                'type': 'object',
+                'additionalProperties': False,
+                'properties': {
+                    'url': {'type': 'string'}
+                }
+            }
+        }
+    }
+}
+
+sj_station_metadata_seed = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'kind': {'type': 'string'},
+        # one of these will be present
+        'artist': {
+            'type': sj_artist,
+            'required': False
+        },
+        'genre': {
+            'type': sj_genre,
+            'required': False
+        },
+    }
+}
+
 sj_station_seed = {
     'type': 'object',
     'additionalProperties': False,
@@ -212,6 +314,8 @@ sj_station_seed = {
         'genreId': {'type': 'string', 'required': False},
         'trackId': {'type': 'string', 'required': False},
         'trackLockerId': {'type': 'string', 'required': False},
+        'curatedStationId': {'type': 'string', 'required': False},
+        'metadataSeed': {'type': sj_station_metadata_seed, 'required': False}
     }
 }
 
@@ -230,20 +334,131 @@ sj_station = {
                             'required': False},  # for public
         'clientId': {'type': 'string',
                      'required': False},  # for public
+        'skipEventHistory': {'type': 'array'},  # TODO: What's in this array?
         'seed': sj_station_seed,
+        'stationSeeds': {'type': 'array',
+                         'items': sj_station_seed},
         'id': {'type': 'string',
                'required': False},  # for public
         'description': {'type': 'string', 'required': False},
         'tracks': {'type': 'array', 'required': False, 'items': sj_track},
         'imageUrls': {'type': 'array',
                       'required': False,
-                      'items': {
-                          'type': 'object',
-                          'additionalProperties': False,
-                          'properties': {
-                              'url': {'type': 'string'}},
-                      }},
+                      'items': sj_image
+                      },
+        'compositeArtRefs': {'type': 'array',
+                             'required': False,
+                             'items': sj_image
+                             },
+        'contentTypes': {'type': 'array',
+                         'required': False,
+                         'items': {'type': 'string'}
+                         }
     }
+}
+
+sj_listen_now_album = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'artist_metajam_id': {'type': 'string'},
+        'artist_name': {'type': 'string'},
+        'artist_profile_image': {
+            'type': 'object',
+            'url': {'type': 'string'}
+        },
+        'description': {
+            'type': 'string',
+            'blank': True
+        },
+        'description_attribution': {
+            'type': sj_attribution,
+            'required': False
+        },
+        'id': {
+            'type': 'object',
+            'properties': {
+                'metajamCompactKey': {'type': 'string'},
+                'artist': {'type': 'string'},
+                'title': {'type': 'string'}
+            }
+        },
+        'title': {'type': 'string'}
+    }
+}
+
+sj_listen_now_station = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'highlight_color': {
+            'type': 'string',
+            'required': False
+        },
+        'id': {
+            'type': 'object',
+            'seeds': {
+                'type': 'array',
+                'items': {'type': sj_station_seed}
+            }
+        },
+        'profile_image': {
+            'type': 'object',
+            'required': False,
+            'url': {'type': 'string'}
+        },
+        'title': {'type': 'string'}
+    }
+}
+
+sj_listen_now_item = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'kind': {'type': 'string'},
+        'compositeArtRefs': {
+            'type': 'array',
+            'required': False,
+            'items': {'type': sj_image}
+        },
+        'images': {
+            'type': 'array',
+            'items': {'type': sj_image}
+        },
+        'suggestion_reason': {'type': 'string'},
+        'suggestion_text': {'type': 'string'},
+        'type': {'type': 'string'},
+        'album': {
+            'type': sj_listen_now_album,
+            'required': False
+        },
+        'radio_station': {
+            'type': sj_listen_now_station,
+            'required': False
+        }
+    }
+}
+
+sj_situation = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'description': {'type': 'string'},
+        'id': {'type': 'string'},
+        'imageUrl': {'type': 'string', 'required': False},
+        'title': {'type': 'string'},
+        'wideImageUrl': {'type': 'string', 'required': False},
+        'stations': {'type': 'array',
+                     'required': False,
+                     'items': sj_station
+                     }
+    }
+}
+
+sj_situation['properties']['situations'] = {
+    'type': 'array',
+    'required': False,
+    'items': sj_situation
 }
 
 sj_search_result = {
@@ -260,6 +475,8 @@ sj_search_result = {
         'track': sj_track.copy(),
         'playlist': sj_playlist.copy(),
         'station': sj_station.copy(),
+        'situation': sj_situation.copy(),
+        'youtube_video': sj_video.copy()
     }
 }
 
@@ -268,6 +485,8 @@ sj_search_result['properties']['album']['required'] = False
 sj_search_result['properties']['track']['required'] = False
 sj_search_result['properties']['playlist']['required'] = False
 sj_search_result['properties']['station']['required'] = False
+sj_search_result['properties']['situation']['required'] = False
+sj_search_result['properties']['youtube_video']['required'] = False
 
 
 class McCall(Call):
@@ -420,10 +639,45 @@ class McBatchMutateCall(McCall):
                               cls.__name__)
 
 
+class Config(McCall):
+    static_method = 'GET'
+    static_url = sj_url + 'config'
+
+    # dv is a required param of type int.
+    # Using 0 seems to work without issue.
+    static_params = {'dv': 0}
+
+    item_schema = {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'kind': {'type': 'string'},
+            'key': {'type': 'string'},
+            'value': {'type': 'string'}
+        }
+    }
+
+    _res_schema = {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'kind': {'type': 'string'},
+            'data': {'type': 'object',
+                     'entries': {'type': 'array', 'items': item_schema},
+                     }
+        }
+    }
+
+
 class Search(McCall):
     """Search for All Access tracks."""
     static_method = 'GET'
     static_url = sj_url + 'query'
+
+    # The result types returned are requested in the `ct` parameter.
+    # Free account search is restricted so may not contain hits for all result types.
+    # 1: Song, 2: Artist, 3: Album, 4: Playlist, 6: Station, 7: Situation, 8: Video
+    static_params = {'ct': '1,2,3,4,6,7,8'}
 
     _res_schema = {
         'type': 'object',
@@ -758,12 +1012,87 @@ class GetDeviceManagementInfo(McCall):
     }
 
 
+class DeauthDevice(McCall):
+    """Deauthorize a device from devicemanagementinfo."""
+
+    static_method = 'DELETE'
+    static_url = sj_url + "devicemanagementinfo"
+
+    @staticmethod
+    def dynamic_params(device_id):
+        return {'delete-id': device_id}
+
+
 class ListPromotedTracks(McListCall):
     item_schema = sj_track
     filter_text = 'tracks'
 
     static_method = 'POST'
     static_url = sj_url + 'ephemeral/top'
+
+
+class ListListenNowItems(McCall):
+    static_method = 'GET'
+    static_url = sj_url + "listennow/getlistennowitems"
+    static_params = {'alt': 'json'}
+
+    _res_schema = {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'kind': {'type': 'string'},
+            'listennow_items': {
+                'type': 'array',
+                'items': {'type': sj_listen_now_item}
+            }
+        }
+    }
+
+    @staticmethod
+    def filter_response(msg):
+        filtered = copy.deepcopy(msg)
+        if 'listennow_items' in filtered:
+            filtered['listennow_items'] = \
+                    ["<%s listennow_items>" % len(filtered['listennow_items'])]
+
+
+class ListListenNowSituations(McCall):
+    static_method = 'POST'
+    static_url = sj_url + 'listennow/situations'
+    static_headers = {'Content-Type': 'application/json'}
+    static_params = {'alt': 'json'}
+
+    _res_schema = {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'distilledContextWrapper': {'type': 'object',
+                                        'distilledContextToken': {'type': 'string'},
+                                        'required': False},
+            'primaryHeader': {'type': 'string'},
+            'subHeader': {'type': 'string'},
+            'situations': {'type': 'array',
+                           'items': sj_situation,
+                           },
+        },
+    }
+
+    @classmethod
+    def dynamic_data(cls):
+        tz_offset = calendar.timegm(time.localtime()) - calendar.timegm(time.gmtime())
+
+        return json.dumps({
+            'requestSignals': {'timeZoneOffsetSecs': tz_offset}
+        })
+
+    @staticmethod
+    def filter_response(msg):
+        filtered = copy.deepcopy(msg)
+        if 'situations' in filtered.get('data', {}):
+            filtered['data']['situations'] = \
+                    ["<%s situations>" % len(filtered['data']['situations'])]
+
+        return filtered
 
 
 class ListStations(McListCall):
@@ -932,36 +1261,6 @@ class GetGenres(McCall):
     static_url = sj_url + 'explore/genres'
     static_params = {'alt': 'json'}
 
-    genre_schema = {
-        'type': 'object',
-        'additionalProperties': False,
-        'properties': {
-            'name': {'type': 'string'},
-            'id': {'type': 'string'},
-            'kind': {'type': 'string'},
-            'images': {
-                'type': 'array',
-                'items': {
-                    'type': 'object',
-                    'additionalProperties': False,
-                    'properties': {
-                        'url': {'type': 'string'}
-                    },
-                },
-                'required': False,
-            },
-            'children': {
-                'type': 'array',
-                'items': {'type': 'string'},
-                'required': False,
-            },
-            'parentId': {
-                'type': 'string',
-                'required': False,
-            }
-        }
-    }
-
     _res_schema = {
         'type': 'object',
         'additionalProperties': False,
@@ -969,7 +1268,7 @@ class GetGenres(McCall):
             'kind': {'type': 'string'},
             'genres': {
                 'type': 'array',
-                'items': genre_schema,
+                'items': sj_genre,
                 'required': False,  # only on errors
             }
         }
