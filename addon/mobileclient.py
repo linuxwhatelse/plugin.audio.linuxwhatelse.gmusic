@@ -5,30 +5,6 @@ from gmusicapi.protocol.mobileclient import *
 
 sj_url = 'https://mclients.googleapis.com/sj/v2.1/'
 
-class GetListenNow(McCall):
-    static_params = {'alt': 'json'}
-    static_method = 'GET'
-    static_url = sj_url + 'listennow/getlistennowitems'
-
-class GetSituations(McListCall):
-    static_method = 'POST'
-    static_url = sj_url + 'listennow/situations'
-    static_params = {'alt': 'json', 'tier': 'aa'}
-
-    @staticmethod
-    def dynamic_params(locale_code):
-        return {
-            'hl': locale_code,
-        }
-
-    @classmethod
-    def dynamic_data(cls, locale_code):
-        return json.dumps({
-            'requestSignals': {
-                'timeZoneOffsetSecs': calendar.timegm(time.localtime()) - calendar.timegm(time.gmtime())
-            }
-        })
-
 class GetNewReleases(McCall):
     static_params = {'alt': 'json'}
     static_method = 'GET'

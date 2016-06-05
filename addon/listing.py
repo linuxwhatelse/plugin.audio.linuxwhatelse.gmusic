@@ -167,26 +167,39 @@ def build_playlist_listitems(playlists):
         if 'playlist' in playlist:
             playlist = playlist['playlist']
 
-        if 'id' not in playlist or 'name' not in playlist:
+        if 'name' not in playlist:
             continue
 
         playlist_token  = None
         playlist_id     = None
         playlist_name   = playlist['name']
-        playlist_art    = playlist['images'][0]['url'] if 'images' in playlist and len(playlist['images']) > 0 else thumbs.IMG_PLAYLIST
+        playlist_art    = None
 
+        # Find a thumbnail to be displayed
+        if 'images' in playlist and len(playlist['images']) > 0:
+            playlist_art = playlist['images'][0]['url']
+
+        elif 'albumArtRef' in playlist and len(playlist['albumArtRef']) > 0:
+            playlist_art = playlist['albumArtRef'][0]['url']
+
+        else:
+            playlist_art = thumbs.IMG_PLAYLIST
+
+        # Get the shareToken if available
         if 'shareToken' in playlist:
             playlist_token = playlist['shareToken']
-        elif 'shareToken' in playlist['id']:
+
+        elif 'id' in playlist and 'shareToken' in playlist['id']:
             playlist_token = playlist['id']['shareToken']
 
-        if 'id' in playlist:
+        # Get the id if available (Would mean it's a user playlist)
+        if 'id' in playlist and type(playlist['id']) == str:
             playlist_id   = playlist['id']
 
         item = xbmcgui.ListItem(
-                label           = playlist_name,
-                iconImage       = playlist_art,
-                thumbnailImage  = playlist_art,
+            label           = playlist_name,
+            iconImage       = playlist_art,
+            thumbnailImage  = playlist_art,
         )
 
         item.setInfo('music', {
@@ -195,6 +208,7 @@ def build_playlist_listitems(playlists):
 
         paths = []
         query = {}
+
         if playlist_id:
             paths = ['browse', 'my-library', 'playlist']
             query['playlist_id'] = playlist_id
@@ -205,25 +219,57 @@ def build_playlist_listitems(playlists):
 
         menu_items = [
             (utils.translate(30033), 'XBMC.RunPlugin(%s)' % \
-                utils.build_url(url=url, paths=['play', 'playlist'], queries=query, r_path=True, r_query=True))
+                utils.build_url(
+                    url     = url,
+                    paths   = ['play', 'playlist'],
+                    queries = query,
+                    r_path  = True,
+                    r_query = True
+                )
+            )
         ]
 
         if playlist_token:
             menu_items.append(
                 (utils.translate(30036), 'XBMC.RunPlugin(%s)' % \
-                    utils.build_url(url=url, paths=['play', 'station'], queries={'playlist_token': playlist_token}, r_path=True, r_query=True))
+                    utils.build_url(
+                        url     = url,
+                        paths   = ['play', 'station'],
+                        queries = {'playlist_token': playlist_token},
+                        r_path  = True,
+                        r_query = True
+                    )
+                )
             )
 
-        if playlist_id:  # Only user playlists have a playlist_id
+        # Only user playlists have a playlist_id
+        if playlist_id:
             menu_items.append(
                 (utils.translate(30068), 'XBMC.RunPlugin(%s)' % \
-                    utils.build_url(url=url, paths=['my-library', 'playlist', 'delete'], queries=query, r_path=True, r_query=True))
+                    utils.build_url(
+                        url     = url,
+                        paths   = ['my-library', 'playlist', 'delete'],
+                        queries = query,
+                        r_path  = True,
+                        r_query = True
+                    )
+                )
             )
 
         item.addContextMenuItems(items=menu_items, replaceItems=True)
 
         items.append(
-            (utils.build_url(url=url, paths=paths, queries=query, r_path=True, r_query=True), item, True)
+            (
+                utils.build_url(
+                    url     = url,
+                    paths   = paths,
+                    queries = query,
+                    r_path  = True,
+                    r_query = True
+                ),
+                item,
+                True
+            )
         )
 
     return items
@@ -235,6 +281,10 @@ def list_playlists(listitems, allow_view_overwrite=True):
 def build_station_listitems(stations):
     items=[]
     for station in stations:
+        # Applies to e.g. search results
+        if 'station' in station:
+            station = station['station']
+
         if 'name' not in station:
             continue
 
@@ -259,21 +309,25 @@ def build_station_listitems(stations):
             query['station_id'] = station['id']
 
         else:
+            seed = station
+            if 'seed' in station:
+                seed = station['seed']
+
             query['station_name'] = station_name.encode('utf-8')
-            if 'trackId' in station:
-                query['track_id'] = station['trackId']
+            if 'trackId' in seed:
+                query['track_id'] = seed['trackId']
 
-            elif 'artistId' in station:
-                query['artist_id'] = station['artistId']
+            elif 'artistId' in seed:
+                query['artist_id'] = seed['artistId']
 
-            elif 'albumId' in station:
-                query['album_id'] = station['albumId']
+            elif 'albumId' in seed:
+                query['album_id'] = seed['albumId']
 
-            elif 'genreId' in station:
-                query['genre_id'] = station['genreId']
+            elif 'genreId' in seed:
+                query['genre_id'] = seed['genreId']
 
-            elif 'curatedStationId' in station:
-                query['curated_station_id'] = station['curatedStationId']
+            elif 'curatedStationId' in seed:
+                query['curated_station_id'] = seed['curatedStationId']
 
             else:
                 continue
@@ -281,14 +335,26 @@ def build_station_listitems(stations):
         item.addContextMenuItems(
             items=[
                 (utils.translate(30033), 'XBMC.RunPlugin(%s)' % \
-                    utils.build_url(url=url, paths=['play', 'station'], queries=query, r_path=True, r_query=True))
+                    utils.build_url(
+                        url     = url,
+                        paths   = ['play', 'station'],
+                        queries = query,
+                        r_path  = True,
+                        r_query = True
+                    )
+                )
             ],
             replaceItems=True
         )
 
-
         items.append(
-            (utils.build_url(url=url, paths=['play', 'station'], queries=query, r_path=True, r_query=True), item, True)
+            (utils.build_url(
+                url     = url,
+                paths   = ['play', 'station'],
+                queries = query,
+                r_path  = True,
+                r_query = True
+            ), item, True)
         )
 
     return items

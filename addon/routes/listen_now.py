@@ -1,6 +1,5 @@
 import os
 import json
-import locale
 
 import xbmc
 import xbmcgui
@@ -12,7 +11,6 @@ from addon import mpr
 from addon import url
 from addon import listing
 from addon import gmusic
-
 
 _cache_dir = utils.get_cache_dir()
 
@@ -70,41 +68,25 @@ def listen_now():
 
     ]
 
-    locale_code = xbmc.getLanguage(xbmc.ISO_639_1)
-    locale_code = locale.normalize(locale_code).split('.')[0]
-
-    if not locale_code or locale_code == xbmc.getLanguage(xbmc.ISO_639_1):
-        locale_code = 'en_US'
-        utils.log(
-            'Could not retrieve your locale. Using "%s" instead' %locale_code,
-            xbmc.LOGERROR
-        )
-
-    situations = gmusic.get_situations(locale_code)
-
-    if situations and 'primaryHeader' in situations:
+    primary_header, situations = gmusic.get_listen_now_situations()
+    if primary_header or situations:
         # We save the current response so we don't have to
         # fetch it again when the users selects it
         with open(os.path.join(_cache_dir, 'situations.json'), 'w+') as f:
             f.write(json.dumps(situations))
 
+        # Add Situations after IFL
         items.insert(1, (
             utils.build_url(
                 url   = url,
                 paths = ['situations']
             ),
             xbmcgui.ListItem(
-                label          = situations['primaryHeader'],
+                label          = primary_header,
                 iconImage      = thumbs.IMG_ALBUM,
                 thumbnailImage = thumbs.IMG_ALBUM),
             True
         ))
-
-    else:
-        utils.log(
-            'Failed retrieving situations. Locale is %s' % locale_code,
-            xbmc.LOGERROR
-        )
 
     for item in items:
         item[1].addContextMenuItems([],True)
@@ -114,11 +96,11 @@ def listen_now():
         [(
             utils.translate(30033),
             'XBMC.RunPlugin(%s)' % utils.build_url(
-                url=url,
-                paths=['play', 'station'],
-                queries={'station_id': 'IFL'},
-                r_path=True,
-                r_query=True
+                url     = url,
+                paths   = ['play', 'station'],
+                queries = {'station_id': 'IFL'},
+                r_path  = True,
+                r_query = True
             )
         )],
         True
@@ -133,61 +115,71 @@ def listen_now_situations():
         situations = json.loads(f.read())
 
     if situations:
-        items = listing.build_situation_listitems(situations['situations'])
+        items = listing.build_situation_listitems(situations)
         listing.list_situations(items)
 
 @mpr.url('^/browse/listen-now/situation/$')
 def listen_now_situation(situation_id):
+    def _find_situation(situation_id, situations):
+        """ Helper to find the right situation as
+        situations can have situations as child (instead of stations)
+        """
+        match = None
+        for situation in situations:
+            if 'id' in situation and situation['id'] == situation_id:
+                match = situation
+
+            elif 'situations' in situation:
+                match =  _find_situation(situation_id, situation['situations'])
+
+            if match:
+                return match
+
+        return None
+
     situations = None
     with open(os.path.join(_cache_dir, 'situations.json'), 'r') as f:
         situations = json.loads(f.read())
 
     if not situations:
         listing.list_items([])
+        return
 
-    for situation in situations['situations']:
-        if situation_id != situation['id']:
-            # In some cases, a situation can have situations as childes
-            # (not stations), therefore we have to check if one of the
-            # sub-situations matches our id
-            if 'situations' in situation:
-                for situation in situation['situations']:
-                    if situation_id != situation['id']:
-                        continue
-            else:
-                continue
+    situation = _find_situation(situation_id, situations)
 
-        if 'situations' in situation:
-            items = listing.build_situation_listitems(situation['situations'])
-            listing.list_situations(items)
+    if not situation:
+        listing.list_items([])
+        return
 
-        elif 'stations' in situation:
-            stations = situation['stations']
-            new_stations = []
-            for station in stations:
-                art = ''
-                for img_urls in station['compositeArtRefs']:
-                    if int(img_urls['aspectRatio']) == 1:
-                        art = img_urls['url']
-                        break
+    items = []
+    if 'situations' in situation:
+        items += listing.build_situation_listitems(situation['situations'])
 
-                tmp_station = {
-                    'name': station['name'],
-                    'imageUrls': [
-                        {'url': art}
-                    ],
-                    'curatedStationId': station['seed']['curatedStationId'],
-                    'description': station['description']
-                }
+    elif 'stations' in situation:
+        stations = []
+        for station in situation['stations']:
+            art = ''
+            for img_urls in station['compositeArtRefs']:
+                if int(img_urls['aspectRatio']) == 1:
+                    art = img_urls['url']
+                    break
 
-                new_stations.append(tmp_station)
+            stations.append({
+                'name': station['name'],
+                'imageUrls': [
+                    {'url': art}
+                ],
+                'curatedStationId': station['seed']['curatedStationId'],
+                'description': station['description']
+            })
 
-            items = listing.build_station_listitems(new_stations)
-            listing.list_stations(items)
+        items += listing.build_station_listitems(stations)
+
+    listing.list_stations(items)
 
 @mpr.url('^/browse/listen-now/albums/$')
 def listen_now_albums():
-    listen_now = gmusic.get_listen_now()
+    listen_now = gmusic.get_listen_now_items()
 
     albums   = []
     for item in listen_now:
@@ -213,7 +205,7 @@ def listen_now_albums():
 
 @mpr.url('^/browse/listen-now/stations/$')
 def listen_now_stations():
-    listen_now = gmusic.get_listen_now()
+    listen_now = gmusic.get_listen_now_items()
 
     new_stations=[]
     for item in listen_now:
@@ -260,7 +252,7 @@ def listen_now_stations():
 
 @mpr.url('^/browse/listen-now/playlists/$')
 def listen_now_playlists():
-    listen_now = gmusic.get_listen_now()
+    listen_now = gmusic.get_listen_now_items()
 
     playlists   = []
     for item in listen_now:
