@@ -394,6 +394,18 @@ def search(query=None):
                 True
             ))
 
+    if 'station_hits' in result and len(result['station_hits']) > 0:
+        items.append((
+            utils.build_url(url, ['stations'], r_query=True),
+                xbmcgui.ListItem(
+                    label='%s (%s)' % (utils.translate(30021),
+                        len(result['station_hits'])),
+                    iconImage=thumbs.IMG_STATION,
+                    thumbnailImage=thumbs.IMG_STATION
+                ),
+                True
+            ))
+
     if 'song_hits' in result and len(result['song_hits']) > 0:
         items.append((
             utils.build_url(url, ['songs'], r_query=True),
@@ -462,6 +474,23 @@ def search_playlists(query=None):
         items = listing.build_playlist_listitems(result['playlist_hits'])
         listing.list_playlists(items)
 
+@mpr.url('^/search/stations/$')
+def search_stations(query=None):
+    result = None
+    if query:
+        result = _perform_search(query)
+
+    else:
+        with open(os.path.join(_cache_dir, 'search_results.json'), 'r') as f:
+            try:
+                result = json.loads(f.read())
+            except ValueError:
+                pass
+
+    if result:
+        items = listing.build_station_listitems(result['station_hits'])
+        listing.list_stations(items)
+
 @mpr.url('^/search/songs/$')
 def search_songs(query=None):
     result = None
@@ -493,7 +522,7 @@ def _get_search_history():
     return history
 
 def _perform_search(query):
-    result = gmusic.search_all_access(query)
+    result = gmusic.search(query)
     if not result:
         return None
 
