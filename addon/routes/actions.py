@@ -351,7 +351,7 @@ def search(query=None):
                 # TODO: Make max history size configurable?
                 f.write(json.dumps(history[:10], indent=2))
 
-    result = _perform_search(query)
+    result = gmusic.search(query, False)
 
     if not result:
         # TODO: Notification that nothing was found
@@ -360,7 +360,7 @@ def search(query=None):
     items = []
     if 'artist_hits' in result and len(result['artist_hits']) > 0:
         items.append((
-            utils.build_url(url, ['artists'], r_query=True),
+            utils.build_url(url, ['artists']),
             xbmcgui.ListItem(
                 label='%s (%s)' % (utils.translate(30022),
                     len(result['artist_hits'])),
@@ -372,7 +372,7 @@ def search(query=None):
 
     if 'album_hits' in result and len(result['album_hits']) > 0:
         items.append((
-            utils.build_url(url, ['albums'], r_query=True),
+            utils.build_url(url, ['albums']),
             xbmcgui.ListItem(
                 label='%s (%s)' % (utils.translate(30023),
                     len(result['album_hits'])),
@@ -384,7 +384,7 @@ def search(query=None):
 
     if 'playlist_hits' in result and len(result['playlist_hits']) > 0:
         items.append((
-            utils.build_url(url, ['playlists'], r_query=True),
+            utils.build_url(url, ['playlists']),
                 xbmcgui.ListItem(
                     label='%s (%s)' % (utils.translate(30020),
                         len(result['playlist_hits'])),
@@ -396,7 +396,7 @@ def search(query=None):
 
     if 'station_hits' in result and len(result['station_hits']) > 0:
         items.append((
-            utils.build_url(url, ['stations'], r_query=True),
+            utils.build_url(url, ['stations']),
                 xbmcgui.ListItem(
                     label='%s (%s)' % (utils.translate(30021),
                         len(result['station_hits'])),
@@ -408,7 +408,7 @@ def search(query=None):
 
     if 'song_hits' in result and len(result['song_hits']) > 0:
         items.append((
-            utils.build_url(url, ['songs'], r_query=True),
+            utils.build_url(url, ['songs']),
                 xbmcgui.ListItem(
                     label='%s (%s)' % (utils.translate(30024),
                         len(result['song_hits'])),
@@ -424,86 +424,36 @@ def search(query=None):
     listing.list_items(items)
 
 @mpr.url('^/search/artists/$')
-def search_artists(query=None):
-    result = None
-    if query:
-        result = _perform_search(query)
-
-    else:
-        with open(os.path.join(_cache_dir, 'search_results.json'), 'r') as f:
-            try:
-                result = json.loads(f.read())
-            except ValueError:
-                pass
-
+def search_artists(query):
+    result = gmusic.search(query)
     if result:
         items = listing.build_artist_listitems(result['artist_hits'])
         listing.list_artists(items)
 
 @mpr.url('^/search/albums/$')
-def search_albums(query=None):
-    result = None
-    if query:
-        result = _perform_search(query)
-
-    else:
-        with open(os.path.join(_cache_dir, 'search_results.json'), 'r') as f:
-            try:
-                result = json.loads(f.read())
-            except ValueError:
-                pass
-
+def search_albums(query):
+    result = gmusic.search(query)
     if result:
         items = listing.build_album_listitems(result['album_hits'])
         listing.list_albums(items)
 
 @mpr.url('^/search/playlists/$')
-def search_playlists(query=None):
-    result = None
-    if query:
-        result = _perform_search(query)
-
-    else:
-        with open(os.path.join(_cache_dir, 'search_results.json'), 'r') as f:
-            try:
-                result = json.loads(f.read())
-            except ValueError:
-                pass
-
+def search_playlists(query):
+    result = gmusic.search(query)
     if result:
         items = listing.build_playlist_listitems(result['playlist_hits'])
         listing.list_playlists(items)
 
 @mpr.url('^/search/stations/$')
-def search_stations(query=None):
-    result = None
-    if query:
-        result = _perform_search(query)
-
-    else:
-        with open(os.path.join(_cache_dir, 'search_results.json'), 'r') as f:
-            try:
-                result = json.loads(f.read())
-            except ValueError:
-                pass
-
+def search_stations(query):
+    result = gmusic.search(query)
     if result:
         items = listing.build_station_listitems(result['station_hits'])
         listing.list_stations(items)
 
 @mpr.url('^/search/songs/$')
-def search_songs(query=None):
-    result = None
-    if query:
-        result = _perform_search(query)
-
-    else:
-        with open(os.path.join(_cache_dir, 'search_results.json'), 'r') as f:
-            try:
-                result = json.loads(f.read())
-            except ValueError:
-                pass
-
+def search_songs(query):
+    result = gmusic.search(query)
     if result:
         items = listing.build_song_listitems(result['song_hits'])
         listing.list_songs(items)
@@ -521,15 +471,6 @@ def _get_search_history():
 
     return history
 
-def _perform_search(query):
-    result = gmusic.search(query)
-    if not result:
-        return None
-
-    with open(os.path.join(_cache_dir, 'search_results.json'), 'w+') as f:
-        f.write(json.dumps(result))
-
-    return result
 
 
 ###################

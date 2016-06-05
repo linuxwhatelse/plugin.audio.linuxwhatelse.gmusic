@@ -22,9 +22,7 @@ _locale_code = locale.getdefaultlocale()[0]
 
 @mpr.url('^/browse/browse-stations/$')
 def browse_stations():
-    categories = gmusic.get_station_categories()
-    with open(os.path.join(_cache_dir,'categories.json'), 'w+') as f:
-        f.write(json.dumps(categories))
+    categories = gmusic.get_station_categories(False)
 
     items = []
     for category in categories:
@@ -41,15 +39,7 @@ def browse_stations():
 
 @mpr.url('^/browse/browse-stations/categories/$')
 def browse_stations_categories(category_id):
-    categories = None
-
-    categories_cache = os.path.join(_cache_dir,'categories.json')
-
-    if os.path.exists(categories_cache):
-        with open(categories_cache, 'r') as f:
-            categories = json.loads(f.read())
-    else:
-        categories = gmusic.get_station_categories()
+    categories = gmusic.get_station_categories(True)
 
     if categories:
         items = []

@@ -97,16 +97,16 @@ class GMusic(Mobileclient):
     ## Overloaded to add some stuff
     ##
     def get_listen_now_situations(self, from_cache=True):
-        situations_cache = os.path.join(_cache_dir, 'situations.json')
+        _cache = os.path.join(_cache_dir, 'situations.json')
 
         resp = None
-        if os.path.exists(situations_cache) and from_cache:
-            with open(situations_cache, 'r') as f:
+        if os.path.exists(_cache) and from_cache:
+            with open(_cache, 'r') as f:
                 resp = json.loads(f.read())
         else:
             resp = self._make_call(mobileclient.ListListenNowSituations)
 
-            with open(situations_cache, 'w+') as f:
+            with open(_cache, 'w+') as f:
                 f.write(json.dumps(resp))
 
         return (resp['primaryHeader'], resp['situations'])
@@ -196,6 +196,27 @@ class GMusic(Mobileclient):
 
             self.delete_songs(song_ids)
 
+    def search(self, query, from_cache=True, max_results=50):
+        _cache = os.path.join(_cache_dir, 'search_results.json')
+
+        resp = None
+        if os.path.exists(_cache) and from_cache:
+            with open(_cache, 'r') as f:
+                resp = json.loads(f.read())
+
+            if resp['query'].lower() != query.lower():
+                resp = super(GMusic, self).search(query, max_results)
+        else:
+            resp = super(GMusic, self).search(query, max_results)
+
+            with open(_cache, 'w+') as f:
+                resp['query'] = query
+                f.write(json.dumps(resp))
+
+        if 'query' in resp:
+            del resp['query']
+
+        return resp
 
     ##
     ## Methodes not yet in API
@@ -216,9 +237,20 @@ class GMusic(Mobileclient):
     def get_top_chart_for_genre(self, genre):
         return self._make_call(mobileclient.GetTopChartForGenre, genre)
 
-    def get_station_categories(self):
-        res = self._make_call(mobileclient.GetStationCategories)
-        return res['root']['subcategories']
+    def get_station_categories(self, from_cache=True):
+        _cache = os.path.join(_cache_dir, 'station_categories.json')
+
+        resp = None
+        if os.path.exists(_cache) and from_cache:
+            with open(_cache, 'r') as f:
+                resp = json.loads(f.read())
+        else:
+            resp = self._make_call(mobileclient.GetStationCategories)
+
+            with open(_cache, 'w+') as f:
+                f.write(json.dumps(resp))
+
+        return resp['root']['subcategories']
 
     def get_stations(self, station_subcategory_id, location_code):
         res = self._make_call(mobileclient.GetStations, station_subcategory_id, location_code)
