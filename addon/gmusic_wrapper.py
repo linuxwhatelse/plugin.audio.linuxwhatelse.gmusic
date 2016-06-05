@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import locale
 
 import xbmc
 import xbmcaddon
@@ -41,6 +42,14 @@ class GMusic(Mobileclient):
             return False
 
     def login(self, validate=False):
+        # Set Kodis locale super class
+        locale_code = xbmc.getLanguage(xbmc.ISO_639_1)
+        locale_code = locale.normalize(locale_code).split('.')[0]
+        if not locale_code:
+            locale_code = 'en_US'
+
+        self.locale = locale_code
+
         if self._is_logged_in and not validate:
             return True
 
@@ -71,7 +80,7 @@ class GMusic(Mobileclient):
                     self.session.is_authenticated = False
 
         if device_id:
-            if super(GMusic, self).login(username, password, device_id):
+            if super(GMusic, self).login(username, password, device_id, self.locale):
                 addon.setSetting('authtoken', self.session._authtoken)
                 self._is_logged_in = True
                 return True
@@ -85,7 +94,12 @@ class GMusic(Mobileclient):
     ##
     ## Overloaded to add some stuff
     ##
-    def create_station(self, name, track_id=None, artist_id=None, album_id=None, genre_id=None, curated_station_id=None, playlist_token=None):
+    def get_listen_now_situations(self):
+        resp = self._make_call(mobileclient.ListListenNowSituations)
+        return (resp['primaryHeader'], resp['situations'])
+
+    def create_station(self, name, track_id=None, artist_id=None,
+        album_id=None, genre_id=None, curated_station_id=None, playlist_token=None):
         """Creates an All Access radio station and returns its id.
 
         :param name: the name of the station to create
@@ -173,17 +187,10 @@ class GMusic(Mobileclient):
     ##
     ## Methodes not yet in API
     ##
-    def get_listen_now(self):
-        res = self._make_call(mobileclient.GetListenNow)
-        return res['listennow_items']
-
-    def get_situations(self, locale_code):
-        return self._make_call(mobileclient.GetSituations, locale_code)
-
     def get_new_releases(self, num_items=25, genre=None):
         res = self._make_call(mobileclient.GetNewReleases, num_items, genre)
         for tabs in res['tabs']:
-            if tabs['tab_type'] == "NEW_RELEASES":
+            if tabs['tab_type'] == 'NEW_RELEASES':
                 return tabs['groups'][0]['entities']
 
     def get_top_chart(self):
