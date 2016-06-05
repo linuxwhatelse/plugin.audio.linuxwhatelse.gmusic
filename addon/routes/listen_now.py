@@ -1,5 +1,6 @@
 import os
 import json
+import time
 
 import xbmc
 import xbmcgui
@@ -7,6 +8,7 @@ import xbmcgui
 from addon import utils
 from addon import thumbs
 
+from addon import addon
 from addon import mpr
 from addon import url
 from addon import listing
@@ -68,13 +70,21 @@ def listen_now():
 
     ]
 
-    primary_header, situations = gmusic.get_listen_now_situations()
-    if primary_header or situations:
-        # We save the current response so we don't have to
-        # fetch it again when the users selects it
-        with open(os.path.join(_cache_dir, 'situations.json'), 'w+') as f:
-            f.write(json.dumps(situations))
+    # Only fetch new information if one full hour has passed
+    # to keep things speedy on slow devices
+    try:
+        last_check = addon.getSetting('listen_now_last_update')
+    except:
+        last_check = -1
 
+    from_cache = True
+    if last_check != time.strftime('%Y%m%d%H'):
+        from_cache = False
+        addon.setSetting('listen_now_last_update', time.strftime('%Y%m%d%H'))
+
+    primary_header, situations = gmusic.get_listen_now_situations(from_cache)
+
+    if primary_header or situations:
         # Add Situations after IFL
         items.insert(1, (
             utils.build_url(
@@ -110,9 +120,7 @@ def listen_now():
 
 @mpr.url('^/browse/listen-now/situations/$')
 def listen_now_situations():
-    situations = None
-    with open(os.path.join(_cache_dir, 'situations.json'), 'r') as f:
-        situations = json.loads(f.read())
+    primary_header, situations = gmusic.get_listen_now_situations(from_cache=True)
 
     if situations:
         items = listing.build_situation_listitems(situations)
@@ -137,9 +145,7 @@ def listen_now_situation(situation_id):
 
         return None
 
-    situations = None
-    with open(os.path.join(_cache_dir, 'situations.json'), 'r') as f:
-        situations = json.loads(f.read())
+    primary_header, situations = gmusic.get_listen_now_situations(from_cache=False)
 
     if not situations:
         listing.list_items([])

@@ -2,6 +2,7 @@ import os
 import json
 import time
 import locale
+import traceback
 
 import xbmc
 import xbmcaddon
@@ -23,6 +24,7 @@ class GMusic(Mobileclient):
             return super(GMusic, self)._make_call(protocol, *args, **kwargs)
         except:
             utils.notify(utils.translate(30050), utils.translate(30051))
+            utils.log(traceback.format_exc(), xbmc.LOGERROR)
             return None
 
     def _should_test_login(self):
@@ -94,8 +96,19 @@ class GMusic(Mobileclient):
     ##
     ## Overloaded to add some stuff
     ##
-    def get_listen_now_situations(self):
-        resp = self._make_call(mobileclient.ListListenNowSituations)
+    def get_listen_now_situations(self, from_cache=True):
+        situations_cache = os.path.join(_cache_dir, 'situations.json')
+
+        resp = None
+        if os.path.exists(situations_cache) and from_cache:
+            with open(situations_cache, 'r') as f:
+                resp = json.loads(f.read())
+        else:
+            resp = self._make_call(mobileclient.ListListenNowSituations)
+
+            with open(situations_cache, 'w+') as f:
+                f.write(json.dumps(resp))
+
         return (resp['primaryHeader'], resp['situations'])
 
     def create_station(self, name, track_id=None, artist_id=None,
