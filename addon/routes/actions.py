@@ -360,7 +360,7 @@ def search(query=None):
     items = []
     if 'artist_hits' in result and len(result['artist_hits']) > 0:
         items.append((
-            utils.build_url(url, ['artists']),
+            utils.build_url(url, ['artists'], {'query' : query}, r_query=True),
             xbmcgui.ListItem(
                 label='%s (%s)' % (utils.translate(30022),
                     len(result['artist_hits'])),
@@ -372,7 +372,7 @@ def search(query=None):
 
     if 'album_hits' in result and len(result['album_hits']) > 0:
         items.append((
-            utils.build_url(url, ['albums']),
+            utils.build_url(url, ['albums'], {'query' : query}, r_query=True),
             xbmcgui.ListItem(
                 label='%s (%s)' % (utils.translate(30023),
                     len(result['album_hits'])),
@@ -384,7 +384,7 @@ def search(query=None):
 
     if 'playlist_hits' in result and len(result['playlist_hits']) > 0:
         items.append((
-            utils.build_url(url, ['playlists']),
+            utils.build_url(url, ['playlists'], {'query' : query}, r_query=True),
                 xbmcgui.ListItem(
                     label='%s (%s)' % (utils.translate(30020),
                         len(result['playlist_hits'])),
@@ -396,7 +396,7 @@ def search(query=None):
 
     if 'station_hits' in result and len(result['station_hits']) > 0:
         items.append((
-            utils.build_url(url, ['stations']),
+            utils.build_url(url, ['stations'], {'query' : query}, r_query=True),
                 xbmcgui.ListItem(
                     label='%s (%s)' % (utils.translate(30021),
                         len(result['station_hits'])),
@@ -408,7 +408,7 @@ def search(query=None):
 
     if 'song_hits' in result and len(result['song_hits']) > 0:
         items.append((
-            utils.build_url(url, ['songs']),
+            utils.build_url(url, ['songs'], {'query' : query}, r_query=True),
                 xbmcgui.ListItem(
                     label='%s (%s)' % (utils.translate(30024),
                         len(result['song_hits'])),
