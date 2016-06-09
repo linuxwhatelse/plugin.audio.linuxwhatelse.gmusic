@@ -207,7 +207,7 @@ def listen_now_albums():
         if 'artist_name' in album:
             album_artist = album['artist_name']
 
-        album_art = thumbs.IMG_ALBUM
+        album_art = None
         if 'images' in item and len(item['images']) > 0:
             album_art = item['images'][0]['url']
 

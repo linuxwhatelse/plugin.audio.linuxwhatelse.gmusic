@@ -36,7 +36,7 @@ def build_artist_listitems(artists, my_library=False):
         item.setArt({
             'thumb'  : artist_art,
             'poster' : artist_art,
-            'fanart' : artist_art
+            'fanart' : artist_art + '=s1920'
         })
 
         item.setInfo('music', {
@@ -111,15 +111,20 @@ def build_album_listitems(albums, my_library=False):
         album_id   = album['albumId']
         album_name = album['name']
         album_art  = thumbs.IMG_ALBUM
+        fanart     = None
+
         if 'albumArtRef' in album:
             album_art = album['albumArtRef']
+
+        if album_art and album_art != thumbs.IMG_ALBUM:
+            fanart = album_art + "=w1280-c-w1280"
 
         item = xbmcgui.ListItem(album_name)
 
         item.setArt({
             'thumb'  : album_art,
             'poster' : album_art,
-            'fanart' : album_art
+            'fanart' : fanart
         })
 
         item.setInfo('music', {
@@ -277,6 +282,7 @@ def build_playlist_listitems(playlists):
         playlist_token  = None
         playlist_name   = playlist['name']
         playlist_art    = thumbs.IMG_PLAYLIST
+        fanart          = None
 
         # Find a thumbnail to be displayed
         if 'images' in playlist and len(playlist['images']) > 0:
@@ -284,6 +290,9 @@ def build_playlist_listitems(playlists):
 
         elif 'albumArtRef' in playlist and len(playlist['albumArtRef']) > 0:
             playlist_art = playlist['albumArtRef'][0]['url']
+
+        if playlist_art and playlist_art != thumbs.IMG_PLAYLIST:
+            fanart = playlist_art + "=w1280-c-w1280"
 
         # Get the id if available (Would mean it's a user playlist)
         if 'id' in playlist and type(playlist['id']) == unicode:
@@ -301,12 +310,9 @@ def build_playlist_listitems(playlists):
         item.setArt({
             'thumb'  : playlist_art,
             'poster' : playlist_art,
+            'fanart' : fanart
         })
 
-        if playlist_art != thumbs.IMG_PLAYLIST:
-            item.setArt({
-                'fanart' : playlist_art
-            })
 
         item.setInfo('music', {
             'album': playlist['name'],
@@ -399,16 +405,20 @@ def build_station_listitems(stations):
 
         station_name = station['name']
         station_art  = thumbs.IMG_STATION
+        fanart       = None
 
         if 'imageUrls' in station and len(station['imageUrls']) > 0:
             station_art = station['imageUrls'][0]['url']
+
+        if station_art and station_art != thumbs.IMG_STATION:
+            fanart = station_art + "=w1280-c-w1280"
 
         item = xbmcgui.ListItem(station_name)
 
         item.setArt({
             'thumb'  : station_art,
             'poster' : station_art,
-            'fanart' : station_art
+            'fanart' : fanart
         })
 
         item.setInfo('music', {
@@ -488,16 +498,20 @@ def build_situation_listitems(situations):
         situation_id    = situation['id']
         situation_title = situation['title']
         situation_art   = thumbs.IMG_ALBUM
+        fanart          = None
 
         if 'imageUrl' in situation:
             situation_art = situation['imageUrl']
+
+        if situation_art and situation_art != thumbs.IMG_ALBUM:
+            fanart = situation_art + "=w1280-c-w1280"
 
         item = xbmcgui.ListItem(situation_title)
 
         item.setArt({
             'thumb'  : situation_art,
             'poster' : situation_art,
-            'fanart' : situation_art
+            'fanart' : fanart
         })
 
         item.setInfo('music', {
@@ -567,20 +581,20 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
 
         track_title = track['title'] if 'title' in track else ''
         album_art   = thumbs.IMG_TRACK
-        artist_art  = thumbs.IMG_ARTIST_FLAT
+        fanart      = None
 
         if 'albumArtRef' in track and len(track['albumArtRef']) > 0:
             album_art = track['albumArtRef'][0]['url']
 
         if 'artistArtRef' in track and len(track['artistArtRef']) > 0:
-            artist_art = track['artistArtRef'][0]['url']
+            fanart = track['artistArtRef'][0]['url'] + '=s1920'
 
         item = xbmcgui.ListItem(track_title)
 
         item.setArt({
             'thumb'  : album_art,
             'poster' : album_art,
-            'fanart' : artist_art
+            'fanart' : fanart
         })
 
         item.setInfo('music', {
