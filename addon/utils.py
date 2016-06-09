@@ -24,7 +24,8 @@ def get_cache_dir(sub_dir=None):
     if not sub_dir:
         sub_dir = []
 
-    cache_dir = xbmc.translatePath(os.path.join(addon.getAddonInfo('profile'), '.cache', *sub_dir))
+    cache_dir = xbmc.translatePath(
+        os.path.join(addon.getAddonInfo('profile'), '.cache', *sub_dir))
 
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)

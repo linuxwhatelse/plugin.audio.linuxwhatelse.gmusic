@@ -1,10 +1,10 @@
 import os
 import json
+import time
 
 import xbmc
 import xbmcgui
 import xbmcplugin
-import xbmcaddon
 
 from addon import utils
 from addon import thumbs
@@ -12,6 +12,7 @@ from addon import thumbs
 from addon import addon
 from addon import url
 from addon import addon_handle
+from addon import gmusic
 
 
 def build_artist_listitems(artists, my_library=False):
@@ -28,37 +29,61 @@ def build_artist_listitems(artists, my_library=False):
         artist_name = artist['name']
         artist_art  = artist['artistArtRef'] if 'artistArtRef' in artist else thumbs.IMG_ARTIST_FLAT
 
-        item = xbmcgui.ListItem(
-            label           = artist_name,
-            iconImage       = artist_art,
-            thumbnailImage  = artist_art,
-        )
+        item = xbmcgui.ListItem(artist_name)
+
+        item.setArt({
+            'thumb'  : artist_art,
+            'poster' : artist_art,
+            'fanart' : artist_art
+        })
 
         item.setInfo('music', {
             'artist': artist_name
         })
 
         item.addContextMenuItems(
-            items=[
-                (utils.translate(30036), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['play', 'station'], \
-                    queries={'station_name': artist_name.encode('utf-8'), 'artist_id': artist_id}, r_path=True, r_query=True)),
-            ],
+            items=[(
+                utils.translate(30036),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['play', 'station'],
+                    queries = {'station_name': artist_name.encode('utf-8'), 'artist_id': artist_id},
+                    r_path  = True,
+                    r_query = True
+                )
+            )],
             replaceItems=True
         )
 
-        # My Library entries differ from normal AllAcces ones as users are able to add only parts of the item to there library
+        # My Library entries differ from normal AllAcces ones as users are able
+        # to add only parts of the item to there library
         if my_library:
-            items.append(
-                (utils.build_url(url=url, paths=['browse', 'my-library', 'artist'], queries={'artist_id': artist_id}, \
-                    r_path=True, r_query=True), item, True)
-            )
+            items.append((
+                utils.build_url(
+                    url     = url,
+                    paths   = ['browse', 'my-library', 'artist', artist_id],
+                    r_path  = True,
+                    r_query = True
+                ),
+                item,
+                True
+            ))
+
         else:
-            items.append(
-                (utils.build_url(url=url, paths=['browse', 'artist'], queries={'artist_id': artist_id}, \
-                    r_path=True, r_query=True), item, True)
-            )
+            items.append((
+                utils.build_url(
+                    url     = url,
+                    paths   = ['browse', 'artist', artist_id],
+                    r_path  = True,
+                    r_query = True
+                ),
+                item,
+                True
+            ))
 
     return items
+
+
 def list_artists(listitems, allow_view_overwrite=True):
     xbmcplugin.setContent(addon_handle, 'artists')
 
@@ -67,7 +92,9 @@ def list_artists(listitems, allow_view_overwrite=True):
         xbmcplugin.SORT_METHOD_ARTIST,
     ]
 
-    list_items(listitems, allow_view_overwrite, int(addon.getSetting('view_id_artists')), sort_methods)
+    list_items(listitems, allow_view_overwrite,
+               int(addon.getSetting('view_id_artists')), sort_methods)
+
 
 def build_album_listitems(albums, my_library=False):
     items = []
@@ -81,13 +108,17 @@ def build_album_listitems(albums, my_library=False):
 
         album_id   = album['albumId']
         album_name = album['name']
-        album_art  = album['albumArtRef'] if 'albumArtRef' in album else thumbs.IMG_ALBUM
+        album_art  = thumbs.IMG_ALBUM
+        if 'albumArtRef' in album:
+            album_art = album['albumArtRef']
 
-        item = xbmcgui.ListItem(
-            label           = album_name,
-            iconImage       = album_art,
-            thumbnailImage  = album_art,
-        )
+        item = xbmcgui.ListItem(album_name)
+
+        item.setArt({
+            'thumb'  : album_art,
+            'poster' : album_art,
+            'fanart' : album_art
+        })
 
         item.setInfo('music', {
             'album'   : album_name,
@@ -96,58 +127,127 @@ def build_album_listitems(albums, my_library=False):
             'year'    : album['year']         if 'year'        in album else '',
         })
 
-        menu_items=[
-            (utils.translate(30033), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['play', 'album'], \
-                queries={'album_id': album_id}, r_path=True, r_query=True)),
-
-            (utils.translate(30039), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['queue', 'album'], \
-                queries={'album_id': album_id}, r_path=True, r_query=True)),
-
-            (utils.translate(30040), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['queue', 'album'], \
-                queries={'album_id': album_id, 'play_next': True}, r_path=True, r_query=True)),
+        menu_items = [
+            (
+                utils.translate(30033),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['play', 'album', album_id],
+                    r_path  = True,
+                    r_query = True
+                )
+            ),
+            (
+                utils.translate(30039),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['queue', 'album', album_id],
+                    r_path  = True,
+                    r_query = True
+                )
+            ),
+            (
+                utils.translate(30040),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['queue', 'album', album_id],
+                    queries = {'play_next': True},
+                    r_path  = True,
+                    r_query = True
+                )
+            )
         ]
 
         if my_library:
-            menu_items.append(
-                (utils.translate(30061), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['my-library', 'remove'], \
-                    queries={'album_id': album_id}, r_path=True, r_query=True)),
-            )
+            menu_items.append((
+                utils.translate(30061),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['my-library', 'remove'],
+                    queries = {'album_id': album_id},
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
 
         else:
-            menu_items.append(
-                (utils.translate(30037), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['my-library', 'add'], \
-                    queries={'album_id': album_id}, r_path=True, r_query=True)),
-            )
+            menu_items.append((
+                utils.translate(30037),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['my-library', 'add'],
+                    queries = {'album_id': album_id},
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
 
         menu_items += [
-            (utils.translate(30038), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['my-library', 'playlist', 'add'], \
-                queries={'album_id': album_id}, r_path=True, r_query=True)),
-
-            (utils.translate(30036), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['play', 'station'], \
-                queries={'station_name': album_name.encode('utf-8'), 'album_id': album_id}, r_path=True, r_query=True)),
+            (
+                utils.translate(30038),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['my-library', 'playlist', 'add'],
+                    queries = {'album_id': album_id},
+                    r_path  = True,
+                    r_query = True
+                )
+            ),
+            (
+                utils.translate(30036),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['play', 'station'],
+                    queries = {'station_name': album_name.encode('utf-8'), 'album_id': album_id},
+                    r_path  = True,
+                    r_query = True
+                )
+            )
         ]
 
         if 'artistId' in album:
-            menu_items.append(
-                (utils.translate(30034), 'Container.Update(%s)' % utils.build_url(url=url, paths=['browse', 'artist'], \
-                queries={'artist_id': album['artistId'][0]}, r_path=True, r_query=True))
-            )
+            menu_items.append((
+                utils.translate(30034),
+                'Container.Update(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['browse', 'artist', album['artistId'][0]],
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
 
         item.addContextMenuItems(items=menu_items, replaceItems=True)
 
-        # My Library entries differ from normal AllAcces ones as users are able to add only parts of the item to there library
+        # My Library entries differ from normal AllAcces ones as users are able
+        # to add only parts of the item to there library
         if my_library:
-            items.append(
-                (utils.build_url(url=url, paths=['browse', 'my-library', 'album'], \
-                    queries={'album_id': album_id}, r_path=True, r_query=True), item, True)
-            )
+            items.append((
+                utils.build_url(
+                    url     = url,
+                    paths   = ['browse', 'my-library', 'album'],
+                    queries = {'album_id': album_id},
+                    r_path  = True,
+                    r_query = True
+                ),
+                item,
+                True
+            ))
+
         else:
-            items.append(
-                (utils.build_url(url=url, paths=['browse', 'album'], \
-                    queries={'album_id': album_id}, r_path=True, r_query=True), item, True)
-            )
+            items.append((
+                utils.build_url(
+                    url     = url,
+                    paths   = ['browse', 'album', album_id],
+                    r_path  = True,
+                    r_query = True
+                ),
+                item,
+                True
+            ))
 
     return items
+
+
 def list_albums(listitems, allow_view_overwrite=True):
     xbmcplugin.setContent(addon_handle, 'albums')
 
@@ -160,8 +260,9 @@ def list_albums(listitems, allow_view_overwrite=True):
 
     list_items(listitems, allow_view_overwrite, int(addon.getSetting('view_id_albums')), sort_methods)
 
+
 def build_playlist_listitems(playlists):
-    items=[]
+    items = []
     for playlist in playlists:
         # Applies to e.g. search results
         if 'playlist' in playlist:
@@ -170,10 +271,10 @@ def build_playlist_listitems(playlists):
         if 'name' not in playlist:
             continue
 
-        playlist_token  = None
         playlist_id     = None
+        playlist_token  = None
         playlist_name   = playlist['name']
-        playlist_art    = None
+        playlist_art    = thumbs.IMG_PLAYLIST
 
         # Find a thumbnail to be displayed
         if 'images' in playlist and len(playlist['images']) > 0:
@@ -182,8 +283,9 @@ def build_playlist_listitems(playlists):
         elif 'albumArtRef' in playlist and len(playlist['albumArtRef']) > 0:
             playlist_art = playlist['albumArtRef'][0]['url']
 
-        else:
-            playlist_art = thumbs.IMG_PLAYLIST
+        # Get the id if available (Would mean it's a user playlist)
+        if 'id' in playlist and type(playlist['id']) == unicode:
+            playlist_id   = playlist['id']
 
         # Get the shareToken if available
         if 'shareToken' in playlist:
@@ -192,15 +294,17 @@ def build_playlist_listitems(playlists):
         elif 'id' in playlist and 'shareToken' in playlist['id']:
             playlist_token = playlist['id']['shareToken']
 
-        # Get the id if available (Would mean it's a user playlist)
-        if 'id' in playlist and type(playlist['id']) == str:
-            playlist_id   = playlist['id']
+        item = xbmcgui.ListItem(playlist_name)
 
-        item = xbmcgui.ListItem(
-            label           = playlist_name,
-            iconImage       = playlist_art,
-            thumbnailImage  = playlist_art,
-        )
+        item.setArt({
+            'thumb'  : playlist_art,
+            'poster' : playlist_art,
+        })
+
+        if playlist_art != thumbs.IMG_PLAYLIST:
+            item.setArt({
+                'fanart' : playlist_art
+            })
 
         item.setInfo('music', {
             'album': playlist['name'],
@@ -210,76 +314,79 @@ def build_playlist_listitems(playlists):
         query = {}
 
         if playlist_id:
-            paths = ['browse', 'my-library', 'playlist']
+            paths = ['browse', 'my-library', 'playlist', playlist_id]
             query['playlist_id'] = playlist_id
 
         elif playlist_token:
-            paths = ['browse', 'shared-playlist']
+            paths = ['browse', 'shared-playlist', playlist_token]
             query['playlist_token'] = playlist_token
 
-        menu_items = [
-            (utils.translate(30033), 'XBMC.RunPlugin(%s)' % \
-                utils.build_url(
+        else:
+            continue
+
+        menu_items = [(
+            utils.translate(30033),
+            'XBMC.RunPlugin(%s)' % utils.build_url(
+                url     = url,
+                paths   = ['play', 'playlist'],
+                queries = query,
+                r_path  = True,
+                r_query = True
+            ),
+        )]
+
+        if playlist_token:
+            menu_items.append((
+                utils.translate(30036),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
                     url     = url,
-                    paths   = ['play', 'playlist'],
+                    paths   = ['play', 'station'],
+                    queries = {'playlist_token': playlist_token},
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
+
+        # Add "Delete playlist" to user playlist (Only
+        # user playlists have a playlist id)
+        if playlist_id:
+            menu_items.append((
+                utils.translate(30068),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['my-library', 'playlist', 'delete'],
                     queries = query,
                     r_path  = True,
                     r_query = True
                 )
-            )
-        ]
-
-        if playlist_token:
-            menu_items.append(
-                (utils.translate(30036), 'XBMC.RunPlugin(%s)' % \
-                    utils.build_url(
-                        url     = url,
-                        paths   = ['play', 'station'],
-                        queries = {'playlist_token': playlist_token},
-                        r_path  = True,
-                        r_query = True
-                    )
-                )
-            )
-
-        # Only user playlists have a playlist_id
-        if playlist_id:
-            menu_items.append(
-                (utils.translate(30068), 'XBMC.RunPlugin(%s)' % \
-                    utils.build_url(
-                        url     = url,
-                        paths   = ['my-library', 'playlist', 'delete'],
-                        queries = query,
-                        r_path  = True,
-                        r_query = True
-                    )
-                )
-            )
+            ))
 
         item.addContextMenuItems(items=menu_items, replaceItems=True)
 
-        items.append(
-            (
-                utils.build_url(
-                    url     = url,
-                    paths   = paths,
-                    queries = query,
-                    r_path  = True,
-                    r_query = True
-                ),
-                item,
-                True
-            )
-        )
+        items.append((
+            utils.build_url(
+                url     = url,
+                paths   = paths,
+                queries = query,
+                r_path  = True,
+                r_query = True
+            ),
+            item,
+            True
+        ))
 
     return items
+
+
 def list_playlists(listitems, allow_view_overwrite=True):
     xbmcplugin.setContent(addon_handle, 'albums')
 
-    list_items(listitems, allow_view_overwrite, int(addon.getSetting('view_id_playlists')))
+    list_items(listitems, allow_view_overwrite,
+               int(addon.getSetting('view_id_playlists')))
+
 
 def build_station_listitems(stations):
-    items=[]
+    items = []
     for station in stations:
         # Applies to e.g. search results
         if 'station' in station:
@@ -289,13 +396,18 @@ def build_station_listitems(stations):
             continue
 
         station_name = station['name']
-        station_art  = station['imageUrls'][0]['url'] if 'imageUrls' in station and len(station['imageUrls']) > 0 else thumbs.IMG_STATION
+        station_art  = thumbs.IMG_STATION
 
-        item = xbmcgui.ListItem(
-            label           = station_name,
-            iconImage       = station_art,
-            thumbnailImage  = station_art,
-        )
+        if 'imageUrls' in station and len(station['imageUrls']) > 0:
+            station_art = station['imageUrls'][0]['url']
+
+        item = xbmcgui.ListItem(station_name)
+
+        item.setArt({
+            'thumb'  : station_art,
+            'poster' : station_art,
+            'fanart' : station_art
+        })
 
         item.setInfo('music', {
             'album': station_name,
@@ -333,47 +445,58 @@ def build_station_listitems(stations):
                 continue
 
         item.addContextMenuItems(
-            items=[
-                (utils.translate(30033), 'XBMC.RunPlugin(%s)' % \
-                    utils.build_url(
-                        url     = url,
-                        paths   = ['play', 'station'],
-                        queries = query,
-                        r_path  = True,
-                        r_query = True
-                    )
+            items=[(
+                utils.translate(30033),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['play', 'station'],
+                    queries = query,
+                    r_path  = True,
+                    r_query = True
                 )
-            ],
+            )],
             replaceItems=True
         )
 
-        items.append(
-            (utils.build_url(
+        items.append((
+            utils.build_url(
                 url     = url,
                 paths   = ['play', 'station'],
                 queries = query,
                 r_path  = True,
                 r_query = True
-            ), item, True)
-        )
+            ),
+            item,
+            True
+        ))
 
     return items
+
+
 def list_stations(listitems, allow_view_overwrite=True):
     xbmcplugin.setContent(addon_handle, 'albums')
-    list_items(listitems, allow_view_overwrite, int(addon.getSetting('view_id_stations')), None, False)
+
+    list_items(listitems, allow_view_overwrite,
+               int(addon.getSetting('view_id_stations')), None, False)
+
 
 def build_situation_listitems(situations):
     items = []
     for situation in situations:
         situation_id    = situation['id']
         situation_title = situation['title']
-        situation_art   = situation['imageUrl'] if 'imageUrl' in situation else thumbs.IMG_ALBUM
+        situation_art   = thumbs.IMG_ALBUM
 
-        item = xbmcgui.ListItem(
-            label           = situation_title,
-            iconImage       = situation_art,
-            thumbnailImage  = situation_art,
-        )
+        if 'imageUrl' in situation:
+            situation_art = situation['imageUrl']
+
+        item = xbmcgui.ListItem(situation_title)
+
+        item.setArt({
+            'thumb'  : situation_art,
+            'poster' : situation_art,
+            'fanart' : situation_art
+        })
 
         item.setInfo('music', {
             'album'   : situation_title,
@@ -384,16 +507,27 @@ def build_situation_listitems(situations):
 
         item.addContextMenuItems(items=[], replaceItems=True)
 
-        items.append(
-            (utils.build_url(url=url, paths=['browse', 'listen-now', 'situation'], \
-                queries={'situation_id': situation_id}, r_path=True, r_query=True), item, True)
-            )
+        items.append((
+            utils.build_url(
+                url     = url,
+                paths   = ['browse', 'listen-now', 'situation', situation_id],
+                r_path  = True,
+                r_query = True
+            ),
+            item,
+            True
+        ))
 
     return items
+
+
 def list_situations(listitems, allow_view_overwrite=True):
     list_albums(listitems, allow_view_overwrite)
 
+
 def build_song_listitems(tracks, station_id=None, my_library=False, my_library_playlist=False):
+    tracks_cache = utils.get_cache_dir(['tracks'])
+
     items = []
     for elem in tracks:
         # Applies to e.g. search results
@@ -402,18 +536,46 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         else:
             track = elem
 
-        if ('trackId' not in track and 'storeId' not in track) or 'title' not in track:
+        # Try to get an id, otherwise we skip
+        # Important, always try to get a trackId first, than
+        # storeId and than id
+        if 'trackId' in track:
+            track_id = track['trackId']
+
+        elif 'storeId' in track:
+            track_id = track['storeId']
+
+        elif 'id' in track:
+            track_id = track['id']
+
+        else:
             continue
 
-        track_id    = track['trackId'] if 'trackId' in track else track['storeId']
-        track_title = track['title']
-        album_art   = track['albumArtRef'][0]['url'] if 'albumArtRef' in track and len(track['albumArtRef']) > 0 else thumbs.IMG_TRACK
+        # In case of playlists, user uploaded songs come without
+        # metadata (title, album, etc.)
+        # All we can do at this point is to check the library cache
+        # entry and use the informations from there (if it exists)
+        #
+        # We only do this if the title is missing as other metadata
+        # isn't as important and we don't want to do this to often
+        if 'title' not in track:
+            _track = gmusic.get_my_library_song_details(track_id)
+            if _track:
+                track = _track
 
-        item = xbmcgui.ListItem(
-            label           = track_title,
-            iconImage       = album_art,
-            thumbnailImage  = album_art,
-        )
+        track_title = track['title'] if 'title' in track else ''
+        album_art   = thumbs.IMG_TRACK
+        if 'albumArtRef' in track and len(track['albumArtRef']) > 0:
+            album_art = track['albumArtRef'][0]['url']
+
+        item = xbmcgui.ListItem(track_title)
+
+        item.setArt({
+            'thumb'  : album_art,
+            'poster' : album_art,
+            'fanart' : album_art
+        })
+
         item.setInfo('music', {
             'title'        :  track_title,
             'tracknumber'  :  track['trackNumber']  if 'trackNumber' in track else '',
@@ -425,85 +587,167 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
             'playcount'    :  track['playCount']    if 'playCount'   in track else '',
         })
 
+        # Add "Queue" and "Play next" to context menu
         menu_items = [
-            (utils.translate(30039), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['queue', 'track'], \
-                queries={'track_id': track_id}, r_path=True, r_query=True)),
-
-            (utils.translate(30040), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['queue', 'track'], \
-                queries={'track_id': track_id, 'play_next': True}, r_path=True, r_query=True)),
+            (
+                utils.translate(30039),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['queue', 'track', track_id],
+                    r_path  = True,
+                    r_query = True
+                )
+            ),
+            (
+                utils.translate(30040),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['queue', 'track', track_id],
+                    queries = {'play_next': True},
+                    r_path  = True,
+                    r_query = True
+                )
+            ),
         ]
 
-
         if my_library:
-            if 'id' in track:
-                menu_items.append(
-                    (utils.translate(30061), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['my-library', 'remove'], \
-                        queries={'library_song_id': track['id']}, r_path=True, r_query=True)),
+            # Add "Remove from library" to context menu
+            menu_items.append((
+                utils.translate(30061),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['my-library', 'remove'],
+                    queries = {'library_song_id': track_id},
+                    r_path  = True,
+                    r_query = True
                 )
+            ))
 
         else:
-            menu_items.append(
-                (utils.translate(30037), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['my-library', 'add'], \
-                    queries={'track_id': track_id}, r_path=True, r_query=True)),
-            )
+            # Add "Add to library" to context menu
+            menu_items.append((
+                utils.translate(30037),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['my-library', 'add'],
+                    queries = {'track_id': track_id},
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
 
-        menu_items.append(
-            (utils.translate(30038), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['my-library', 'playlist', 'add'], \
-                queries={'track_id': track_id}, r_path=True, r_query=True)),
-        )
+        # Add "Add to playlist" to context menu
+        menu_items.append((
+            utils.translate(30038),
+            'XBMC.RunPlugin(%s)' % utils.build_url(
+                url     = url,
+                paths   = ['my-library', 'playlist', 'add'],
+                queries = {'track_id': track_id},
+                r_path  = True,
+                r_query = True
+            )
+        ))
 
         if my_library_playlist:
+            # Add "Remove from playlist" to context menu
             if 'id' in elem:
-                menu_items.append(
-                    (utils.translate(30062), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['my-library', 'playlist', 'remove'], \
-                        queries={'entry_id': elem['id']}, r_path=True, r_query=True)),
-                )
+                menu_items.append((
+                    utils.translate(30062),
+                    'XBMC.RunPlugin(%s)' % utils.build_url(
+                        url     = url,
+                        paths   = ['my-library', 'playlist', 'remove'],
+                        queries = {'entry_id': elem['id']},
+                        r_path  = True,
+                        r_query = True
+                    )
+                ))
 
+        # Add "Start radio" to context menu
+        menu_items.append((
+            utils.translate(30036),
+            'XBMC.RunPlugin(%s)' % utils.build_url(
+                url     = url,
+                paths   = ['play', 'station'],
+                queries = {'track_id': track_id, 'station_name': track_title.encode('utf-8')},
+                r_path  = True,
+                r_query = True
+            )
+        ))
 
-        menu_items.append(
-            (utils.translate(30036), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['play', 'station'], \
-                queries={'track_id': track_id, 'station_name': track_title.encode('utf-8')}, r_path=True, r_query=True)),
-        )
-
+        # Add "Go to Artist" to context menu
         if 'artistId' in track and len(track['artistId']) > 0:
-            menu_items.append(
-                (utils.translate(30034), 'Container.Update(%s)' % utils.build_url(url=url, paths=['browse', 'artist'], \
-                    queries={'artist_id': track['artistId'][0]}, r_path=True, r_query=True))
-            )
+            menu_items.append((
+                utils.translate(30034),
+                'Container.Update(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['browse', 'artist', track['artistId'][0]],
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
 
+        # Add "Go to Album" to context menu
         if 'albumId' in track:
-            menu_items.append(
-                (utils.translate(30035), 'Container.Update(%s)' % utils.build_url(url=url, paths=['browse', 'album'], \
-                    queries={'album_id': track['albumId']}, r_path=True, r_query=True))
-            )
+            menu_items.append((
+                utils.translate(30035),
+                'Container.Update(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['browse', 'album', track['albumId']],
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
 
-        menu_items.append(
-            (utils.translate(30041), 'XBMC.RunPlugin(%s)' % utils.build_url(url=url, paths=['rate'], \
-                queries={'track_id': track_id}, r_path=True, r_query=True)),
-        )
+        # Add "Rate song" to context menu
+        menu_items.append((
+            utils.translate(30041),
+            'XBMC.RunPlugin(%s)' % utils.build_url(
+                url     = url,
+                paths   = ['rate'],
+                queries = {'track_id': track_id},
+                r_path  = True,
+                r_query = True
+            )
+        ))
 
         item.addContextMenuItems(items=menu_items, replaceItems=True)
 
-        item.setProperty('IsPlayable','true')
-        item.setProperty('Music', 'true')
-        item.setProperty('mimetype', 'audio/mpeg')
-
-
-        queries = {'track_id':track_id}
-        if station_id:
-            queries['station_id'] = station_id
-
+        item.setProperty('IsPlayable', 'true')
+        item.setProperty('Music',      'true')
+        item.setProperty('mimetype',   'audio/mpeg')
 
         # We cache everything so :play_track: doesn't have to fetch those informations again
-        tracks_cache = utils.get_cache_dir(['tracks'])
         with open(os.path.join(tracks_cache, track_id), 'w+') as f:
             f.write(json.dumps(track))
 
-        items.append(
-            (utils.build_url(url=url, paths=['play', 'track'], queries=queries, r_path=True, r_query=True), item, False)
-        )
+        queries = {}
+        if station_id:
+            queries['station_id'] = station_id
+
+        items.append((
+            utils.build_url(
+                url     = url,
+                paths   = ['play', 'track', track_id],
+                queries = queries,
+                r_path  = True,
+                r_query = True
+            ),
+            item,
+            False
+        ))
+
+    # Clean up the tracks directory
+    for _file in os.listdir(tracks_cache):
+        _file = os.path.join(tracks_cache, _file)
+        m_time = os.stat(_file).st_mtime
+
+        # If older than 24h we remove it
+        if m_time < time.time() - 86400:
+            os.remove(_file)
 
     return items
+
+
 def list_songs(listitems, allow_view_overwrite=True):
     xbmcplugin.setContent(addon_handle, 'songs')
 
@@ -519,11 +763,13 @@ def list_songs(listitems, allow_view_overwrite=True):
         xbmcplugin.SORT_METHOD_GENRE,
     ]
 
-    list_items(listitems, allow_view_overwrite, int(addon.getSetting('view_id_songs')), sort_methods)
+    list_items(listitems, allow_view_overwrite,
+               int(addon.getSetting('view_id_songs')), sort_methods)
 
 
-def list_items(listitems, allow_view_overwrite=True, view_mode_id=None, sort_methods=None, cacheToDisc=True):
-    cacheToDisc=False
+def list_items(listitems, allow_view_overwrite=True, view_mode_id=None,
+               sort_methods=None, cacheToDisc=True):
+    cacheToDisc = False
     if not view_mode_id:
         view_mode_id = int(addon.getSetting('view_id_list'))
 
@@ -531,9 +777,9 @@ def list_items(listitems, allow_view_overwrite=True, view_mode_id=None, sort_met
         sort_methods = []
 
     xbmcplugin.addDirectoryItems(
-        handle=addon_handle,
-        items=listitems,
-        totalItems=len(listitems)
+        handle     = addon_handle,
+        items      = listitems,
+        totalItems = len(listitems)
     )
 
     for sort_method in sort_methods:

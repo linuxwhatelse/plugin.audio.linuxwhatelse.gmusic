@@ -11,11 +11,14 @@ else:
     addon_handle = None
     url          = None
 
+
 import xbmcaddon
 addon = xbmcaddon.Addon()
 
+
 import mapper
 mpr = mapper.Mapper()
+
 
 # Adds all libraries to our path
 # see "resources/libs/lib/__init__.py"
@@ -29,6 +32,7 @@ import resources.libs
 import os
 import utils
 os.chdir(utils.get_cache_dir())
+
 
 from gmusic_wrapper import GMusic
 gmusic = GMusic(debug_logging=False, validate=True, verify_ssl=True)

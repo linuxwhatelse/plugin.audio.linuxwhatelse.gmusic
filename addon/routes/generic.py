@@ -1,76 +1,127 @@
 import xbmcgui
-import xbmcaddon
 
 from addon import utils
 from addon import thumbs
 
-from addon import addon
 from addon import mpr
 from addon import url
-from addon import addon_handle
 from addon import listing
 from addon import gmusic
 
 
-@mpr.url('^/browse/artist/$', type_cast={'allow_view_overwrite': bool})
+@mpr.s_url('/browse/artist/<artist_id>/', type_cast={'allow_view_overwrite': bool})
 def artist(artist_id, allow_view_overwrite=True):
-    if artist_id:
-        items = [
-            ( utils.build_url(url=url, paths=['browse', 'artist', 'top-songs'],       r_path=True), xbmcgui.ListItem(label=utils.translate(30066), iconImage=thumbs.IMG_STAR,   thumbnailImage=thumbs.IMG_STAR), True ),
-            ( utils.build_url(url=url, paths=['browse', 'artist', 'related-artists'], r_path=True), xbmcgui.ListItem(label=utils.translate(30067), iconImage=thumbs.IMG_ARTIST, thumbnailImage=thumbs.IMG_ARTIST),     True ),
-        ]
+    top_songs = xbmcgui.ListItem(utils.translate(30066))
+    top_songs.setArt({
+        'thumb'  : thumbs.IMG_STAR,
+        'poster' : thumbs.IMG_STAR
+    })
 
-        items += listing.build_album_listitems(gmusic.get_artist_info(artist_id=artist_id, include_albums=True, max_top_tracks=0, max_rel_artist=0)['albums'])
+    related_artists = xbmcgui.ListItem(utils.translate(30067))
+    related_artists.setArt({
+        'thumb'  : thumbs.IMG_ARTIST,
+        'poster' : thumbs.IMG_ARTIST
+    })
+
+    items = [
+        (
+            utils.build_url(
+                url    = url,
+                paths  = ['browse', 'artist', artist_id, 'top-songs'],
+                r_path = True
+            ),
+            top_songs,
+            True
+        ),
+        (
+            utils.build_url(
+                url    = url,
+                paths  = ['browse', 'artist', artist_id, 'related-artists'],
+                r_path = True
+            ),
+            related_artists,
+            True
+        )
+    ]
+
+    info = gmusic.get_artist_info(artist_id=artist_id, include_albums=True,
+                                  max_top_tracks=0, max_rel_artist=0)
+
+    if 'albums' in info:
+        items += listing.build_album_listitems(info['albums'])
         listing.list_albums(items, allow_view_overwrite)
 
-@mpr.url('^/browse/artist/top-songs/$')
+    else:
+        listing.list_items([])
+
+
+@mpr.s_url('/browse/artist/<artist_id>/top-songs/')
 def artist_top_tracks(artist_id):
-    if artist_id:
-        artist = gmusic.get_artist_info(artist_id=artist_id, include_albums=False, max_top_tracks=100, max_rel_artist=0)
-        if 'topTracks' in artist:
-            items = listing.build_song_listitems(artist['topTracks'])
-            listing.list_songs(items)
+    artist = gmusic.get_artist_info(artist_id=artist_id, include_albums=False,
+                                    max_top_tracks=100, max_rel_artist=0)
 
-@mpr.url('^/browse/artist/related-artists/$')
+    if artist and 'topTracks' in artist:
+        items = listing.build_song_listitems(artist['topTracks'])
+        listing.list_songs(items)
+
+    else:
+        listing.list_items([])
+
+
+@mpr.s_url('/browse/artist/<artist_id>/related-artists/')
 def artist_related_artists(artist_id):
-    if artist_id:
-        artist = gmusic.get_artist_info(artist_id=artist_id, include_albums=False, max_top_tracks=0, max_rel_artist=100)
-        if 'related_artists' in artist:
-            items = listing.build_artist_listitems(artist['related_artists'])
-            listing.list_artists(items)
+    artist = gmusic.get_artist_info(artist_id=artist_id, include_albums=False,
+                                    max_top_tracks=0, max_rel_artist=100)
 
-@mpr.url('^/browse/album/$', type_cast={'allow_view_overwrite': bool})
+    if artist and 'related_artists' in artist:
+        items = listing.build_artist_listitems(artist['related_artists'])
+        listing.list_artists(items)
+
+    else:
+        listing.list_items([])
+
+
+@mpr.s_url('/browse/album/<album_id>/', type_cast={'allow_view_overwrite': bool})
 def album(album_id, allow_view_overwrite=True):
-    if album_id:
-        items = listing.build_song_listitems(gmusic.get_album_info(album_id=album_id)['tracks'])
+    album_info = gmusic.get_album_info(album_id=album_id)
+
+    if album_info and 'tracks' in album_info:
+        items = listing.build_song_listitems(album_info['tracks'])
         listing.list_songs(items, allow_view_overwrite)
 
-@mpr.url('^/browse/shared-playlist/$')
+    else:
+        listing.list_items([])
+
+
+@mpr.s_url('/browse/shared-playlist/<playlist_token>/')
 def listen_now_shared_playlist(playlist_token):
     playlist_content = gmusic.get_shared_playlist_contents(share_token=playlist_token)
 
-    tracks=[]
+    tracks = []
     for item in playlist_content:
         tracks.append(item['track'])
 
     items = listing.build_song_listitems(tracks)
     listing.list_songs(items)
 
-@mpr.url('^/browse/station/$')
+
+@mpr.s_url('/browse/station/')
 def station(station_id=None, station_name=None, artist_id=None, album_id=None,
-        track_id=None, genre_id=None, curated_station_id=None,
-        playlist_token=None, allow_view_overwrite=True):
+            track_id=None, genre_id=None, curated_station_id=None,
+            playlist_token=None, allow_view_overwrite=True):
     allow_view_overwrite = False if allow_view_overwrite == 'False' else True
 
     if not station_id:
-        station_id = gmusic.create_station(name=station_name, artist_id=artist_id,
-            album_id=album_id, track_id=track_id, genre_id=genre_id,
-            curated_station_id=curated_station_id, playlist_token=playlist_token)
+        station_id = gmusic.create_station(
+            name=station_name, artist_id=artist_id, album_id=album_id,
+            track_id=track_id, genre_id=genre_id,
+            curated_station_id=curated_station_id,
+            playlist_token=playlist_token
+        )
 
         if not station_id:
             utils.notify(utils.translate(30050), utils.translate(30051))
             return
-
 
     tracks = gmusic.get_station_tracks(station_id=station_id, num_tracks=25)
 

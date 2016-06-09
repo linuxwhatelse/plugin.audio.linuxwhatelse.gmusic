@@ -8,7 +8,6 @@ from addon import addon
 from addon import utils
 from addon import gmusic
 
-
 _addon_path = 'plugin://%s' % addon.getAddonInfo('id')
 
 def run(track_id):

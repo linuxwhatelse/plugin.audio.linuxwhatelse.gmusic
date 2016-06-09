@@ -8,8 +8,12 @@ from addon import url
 
 if __name__ == '__main__':
     if addon.getSetting('is_setup') != 'true':
-        mpr.call(utils.build_url(url=url, paths=['setup'],
-            r_path=True, r_query=True))
+        mpr.call(utils.build_url(
+            url     = url,
+            paths   = ['setup'],
+            r_path  = True,
+            r_query = True
+        ))
 
     gmusic.login()
     mpr.call(url)

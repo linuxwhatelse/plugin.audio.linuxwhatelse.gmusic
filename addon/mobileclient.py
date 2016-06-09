@@ -1,9 +1,7 @@
-import time
-import calendar
-
 from gmusicapi.protocol.mobileclient import *
 
 sj_url = 'https://mclients.googleapis.com/sj/v2.4/'
+
 
 class GetNewReleases(McCall):
     static_params = {'alt': 'json'}
@@ -17,15 +15,18 @@ class GetNewReleases(McCall):
             params['genre'] = genre
         return params
 
+
 class GetTopChart(McCall):
     static_params = {'alt': 'json'}
     static_method = 'GET'
     static_url = sj_url + 'browse/topchart'
 
+
 class GetTopChartGenres(McCall):
     static_params = {'alt': 'json'}
     static_method = 'GET'
     static_url = sj_url + 'browse/topchartgenres'
+
 
 class GetTopChartForGenre(McCall):
     static_params = {'alt': 'json'}
@@ -35,10 +36,12 @@ class GetTopChartForGenre(McCall):
     def dynamic_url(genre):
         return sj_url + 'browse/topchartforgenre/' + genre
 
+
 class GetStationCategories(McCall):
     static_params = {'alt': 'json'}
     static_method = 'GET'
     static_url = sj_url + 'browse/stationcategories'
+
 
 class GetStations(McCall):
     static_params = {'alt': 'json'}

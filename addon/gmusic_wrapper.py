@@ -1,20 +1,20 @@
 import os
+import uuid
 import json
 import time
 import locale
 import traceback
 
 import xbmc
-import xbmcaddon
 
-from gmusicapi import Mobileclient, Webclient
+from gmusicapi import Mobileclient
 
 from addon import mobileclient
 from addon import utils
+from addon import thumbs
 
 from addon import addon
 
-_cache_dir = utils.get_cache_dir()
 
 class GMusic(Mobileclient):
     _is_logged_in = False
@@ -22,6 +22,7 @@ class GMusic(Mobileclient):
     def _make_call(self, protocol, *args, **kwargs):
         try:
             return super(GMusic, self)._make_call(protocol, *args, **kwargs)
+
         except:
             utils.notify(utils.translate(30050), utils.translate(30051))
             utils.log(traceback.format_exc(), xbmc.LOGERROR)
@@ -30,6 +31,7 @@ class GMusic(Mobileclient):
     def _should_test_login(self):
         try:
             last_login_check = int(addon.getSetting('last_login_check'))
+
         except:
             last_login_check = 0
 
@@ -44,7 +46,7 @@ class GMusic(Mobileclient):
             return False
 
     def login(self, validate=False):
-        # Set Kodis locale super class
+        # Set Kodis locale to super class
         locale_code = xbmc.getLanguage(xbmc.ISO_639_1)
         locale_code = locale.normalize(locale_code).split('.')[0]
         if not locale_code:
@@ -72,17 +74,22 @@ class GMusic(Mobileclient):
             else:
                 addon.setSetting('last_login_check', str(int(time.time())))
                 try:
-                    # Send a test request to ensure our authtoken is still valide and working
+                    # Send a test request to ensure our authtoken
+                    # is still valide and working
                     self.get_registered_devices()
                     self._is_logged_in = True
                     return True
                 except:
-                    # Faild with the test-request so we set "is_authenticated=False"
-                    # and go through the login-process again to get a new "authtoken"
+                    # Faild with the test-request so we set
+                    # "is_authenticated=False" and go through the login-process
+                    # again to get a new "authtoken"
                     self.session.is_authenticated = False
 
         if device_id:
-            if super(GMusic, self).login(username, password, device_id, self.locale):
+            success = super(GMusic, self).login(username, password,
+                                                device_id, self.locale)
+
+            if success:
                 addon.setSetting('authtoken', self.session._authtoken)
                 self._is_logged_in = True
                 return True
@@ -97,79 +104,45 @@ class GMusic(Mobileclient):
     ## Overloaded to add some stuff
     ##
     def get_listen_now_situations(self, from_cache=True):
-        _cache = os.path.join(_cache_dir, 'situations.json')
+        _cache = os.path.join(utils.get_cache_dir(), 'situations.json')
 
         resp = None
         if os.path.exists(_cache) and from_cache:
             with open(_cache, 'r') as f:
-                resp = json.loads(f.read())
-        else:
+                try:
+                    resp = json.loads(f.read())
+
+                except:
+                    pass
+
+        if not resp:
             resp = self._make_call(mobileclient.ListListenNowSituations)
 
             with open(_cache, 'w+') as f:
                 f.write(json.dumps(resp))
 
-        return (resp['primaryHeader'], resp['situations'])
+        if resp:
+            return (resp['primaryHeader'], resp['situations'])
 
-    def create_station(self, name, track_id=None, artist_id=None,
-        album_id=None, genre_id=None, curated_station_id=None, playlist_token=None):
-        """Creates an All Access radio station and returns its id.
+        else:
+            return (None, None)
 
-        :param name: the name of the station to create
-        :param \*_id: the id of an item to seed the station from.
-          Exactly one of these params must be provided, or ValueError
-          will be raised.
-        """
-        # TODO could expose include_tracks
-
-        seed = {}
-        if track_id is not None:
-            if track_id[0] == 'T':
-                seed['trackId'] = track_id
-                seed['seedType'] = 2
-            else:
-                seed['trackLockerId'] = track_id
-                seed['seedType'] = 1
-
-        if artist_id is not None:
-            seed['artistId'] = artist_id
-            seed['seedType'] = 3
-        if album_id is not None:
-            seed['albumId'] = album_id
-            seed['seedType'] = 4
-        if genre_id is not None:
-            seed['genreId'] = genre_id
-            seed['seedType'] = 5
-        if playlist_token is not None:
-            seed['playlistShareToken'] = playlist_token
-            seed['seedType'] = 8
-        if curated_station_id is not None:
-            seed['curatedStationId'] = curated_station_id
-            seed['seedType'] = 9
-
-        if len(seed) > 2:
-            raise ValueError('exactly one {track,artist,album,genre}_id must be provided')
-
-        mutate_call = mobileclient.BatchMutateStations
-        add_mutation = mutate_call.build_add(name, seed, include_tracks=False, num_tracks=0)
-        res = self._make_call(mutate_call, [add_mutation])
-
-        return res['mutate_response'][0]['id']
-
-    def get_station_tracks(self, station_id, num_tracks=25, recently_played_ids=None):
-        stations_cache = utils.get_cache_dir(['station-ids'])
-        station_ids_cache = os.path.join(stations_cache, '%s.json' % station_id)
+    def get_station_tracks(self, station_id, num_tracks=25,
+                           recently_played_ids=None):
+        _cache = utils.get_cache_dir(['station-ids'])
+        station_ids_cache = os.path.join(_cache, '%s.json' % station_id)
 
         if not recently_played_ids:
             if os.path.exists(station_ids_cache):
                 with open(station_ids_cache, 'r') as f:
                     try:
                         recently_played_ids = json.loads(f.read())
+
                     except ValueError:
                         pass
 
-
-        tracks = super(GMusic, self).get_station_tracks(station_id=station_id, num_tracks=num_tracks, recently_played_ids=recently_played_ids)
+        tracks = super(GMusic, self).get_station_tracks(station_id, num_tracks,
+                                                        recently_played_ids)
 
         track_ids = []
         with open(station_ids_cache, 'w+') as f:
@@ -185,44 +158,79 @@ class GMusic(Mobileclient):
         return tracks
 
     def delete_album(self, album_id):
-        songs_cache  = os.path.join(_cache_dir, 'songs.json')
-        songs        = self.get_my_library_songs(from_cache=True)
+        songs = self.get_my_library_songs(from_cache=True)
 
-        if songs:
-            song_ids = []
-            for song in songs:
-                if song['albumId'] == album_id:
-                    song_ids.append(song['id'])
+        if not songs:
+            return
 
+        song_ids = []
+        for song in songs:
+            if song['albumId'] == album_id:
+                song_ids.append(song['id'])
+
+        if song_ids:
             self.delete_songs(song_ids)
 
-    def search(self, query, from_cache=True, max_results=50):
-        _cache = os.path.join(_cache_dir, 'search_results.json')
+    def search(self, query=None, cached=False, max_results=50):
+        """Queries Google Music for content.
 
-        resp = None
-        if os.path.exists(_cache) and from_cache:
+        Args:
+            query (str): A query to search for
+            cached (bool): If set, the query will be ignored and
+                the result of the last search will be returned.
+
+        Returns:
+            Search results matching the query, from the cache or
+            None if cache was requested but none existent
+        """
+        _cache = os.path.join(utils.get_cache_dir(), 'search_results.json')
+
+        if query and not cached:
+            return super(GMusic, self).search(query, max_results)
+
+        if cached and os.path.exists(_cache):
             with open(_cache, 'r') as f:
-                resp = json.loads(f.read())
+                return json.loads(f.read())
 
-            if resp['query'].lower() != query.lower():
-                resp = super(GMusic, self).search(query, max_results)
+        return None
+
+    def get_album_info(self, album_id, include_tracks=True):
+        # If a user uploaded a song where google can't match a album,
+        # an albumId doesn NOT exist.
+        # Therefore we generate our own id.
+        # A call to googles backend will obviously return nothing
+        # so we handle this case beforehand
+        #
+        # Note: Google albumIds always start with a capital B
+        if album_id.startswith('B'):
+            return super(GMusic, self).get_album_info(album_id, include_tracks)
+
         else:
-            resp = super(GMusic, self).search(query, max_results)
+            return []
 
-            with open(_cache, 'w+') as f:
-                resp['query'] = query
-                f.write(json.dumps(resp))
+    def get_artist_info(self, artist_id, include_albums=True, max_top_tracks=5, max_rel_artist=5):
+        # If a user uploaded a song where google can't match a artist,
+        # an artistId doesn NOT exist.
+        # Therefore we generate our own id.
+        # A call to googles backend will obviously return nothing
+        # so we handle this case beforehand
+        #
+        # Note: Google artistIds always start with a capital A
+        if artist_id.startswith('A'):
+            return super(GMusic, self).get_artist_info(artist_id,
+                                                       include_albums,
+                                                       max_top_tracks,
+                                                       max_rel_artist)
 
-        if 'query' in resp:
-            del resp['query']
-
-        return resp
+        else:
+            return []
 
     ##
     ## Methodes not yet in API
     ##
     def get_new_releases(self, num_items=25, genre=None):
         res = self._make_call(mobileclient.GetNewReleases, num_items, genre)
+        utils.log(json.dumps(res, indent=2), xbmc.LOGERROR)
         for tabs in res['tabs']:
             if tabs['tab_type'] == 'NEW_RELEASES':
                 return tabs['groups'][0]['entities']
@@ -238,7 +246,7 @@ class GMusic(Mobileclient):
         return self._make_call(mobileclient.GetTopChartForGenre, genre)
 
     def get_station_categories(self, from_cache=True):
-        _cache = os.path.join(_cache_dir, 'station_categories.json')
+        _cache = os.path.join(utils.get_cache_dir(), 'station_categories.json')
 
         resp = None
         if os.path.exists(_cache) and from_cache:
@@ -252,129 +260,187 @@ class GMusic(Mobileclient):
 
         return resp['root']['subcategories']
 
-    def get_stations(self, station_subcategory_id, location_code):
-        res = self._make_call(mobileclient.GetStations, station_subcategory_id, location_code)
-        return res['stations']
+    def get_stations(self, station_subcategory_id):
+        res = self._make_call(mobileclient.GetStations,
+                              station_subcategory_id, self.locale)
 
+        return res['stations']
 
 
     ##
     ## Helper/Wrapper functions
     ##
+    def _uniquify(self, dict_list, key):
+        new = []
+        seen = set()
+        for elem in dict_list:
+            if key not in elem:
+                continue
+
+            if elem[key] not in seen and not seen.add(elem[key]):
+                new.append(elem)
+
+        return new
+
     def get_my_library_songs(self, from_cache=True):
-        songs_cache = os.path.join(_cache_dir, 'songs.json')
+        _cache = os.path.join(utils.get_cache_dir(['library']), 'songs.json')
+        _song_cache_path = utils.get_cache_dir(['library', 'songs'])
 
         songs = None
-        if os.path.exists(songs_cache) and from_cache:
-            with open(songs_cache, 'r') as f:
+        if os.path.exists(_cache) and from_cache:
+            with open(_cache, 'r') as f:
                 songs = json.loads(f.read())
+
         else:
             generator = self.get_all_songs(incremental=True, include_deleted=False)
+
             tmp = []
             for songs in generator:
-                for song in songs:
-                    # If we miss required id's we ignore those entries!
+                tmp += songs
 
-                    if 'artistId' not in song:
-                        continue
-
-                    if 'albumId' not in song:
-                        continue
-
-                    if 'storeId' not in song:
-                        if 'nid' not in song:
-                            continue
-                        else:
-                            song['storeId'] = song['nid']
-
-                    tmp.append(song)
             songs = tmp
 
-            with open(songs_cache, 'w+') as f:
+            # Generate artistId and albumId in case they are
+            # missing (applies to user uploaded songs without
+            # a matching entry in googles database)
+            for i, song in enumerate(songs):
+                if 'artistId' not in song:
+                    songs[i]['artistId'] = [str(uuid.uuid4())]
+
+                if 'albumId' not in song:
+                    songs[i]['albumId'] = str(uuid.uuid4())
+
+
+            with open(_cache, 'w+') as f:
                 f.write(json.dumps(songs))
+
+
+            # Save each song as separate file
+            # for easier and quicker access
+            for song in songs:
+                # Main id file
+                _target = os.path.join(_song_cache_path, song['id'])
+                with open(os.path.join(_target), 'w+') as f:
+                    f.write(json.dumps(song))
+
+                # Other available ids
+                for _id in ['trackId', 'storeId']:
+                    if _id not in song:
+                        continue
+
+                    _link = os.path.join(_song_cache_path, song[_id])
+                    if os.path.exists(_link) and os.path.islink(_link):
+                        continue
+
+                    try:
+                        os.symlink(_target, _link)
+
+                    except:
+                        with open(os.path.join(_link), 'w+') as f:
+                            f.write(json.dumps(song))
 
         return songs
 
+    def get_my_library_song_details(self, track_id):
+        _cache = os.path.join(utils.get_cache_dir(['library', 'songs']), track_id)
+
+        track = None
+        if os.path.exists(_cache):
+            with open(_cache, 'r') as f:
+                track = json.loads(f.read())
+
+        return track
+
     def get_my_library_artists(self, from_cache=True):
-        artists_cache = os.path.join(_cache_dir, 'artists.json')
+        _cache = os.path.join(utils.get_cache_dir(['library']), 'artists.json')
 
         artists = []
-        if os.path.exists(artists_cache) and from_cache:
-            with open(artists_cache, 'r') as f:
+        if os.path.exists(_cache) and from_cache:
+            with open(_cache, 'r') as f:
                 artists = json.loads(f.read())
         else:
             songs = self.get_my_library_songs()
-
-            # Uniquify all songs by artistId
-            seen = set()
-            seen_add = seen.add
-            songs = [x for x in songs if x['albumArtist'] not in seen and not seen_add(x['albumArtist'])]
+            songs = self._uniquify(songs, 'albumArtist')
 
             for song in songs:
-                artists.append({
+                if 'artistId' not in song:
+                    continue
+
+                _art = thumbs.IMG_ARTIST
+                if 'artistArtRef' in song and len(song['artistArtRef']) > 0:
+                    _art = song['artistArtRef'][0]['url']
+
+                artist ={
                     'artistId':     song['artistId'][0],
                     'name':         song['albumArtist'],
-                    'artistArtRef': song['artistArtRef'][0]['url'] if 'artistArtRef' in song and len(song['artistArtRef']) > 0 else ''
-                })
+                    'artistArtRef': _art
+                }
+
+                artists.append(artist)
 
             artists = sorted(artists, key=lambda k: k['name'].lower())
-            with open(artists_cache, 'w+') as f:
+            with open(_cache, 'w+') as f:
                 f.write(json.dumps(artists))
 
         return artists
 
     def get_my_library_albums(self, from_cache=True):
-        albums_cache = os.path.join(_cache_dir, 'albums.json')
+        _cache = os.path.join(utils.get_cache_dir(['library']), 'albums.json')
 
         albums = []
-        if os.path.exists(albums_cache) and from_cache:
-            with open(albums_cache, 'r') as f:
+        if os.path.exists(_cache) and from_cache:
+            with open(_cache, 'r') as f:
                 albums = json.loads(f.read())
         else:
             songs = self.get_my_library_songs()
 
-            # Uniquify all songs by albumId
-            seen = set()
-            seen_add = seen.add
-            songs = [x for x in songs if x['albumId'] not in seen and not seen_add(x['albumId'])]
+            songs = self._uniquify(songs, 'albumId')
 
             for song in songs:
+                if 'albumId' not in song:
+                    continue
+
+                if 'artistId' not in song:
+                    continue
+
+                _art = thumbs.IMG_ALBUM
+                if 'albumArtRef' in song and len(song['albumArtRef']) > 0:
+                    _art = song['albumArtRef'][0]['url']
+
                 album = {
-                    'albumId':     song['albumId'],
-                    'artistId':    song['artistId'],
-                    'name':        song['album']       if 'album'       in song else '',
-                    'artist':      song['artist']      if 'artist'      in song else '',
+                    'albumId'    : song['albumId'],
+                    'artistId'   : song['artistId'],
+                    'name'       : song['album']       if 'album'       in song else '',
+                    'artist'     : song['artist']      if 'artist'      in song else '',
                     'albumArtist': song['albumArtist'] if 'albumArtist' in song else '',
-                    'year':        song['year']        if 'year'        in song else '',
-                    'genre':       song['genre']       if 'genre'       in song else '',
-                    'albumArtRef': song['albumArtRef'][0]['url'] if 'albumArtRef' in song and len(song['albumArtRef']) > 0 else '',
+                    'year'       : song['year']        if 'year'        in song else '',
+                    'genre'      : song['genre']       if 'genre'       in song else '',
+                    'albumArtRef': _art
                 }
 
                 albums.append(album)
 
             albums = sorted(albums, key=lambda k: k['name'].lower())
-            with open(albums_cache, 'w+') as f:
+            with open(_cache, 'w+') as f:
                 f.write(json.dumps(albums))
 
         return albums
 
     def get_my_library_genres(self):
         songs = self.get_my_library_songs()
-
-        # Uniquify all songs by genre
-        seen = set()
-        seen_add = seen.add
-        songs = [x for x in songs if x['genre'] not in seen and not seen_add(x['genre'])]
+        songs = self._uniquify(songs, 'genre')
 
         genres = []
         for song in songs:
-            genres.append({
-                'name':  song['genre'],
-                'image': song['albumArtRef'][0]['url'] if 'albumArtRef' in song and len(song['albumArtRef']) > 0 else None
-            })
+            if 'genre' not in song:
+                continue
 
+            if song['genre'] == '':
+                continue
 
-        return sorted(genres, key=lambda k: k['name'])
+            genres.append(song['genre'])
+
+        return sorted(genres)
 
     def get_user_artist_albums(self, artist_id):
         artist_albums = []
@@ -387,7 +453,8 @@ class GMusic(Mobileclient):
     def get_user_album_songs(self, album_id):
         album_songs = []
         for song in self.get_my_library_songs():
-            if album_id == song['albumId']:
+
+            if 'albumId' in song and album_id == song['albumId']:
                 album_songs.append(song)
 
         return sorted(album_songs, key=lambda k: k['trackNumber'])
@@ -395,7 +462,7 @@ class GMusic(Mobileclient):
     def get_user_genre_albums(self, genre):
         genre_albums = []
         for album in self.get_my_library_albums():
-            if genre == album['genre']:
+            if 'genre' in album and genre == album['genre']:
                 genre_albums.append(album)
 
         return sorted(genre_albums, key=lambda k: k['name'])
@@ -408,6 +475,7 @@ class GMusic(Mobileclient):
 
     def get_user_playlist(self, playlist_id):
         playlist_content = self.get_all_user_playlist_contents()
+
         for playlist in playlist_content:
             if playlist['id'] != playlist_id:
                 continue
@@ -416,6 +484,7 @@ class GMusic(Mobileclient):
 
     def get_user_lastadded(self, limit=200):
         songs = self.get_my_library_songs()
+        # ToDo:
         # Google also sorts by tracknumber specific to the album
         # Can we do that as well somehow?
         songs = sorted(songs, key=lambda k: -long(k['recentTimestamp']))

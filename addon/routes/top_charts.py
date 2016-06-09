@@ -1,34 +1,67 @@
 import xbmcgui
-import xbmcaddon
 
 from addon import utils
 from addon import thumbs
 
-from addon import addon
 from addon import mpr
 from addon import url
-from addon import addon_handle
 from addon import listing
 from addon import gmusic
 
 
-@mpr.url('^/browse/top-charts/$')
+@mpr.s_url('/browse/top-charts/')
 def top_charts():
+    songs = xbmcgui.ListItem(utils.translate(30024))
+    songs.setArt({
+        'thumb'  : thumbs.IMG_TRACK,
+        'poster' : thumbs.IMG_TRACK
+    })
+
+    albums = xbmcgui.ListItem(utils.translate(30023))
+    albums.setArt({
+        'thumb'  : thumbs.IMG_ALBUM,
+        'poster' : thumbs.IMG_ALBUM
+    })
+
     items = [
-        ( utils.build_url(url, ['songs']),  xbmcgui.ListItem(label=utils.translate(30024), iconImage=thumbs.IMG_TRACK, thumbnailImage=thumbs.IMG_TRACK), True ),
-        ( utils.build_url(url, ['albums']), xbmcgui.ListItem(label=utils.translate(30023), iconImage=thumbs.IMG_ALBUM, thumbnailImage=thumbs.IMG_ALBUM), True ),
+        (
+            utils.build_url(url, ['songs']),
+            songs,
+            True
+        ),
+        (
+            utils.build_url(url, ['albums']),
+            albums,
+            True
+        )
     ]
+
+    # Remove default context menu entries (like "Play all", "Queue", etc.)
     for item in items:
-        item[1].addContextMenuItems([],True)
+        item[1].addContextMenuItems([], True)
 
     listing.list_items(items)
 
-@mpr.url('^/browse/top-charts/songs/$')
-def top_charts_songs():
-    items = listing.build_song_listitems(gmusic.get_top_chart()['tracks'])
-    listing.list_songs(items)
 
-@mpr.url('^/browse/top-charts/albums/$')
+@mpr.s_url('/browse/top-charts/songs/')
+def top_charts_songs():
+    top_charts = gmusic.get_top_chart()
+
+    if top_charts and 'tracks' in top_charts:
+        items = listing.build_song_listitems(top_charts['tracks'])
+        listing.list_songs(items)
+
+    else:
+        listing.list_items([])
+
+
+@mpr.s_url('/browse/top-charts/albums/')
 def top_charts_albums():
-    items = listing.build_album_listitems(gmusic.get_top_chart()['albums'])
-    listing.list_albums(items)
+    top_charts = gmusic.get_top_chart()
+
+    if top_charts and 'albums' in top_charts:
+        items = listing.build_album_listitems(top_charts['albums'])
+        listing.list_albums(items)
+
+    else:
+        listing.list_items([])
