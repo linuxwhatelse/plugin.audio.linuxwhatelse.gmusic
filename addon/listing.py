@@ -27,7 +27,9 @@ def build_artist_listitems(artists, my_library=False):
 
         artist_id   = artist['artistId']
         artist_name = artist['name']
-        artist_art  = artist['artistArtRef'] if 'artistArtRef' in artist else thumbs.IMG_ARTIST_FLAT
+        artist_art  = thumbs.IMG_ARTIST_FLAT
+        if 'artistArtRef' in artist:
+            artist_art = artist['artistArtRef']
 
         item = xbmcgui.ListItem(artist_name)
 
@@ -565,15 +567,20 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
 
         track_title = track['title'] if 'title' in track else ''
         album_art   = thumbs.IMG_TRACK
+        artist_art  = thumbs.IMG_ARTIST_FLAT
+
         if 'albumArtRef' in track and len(track['albumArtRef']) > 0:
             album_art = track['albumArtRef'][0]['url']
+
+        if 'artistArtRef' in track and len(track['artistArtRef']) > 0:
+            artist_art = track['artistArtRef'][0]['url']
 
         item = xbmcgui.ListItem(track_title)
 
         item.setArt({
             'thumb'  : album_art,
             'poster' : album_art,
-            'fanart' : album_art
+            'fanart' : artist_art
         })
 
         item.setInfo('music', {
