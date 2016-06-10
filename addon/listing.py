@@ -117,7 +117,7 @@ def build_album_listitems(albums, my_library=False):
             album_art = album['albumArtRef']
 
         if album_art and album_art != thumbs.IMG_ALBUM:
-            fanart = album_art + "=w1280-c-w1280"
+            fanart = album_art + "=w1280-w1280"
 
         item = xbmcgui.ListItem(album_name)
 
@@ -292,7 +292,7 @@ def build_playlist_listitems(playlists):
             playlist_art = playlist['albumArtRef'][0]['url']
 
         if playlist_art and playlist_art != thumbs.IMG_PLAYLIST:
-            fanart = playlist_art + "=w1280-c-w1280"
+            fanart = playlist_art + "=w1280-w1280"
 
         # Get the id if available (Would mean it's a user playlist)
         if 'id' in playlist and type(playlist['id']) == unicode:
@@ -411,7 +411,7 @@ def build_station_listitems(stations):
             station_art = station['imageUrls'][0]['url']
 
         if station_art and station_art != thumbs.IMG_STATION:
-            fanart = station_art + "=w1280-c-w1280"
+            fanart = station_art + "=w1280-w1280"
 
         item = xbmcgui.ListItem(station_name)
 
@@ -504,7 +504,7 @@ def build_situation_listitems(situations):
             situation_art = situation['imageUrl']
 
         if situation_art and situation_art != thumbs.IMG_ALBUM:
-            fanart = situation_art + "=w1280-c-w1280"
+            fanart = situation_art + "=w1280-w1280"
 
         item = xbmcgui.ListItem(situation_title)
 
