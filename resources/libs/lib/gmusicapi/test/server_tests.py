@@ -7,8 +7,6 @@ Destructive modifications are not made, but if things go terrible wrong,
 an extra test playlist or song may result.
 """
 from __future__ import print_function, division, absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 from builtins import *  # noqa
 
 from collections import namedtuple
@@ -29,7 +27,7 @@ import requests
 from requests.exceptions import SSLError
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-from gmusicapi import Webclient, Musicmanager, Mobileclient
+from gmusicapi import Musicmanager, Mobileclient
 # from gmusicapi.protocol import mobileclient
 from gmusicapi.protocol.shared import authtypes
 from gmusicapi.utils.utils import retry, id_or_nid
@@ -49,6 +47,14 @@ TEST_STORE_SONG_ID = 'Tqqufr34tuqojlvkolsrwdwx7pe'
 # differences between clients are presumably from stream quality.
 TEST_STORE_SONG_WC_HASH = 'c3302fe6bd54ce9b310f92da1904f3b9'
 TEST_STORE_SONG_MC_HASH = '815c49d3e49eea675d198a2e00aa4c40'
+
+# The Nerdist.
+TEST_PODCAST_SERIES_ID = 'Iliyrhelw74vdqrro77kq2vrdhy'
+
+# An episode of Note to Self.
+# Picked because it's very short (~4 minutes).
+TEST_PODCAST_EPISODE_ID = 'Diksw5cywxflebfs3dbiiabfphu'
+TEST_PODCAST_EPISODE_HASH = 'e8ff4efd6a3a6a1017b35e0ef564d840'
 
 # Amorphis
 TEST_STORE_ARTIST_ID = 'Apoecs6off3y6k4h5nvqqos4b5e'
@@ -102,21 +108,23 @@ class SslVerificationTests(object):
 
     @test
     def clients_verify_by_default(self):
-        for client_cls in (Webclient, Mobileclient, Musicmanager):
+        # Webclient removed since testing is disabled.
+        for client_cls in (Mobileclient, Musicmanager):
             assert_raises(SSLError, self.request_invalid_site, client_cls())
 
     @test
     def disable_client_verify(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=InsecureRequestWarning)
-            for client_cls in (Webclient, Mobileclient, Musicmanager):
+            # Webclient removed since testing is disabled.
+            for client_cls in (Mobileclient, Musicmanager):
                 self.request_invalid_site(client_cls(verify_ssl=False))  # should not raise SSLError
 
 
 @test(groups=['server'])
 class ClientTests(object):
     # set on the instance in login
-    wc = None  # webclient
+    # wc = None  # webclient
     mm = None  # musicmanager
     mc = None  # mobileclient
 
@@ -129,6 +137,9 @@ class ClientTests(object):
     playlist_ids = None
     plentry_ids = None
     station_ids = None
+
+    podcast_ids = None
+    delete_podcast = True  # Set to false if user already subscribed to test podcast.
 
     @property
     def all_songs(self):
@@ -269,7 +280,7 @@ class ClientTests(object):
         user_sids.append(uploaded[fname])
 
         if test_subscription_features():
-            store_sids.append(self.mc.add_store_track(TEST_STORE_SONG_ID))
+            store_sids.append(self.mc.add_store_tracks(TEST_STORE_SONG_ID)[0])
 
         # we test get_all_songs here so that we can assume the existance
         # of the song for future tests (the servers take time to sync an upload)
@@ -437,6 +448,52 @@ class ClientTests(object):
         self.assert_songs_state(self.mc.get_all_songs, sids(self.all_songs), present=False)
         self.assert_listing_contains_deleted_items(self.mc.get_all_songs)
 
+    @test
+    def podcast_create(self):
+        # Check to make sure podcast doesn't already exist to prevent deletion.
+        already_exists = [pc for pc in self.mc.get_all_podcast_series()
+                          if pc['seriesId'] == TEST_PODCAST_SERIES_ID]
+
+        if already_exists:
+            self.delete_podcast = False
+
+        # like song_create, retry until the podcast appears
+        @retry
+        def assert_podcast_exists(pcids):
+            found = [pc for pc in self.mc.get_all_podcast_series()
+                     if pc['seriesId'] in pcids]
+
+            assert_equal(len(found), 1)
+
+        pc_id = self.mc.add_podcast_series(TEST_PODCAST_SERIES_ID)
+
+        assert_podcast_exists([pc_id])
+        self.podcast_ids = [pc_id]
+
+    @test(groups=['podcast'], depends_on=[podcast_create],
+          runs_after_groups=['podcast.exists'],
+          always_run=True)
+    def podcast_delete(self):
+        if self.podcast_ids is None:
+            raise SkipTest('did not store self.podcast_ids')
+
+        if not self.delete_podcast:
+            raise SkipTest('not deleting already existing podcast')
+
+        for pcid in self.podcast_ids:
+            res = self.mc.delete_podcast_series(pcid)
+            assert_equal(res, pcid)
+
+        @retry
+        def assert_podcast_does_not_exist(pcid):
+            found = [pc for pc in self.mc.get_all_podcast_series(include_deleted=False)
+                     if pc['seriesId'] == pcid]
+
+            assert_equal(len(found), 0)
+
+        for pcid in self.podcast_ids:
+            assert_podcast_does_not_exist(pcid)
+
     # These decorators just prevent setting groups and depends_on over and over.
     # They won't work right with additional settings; if that's needed this
     #  pattern should be factored out.
@@ -448,12 +505,17 @@ class ClientTests(object):
     plentry_test = test(groups=['plentry', 'plentry.exists'],
                         depends_on=[plentry_create])
     station_test = test(groups=['station', 'station.exists'], depends_on=[station_create])
+    podcast_test = test(groups=['podcast', 'podcast.exists'], depends_on=[podcast_create])
 
     # Non-wonky tests resume down here.
 
     # ---------
     #  MM tests
     # ---------
+
+    def mm_get_quota(self):
+        # just testing the call is successful
+        self.mm.get_quota()
 
     @song_test
     def mm_list_new_songs(self):
@@ -556,6 +618,16 @@ class ClientTests(object):
         self.mc.get_registered_devices()
 
     @test
+    def mc_get_browse_podcast_hierarchy(self):
+        # no logic; just checking schema
+        self.mc.get_browse_podcast_hierarchy()
+
+    @test
+    def mc_get_browse_podcast_series(self):
+        # no logic; just checking schema
+        self.mc.get_browse_podcast_series()
+
+    @test
     def mc_get_listen_now_items(self):
         # no logic; just checking schema
         self.mc.get_listen_now_items()
@@ -577,6 +649,13 @@ class ClientTests(object):
     def mc_list_shared_playlist_entries(self):
         entries = self.mc.get_shared_playlist_contents(TEST_PLAYLIST_SHARETOKEN)
         assert_true(len(entries) > 0)
+
+    @test
+    def mc_stream_podcast_episode(self):
+        # uses frozen device_id
+        url = self.mc.get_podcast_episode_stream_url(TEST_PODCAST_EPISODE_ID)
+        audio = self.mc.session._rsession.get(url).content
+        assert_equal(md5(audio).hexdigest(), TEST_PODCAST_EPISODE_HASH)
 
     @test
     @subscription
@@ -623,10 +702,10 @@ class ClientTests(object):
     #     song = self.mc.get_track_info(TEST_STORE_SONG_ID)
 
     #     # increment by one but keep in rating range
-    #     song['rating'] = int(song.get('rating', '0')) + 1
-    #     song['rating'] = str(song['rating'] % 6)
+    #     rating = int(song.get('rating', '0')) + 1
+    #     rating = str(rating % 6)
 
-    #     self.mc.change_song_metadata(song)
+    #     self.mc.rate_songs(song, rating)
 
     #     self._assert_song_key_equal_to(lambda: self.mc.get_track_info(TEST_STORE_SONG_ID),
     #                              id_or_nid(song),
@@ -640,27 +719,23 @@ class ClientTests(object):
             'rating',
             '0')  # initially unrated
 
-        song['rating'] = '1'
-        self.mc.change_song_metadata(song)
+        self.mc.rate_songs(song, 1)
 
         self._assert_song_key_equal_to(self.mc.get_all_songs, song['id'], 'rating', '1')
 
-        song['rating'] = '0'
-        self.mc.change_song_metadata(song)
+        self.mc.rate_songs(song, 0)
 
     @song_test
     @retry
     def mc_get_promoted_songs(self):
         song = self.mc.get_track_info(TEST_STORE_SONG_ID)
 
-        song['rating'] = '5'
-        self.mc.change_song_metadata(song)
+        self.mc.rate_songs(song, 5)
 
         promoted = self.mc.get_promoted_songs()
         assert_true(len(promoted))
 
-        song['rating'] = '0'
-        self.mc.change_song_metadata(song)
+        self.mc.rate_songs(song, 0)
 
     def _test_increment_playcount(self, sid):
         matching = [t for t in self.mc.get_all_songs()
@@ -697,7 +772,11 @@ class ClientTests(object):
 
         old_title = song.title
         new_title = old_title + '_mod'
-        self.mc.change_song_metadata({'id': song.sid, 'title': new_title})
+        # Mobileclient.change_song_metadata is deprecated, so
+        # ignore its deprecation warning.
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            self.mc.change_song_metadata({'id': song.sid, 'title': new_title})
 
         self._assert_song_key_equal_to(self.mc.get_all_songs, song.sid, 'title', old_title)
 
@@ -708,6 +787,14 @@ class ClientTests(object):
     @song_test
     def mc_list_songs_inc_equal_with_deleted(self):
         self.assert_list_inc_equivalence(self.mc.get_all_songs, include_deleted=True)
+
+    @podcast_test
+    def mc_list_podcast_series_inc_equal(self):
+        self.assert_list_inc_equivalence(self.mc.get_all_podcast_series)
+
+    @podcast_test
+    def mc_list_podcast_series_inc_equal_with_deleted(self):
+        self.assert_list_inc_equivalence(self.mc.get_all_podcast_series, include_deleted=True)
 
     @playlist_test
     def mc_list_playlists_inc_equal(self):
@@ -931,6 +1018,19 @@ class ClientTests(object):
     @test
     def mc_track_info(self):
         self.mc.get_track_info(TEST_STORE_SONG_ID)  # just for the schema
+
+    @test
+    def mc_podcast_series_info(self):
+        optional_keys = {'episodes'}
+
+        include_episodes = self.mc.get_podcast_series_info(TEST_PODCAST_SERIES_ID, max_episodes=1)
+        no_episodes = self.mc.get_podcast_series_info(TEST_PODCAST_SERIES_ID, max_episodes=0)
+
+        with Check() as check:
+            check.true(set(include_episodes.keys()) & optional_keys == optional_keys)
+
+            check.true(set(no_episodes.keys()) & optional_keys ==
+                       optional_keys - {'episodes'})
 
     @test(groups=['genres'])
     def mc_all_genres(self):

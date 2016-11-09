@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import print_function, division, absolute_import, unicode_literals
-from future import standard_library
+from future.utils import PY3
 from past.builtins import basestring
-standard_library.install_aliases()
 from builtins import *  # noqa
-from urllib.parse import urlparse, parse_qsl
+
+import warnings
+
+if PY3:
+    from urllib.parse import parse_qsl, urlparse
+else:
+    from urlparse import parse_qsl, urlparse
 
 import gmusicapi
 from gmusicapi.clients.shared import _Base
+from gmusicapi.exceptions import GmusicapiWarning
 from gmusicapi.protocol import webclient
 from gmusicapi.utils import utils
 import gmusicapi.session
@@ -37,6 +44,12 @@ class Webclient(_Base):
     _session_class = gmusicapi.session.Webclient
 
     def __init__(self, debug_logging=True, validate=True, verify_ssl=True):
+        warnings.warn(
+            "Webclient functionality is not tested nor well supported. "
+            "Use Mobileclient or Musicmanager if possible.",
+            GmusicapiWarning
+        )
+
         super(Webclient, self).__init__(self.__class__.__name__,
                                         debug_logging,
                                         validate,
@@ -250,6 +263,22 @@ class Webclient(_Base):
         self._make_call(webclient.ChangeSongMetadata, song_dicts)
 
         return url
+
+    @utils.accept_singleton(dict)
+    @utils.empty_arg_shortcircuit
+    def change_song_metadata(self, songs):
+        """Changes metadata of songs.
+
+        Returns a list of the song ids changed.
+
+        :param songs: a list of song dictionaries, each dictionary must contain valid song 'id'
+
+        The following fields are supported: title, album, albumArtist, artist
+        """
+
+        self._make_call(webclient.ChangeSongMetadata, songs)
+
+        return list(song['id'] for song in songs)
 
     # deprecated methods follow:
 

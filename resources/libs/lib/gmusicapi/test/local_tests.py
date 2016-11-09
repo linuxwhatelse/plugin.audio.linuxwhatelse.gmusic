@@ -4,8 +4,6 @@
 Tests that don't hit the Google Music servers.
 """
 from __future__ import print_function, division, absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 from builtins import *  # noqa
 
 from collections import namedtuple
@@ -20,7 +18,7 @@ from proboscis.asserts import (
 from proboscis import test
 
 import gmusicapi.session
-from gmusicapi.clients import Webclient, Musicmanager
+from gmusicapi.clients import Mobileclient, Musicmanager
 from gmusicapi.exceptions import AlreadyLoggedIn
 from gmusicapi.protocol.shared import authtypes
 from gmusicapi.protocol import mobileclient
@@ -53,7 +51,7 @@ def longest_increasing_sub():
 # clients
 #
 # this feels like a dumb pattern, but I can't think of a better way
-names = ('Webclient', 'Musicmanager')
+names = ('Mobileclient', 'Musicmanager')  # Webclient removed since testing is disabled.
 Clients = namedtuple('Clients', [n.lower() for n in names])
 
 
@@ -72,8 +70,11 @@ def create_clients():
 
 @test
 def no_client_auth_initially():
-    wc = Webclient()
-    assert_false(wc.is_authenticated())
+    # wc = Webclient()
+    # assert_false(wc.is_authenticated())
+
+    mc = Mobileclient()
+    assert_false(mc.is_authenticated())
 
     mm = Musicmanager()
     assert_false(mm.is_authenticated())

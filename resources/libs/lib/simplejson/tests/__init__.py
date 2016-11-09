@@ -57,6 +57,7 @@ def all_tests_suite():
                 'simplejson.tests.test_scanstring',
                 'simplejson.tests.test_separators',
                 'simplejson.tests.test_speedups',
+                'simplejson.tests.test_str_subclass',
                 'simplejson.tests.test_unicode',
                 'simplejson.tests.test_decimal',
                 'simplejson.tests.test_tuple',
@@ -64,6 +65,7 @@ def all_tests_suite():
                 'simplejson.tests.test_tool',
                 'simplejson.tests.test_for_json',
                 'simplejson.tests.test_subclass',
+                'simplejson.tests.test_raw_json',
             ]))
     suite = get_suite()
     import simplejson

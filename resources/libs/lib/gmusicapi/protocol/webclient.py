@@ -2,10 +2,7 @@
 
 """Calls made by the web client."""
 from __future__ import print_function, division, absolute_import, unicode_literals
-from future import standard_library
 from six import raise_from
-
-standard_library.install_aliases()
 from builtins import *  # noqa
 
 import base64
@@ -296,13 +293,23 @@ class ChangeSongMetadata(WcCall):
         """
         :param songs: a list of dicts ``{'id': '...', 'albumArtUrl': '...'}``
         """
-        if any([s for s in songs if set(s.keys()) != {'id', 'albumArtUrl'}]):
-            raise ValueError("ChangeSongMetadata only supports the 'id' and 'albumArtUrl' keys."
-                             " All other keys must be removed.")
+        supported = {'id', 'albumArtUrl', 'title', 'artist', 'albumArtist', 'album'}
+        for s in songs:
+            for k in s.keys():
+                if k not in supported:
+                    raise ValueError("ChangeSongMetadata only supports the the following keys: "
+                                     + str(supported) +
+                                     ". All other keys must be removed. Key encountered:" + k)
 
         # jsarray is just wonderful
         jsarray = [[session_id, 1]]
-        song_arrays = [[s['id'], None, s['albumArtUrl']] + [None] * 36 + [[]] for s in songs]
+        song_arrays = [[s['id'],
+                        s.get('title'),
+                        s.get('albumArtUrl'),
+                        s.get('artist'),
+                        s.get('album'),
+                        s.get('albumArtist')]
+                       + [None] * 33 + [[]] for s in songs]
         jsarray.append([song_arrays])
 
         return json.dumps(jsarray)

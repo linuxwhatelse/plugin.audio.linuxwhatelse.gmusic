@@ -1,16 +1,20 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function, division, absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
+from future.utils import PY3
 from past.builtins import basestring
 from builtins import *  # noqa
+
 import os
 from socket import gethostname
 import time
-import urllib.request
-import urllib.parse
-import urllib.error
 from uuid import getnode as getmac
 import webbrowser
+
+if PY3:
+    from urllib.parse import unquote
+else:
+    from urllib import unquote
 
 import httplib2  # included with oauth2client
 from oauth2client.client import OAuth2WebServerFlow, TokenRevokeError
@@ -199,6 +203,7 @@ class Musicmanager(_Base):
         if uploader_id is None:
             mac_int = getmac()
             if (mac_int >> 40) % 2:
+                self.session.logout()
                 raise OSError('a valid MAC could not be determined.'
                               ' Provide uploader_id (and be'
                               ' sure to provide the same one on future runs).')
@@ -210,6 +215,7 @@ class Musicmanager(_Base):
             uploader_id = utils.create_mac_string(mac_int)
 
         if not utils.is_valid_mac(uploader_id):
+            self.session.logout()
             raise ValueError('uploader_id is not in a valid form.'
                              '\nProvide 6 pairs of hex digits'
                              ' with capital letters',
@@ -337,14 +343,18 @@ class Musicmanager(_Base):
 
     @utils.enforce_id_param
     def download_song(self, song_id):
-        """Returns a tuple ``(u'suggested_filename', 'audio_bytestring')``.
+        """Download an uploaded or purchased song from your library.
+
+        Subscription tracks can't be downloaded with this method.
+
+        Returns a tuple ``(u'suggested_filename', 'audio_bytestring')``.
         The filename
         will be what the Music Manager would save the file as,
         presented as a unicode string with the proper file extension.
         You don't have to use it if you don't want.
 
 
-        :param song_id: a single song id.
+        :param song_id: a single uploaded or purchased song id.
 
         To write the song to disk, use something like::
 
@@ -373,15 +383,22 @@ class Musicmanager(_Base):
 
         cd_header = response.headers['content-disposition']
 
-        filename = urllib.parse.unquote(cd_header.split("filename*=UTF-8''")[-1])
+        filename = unquote(cd_header.split("filename*=UTF-8''")[-1])
 
         return (filename, response.content)
 
-    # def get_quota(self):
-    #     """Returns a tuple of (allowed number of tracks, total tracks, available tracks)."""
-    #     quota = self._mm_pb_call("client_state").quota
-    #     #protocol incorrect here...
-    #     return (quota.maximumTracks, quota.totalTracks, quota.availableTracks)
+    def get_quota(self):
+        """Returns a tuple of (number of uploaded tracks, allowed number of uploaded tracks)."""
+
+        if self.uploader_id is None:
+            raise NotLoggedIn("Not authenticated as an upload device;"
+                              " run Musicmanager.login(...perform_upload_auth=True...)"
+                              " first.")
+
+        client_state = self._make_call(
+            musicmanager.GetClientState, self.uploader_id).clientstate_response
+
+        return (client_state.total_track_count, client_state.locker_track_limit)
 
     @utils.accept_singleton(basestring)
     @utils.empty_arg_shortcircuit(return_code='{}')
@@ -394,7 +411,7 @@ class Musicmanager(_Base):
 
         An available installation of ffmpeg or avconv is required in most cases:
         see `the installation page
-        <https://unofficial-google-music-api.readthedocs.org/en
+        <https://unofficial-google-music-api.readthedocs.io/en
         /latest/usage.html?#installation>`__ for details.
 
         Returns a 3-tuple ``(uploaded, matched, not_uploaded)`` of dictionaries, eg::

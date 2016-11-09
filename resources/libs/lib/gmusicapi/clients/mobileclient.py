@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function, division, absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 from past.builtins import basestring
 from builtins import *  # noqa
 from collections import defaultdict
@@ -32,6 +32,16 @@ class Mobileclient(_Base):
                                            debug_logging,
                                            validate,
                                            verify_ssl)
+
+    def _ensure_device_id(self, device_id=None):
+        if device_id is None:
+            device_id = self.android_id
+
+        if len(device_id) == 16 and re.match('^[a-z0-9]*$', device_id):
+            # android device ids are now sent in base 10
+            device_id = str(int(device_id, 16))
+
+        return device_id
 
     @property
     def locale(self):
@@ -189,6 +199,32 @@ class Mobileclient(_Base):
 
     @utils.accept_singleton(dict)
     @utils.empty_arg_shortcircuit
+    def rate_songs(self, songs, rating):
+        """Rate library or store songs.
+
+        Returns rated song ids.
+
+        :param songs: a list of song dictionaries
+          or a single song dictionary.
+          required keys: 'id' for library songs or 'nid' and 'trackType' for store songs.
+        :param rating: set to ``'0'`` (no thumb), ``'1'`` (down thumb), or ``'5'`` (up thumb).
+        """
+
+        mutate_call = mobileclient.BatchMutateTracks
+        mutations = []
+        for song in songs:
+            song['rating'] = rating
+            mutations.append({'update': song})
+        self._make_call(mutate_call, mutations)
+
+        # TODO
+        # store tracks don't send back their id, so we're
+        # forced to spoof this
+        return [utils.id_or_nid(song) for song in songs]
+
+    @utils.accept_singleton(dict)
+    @utils.empty_arg_shortcircuit
+    @utils.deprecated('prefer Mobileclient.rate_songs')
     def change_song_metadata(self, songs):
         """Changes the metadata of tracks.
         Returns a list of the song ids changed.
@@ -197,8 +233,7 @@ class Mobileclient(_Base):
           or a single song dictionary.
 
         Currently, only the ``rating`` key can be changed.
-        Set it to ``'0'`` (no thumb), ``'1'`` (down thumb), or ``'5'`` (up thumb)
-        unless you're using the 5-star ratings lab.
+        Set it to ``'0'`` (no thumb), ``'1'`` (down thumb), or ``'5'`` (up thumb).
 
         You can also use this to rate store tracks
         that aren't in your library, eg::
@@ -242,6 +277,7 @@ class Mobileclient(_Base):
 
     @utils.require_subscription
     @utils.enforce_id_param
+    @utils.deprecated('prefer Mobileclient.add_store_tracks')
     def add_store_track(self, store_song_id):
         """Adds a store track to the library
 
@@ -249,16 +285,27 @@ class Mobileclient(_Base):
 
         :param store_song_id: store song id
         """
-        # TODO is there a way to do this on multiple tracks at once?
-        # problem is with gathering store track info
 
-        store_track_info = self.get_track_info(store_song_id)
+        return self.add_store_tracks(store_song_id)[0]
+
+    @utils.require_subscription
+    @utils.accept_singleton(basestring)
+    @utils.enforce_ids_param
+    def add_store_tracks(self, store_song_ids):
+        """Add store tracks to the library
+
+        Returns a list of the library track ids of added store tracks.
+
+        :param store_song_ids: a list of store song ids or a single store song id
+        """
 
         mutate_call = mobileclient.BatchMutateTracks
-        add_mutation = mutate_call.build_track_add(store_track_info)
-        res = self._make_call(mutate_call, [add_mutation])
+        add_mutations = [mutate_call.build_track_add(self.get_track_info(store_song_id))
+                         for store_song_id in store_song_ids]
 
-        return res['mutate_response'][0]['id']
+        res = self._make_call(mutate_call, add_mutations)
+
+        return [r['id'] for r in res['mutate_response']]
 
     @utils.accept_singleton(basestring)
     @utils.enforce_ids_param
@@ -320,12 +367,7 @@ class Mobileclient(_Base):
         if song_id.startswith('T') and not self.is_subscribed:
             raise NotSubscribed("Store tracks require a subscription to stream.")
 
-        if device_id is None:
-            device_id = self.android_id
-
-        if len(device_id) == 16 and re.match('^[a-z0-9]*$', device_id):
-            # android device ids are now sent in base 10
-            device_id = str(int(device_id, 16))
+        device_id = self._ensure_device_id(device_id)
 
         return self._make_call(mobileclient.GetStreamUrl, song_id, device_id, quality)
 
@@ -913,6 +955,513 @@ class Mobileclient(_Base):
 
         return self._make_call(mobileclient.ListListenNowSituations)['situations']
 
+    def get_browse_podcast_hierarchy(self):
+        """Retrieve the hierarchy of podcast browse genres.
+
+        Returns a list of podcast genres and subgenres::
+
+            {
+                "groups": [
+                    {
+                        "id": "JZCpodcasttopchart",
+                        "displayName": "Top Charts",
+                        "subgroups": [
+                            {
+                             "id": "JZCpodcasttopchartall",
+                             "displayName": "All categories"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartarts",
+                             "displayName": "Arts"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartbusiness",
+                             "displayName": "Business"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartcomedy",
+                             "displayName": "Comedy"
+                            },
+                            {
+                             "id": "JZCpodcasttopcharteducation",
+                             "displayName": "Education"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartgames",
+                             "displayName": "Games & hobbies"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartgovernment",
+                             "displayName": "Government & organizations"
+                            },
+                            {
+                             "id": "JZCpodcasttopcharthealth",
+                             "displayName": "Health"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartkids",
+                             "displayName": "Kids & families"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartmusic",
+                             "displayName": "Music"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartnews",
+                             "displayName": "News & politics"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartreligion",
+                             "displayName": "Religion & spirituality"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartscience",
+                             "displayName": "Science & medicine"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartsociety",
+                             "displayName": "Society & culture"
+                            },
+                            {
+                             "id": "JZCpodcasttopchartsports",
+                             "displayName": "Sports & recreation"
+                            },
+                            {
+                             "id": "JZCpodcasttopcharttechnology",
+                             "displayName": "Technology"
+                            },
+                            {
+                             "id": "JZCpodcasttopcharttv",
+                             "displayName": "TV & film"
+                            }
+                        ]
+                    }
+                ]
+            }
+        """
+
+        res = self._make_call(mobileclient.GetBrowsePodcastHierarchy)
+
+        return res.get('groups', [])
+
+    def get_browse_podcast_series(self, genre_id='JZCpodcasttopchartall'):
+        """Retrieve podcast series from browse podcasts by genre.
+
+        :param genre_id: A podcast genre id as returned by :func:`get_podcast_browse_hierarchy`.
+          Defaults to Top Chart 'All categories'.
+
+        Returns a list of podcast series dicts.
+
+        Here is an example podcast series dict::
+
+            {
+                'art': [
+                    {
+                        'aspectRatio': '1',
+                        'autogen': False,
+                        'kind': 'sj#imageRef',
+                        'url': 'http://lh3.googleusercontent.com/liR-Pm7EhB58wrAa4uo9Y33LcJJ8keU...'
+                    }
+                ],
+                'author': 'NBC Sports Radio',
+                'continuationToken': '',
+                'description': 'Mike Florio talks about the biggest NFL topics with the '
+                              'people who are most passionate about the game: League execs, '
+                              'players, coaches and the journalists who cover pro football.',
+                'explicitType': '2',
+                'link': 'https://audioboom.com/channel/pro-football-talk-live-with-mike-florio',
+                'seriesId': 'I3iad5heqorm3nck6yp7giruc5i',
+                'title': 'Pro Football Talk Live with Mike Florio',
+                'totalNumEpisodes': 0
+            }
+
+        """
+
+        res = self._make_call(mobileclient.ListBrowsePodcastSeries, id=genre_id)
+
+        return res.get('series', [])
+
+    def get_all_podcast_series(self, device_id=None, incremental=False,
+                               include_deleted=False, updated_after=None):
+        """Retrieve list of user-subscribed podcast series.
+
+        :param device_id: (optional) defaults to ``android_id`` from login.
+
+          Otherwise, provide a mobile device id as a string.
+          Android device ids are 16 characters, while iOS ids
+          are uuids with 'ios:' prepended.
+
+          If you have already used Google Music on a mobile device,
+          :func:`Mobileclient.get_registered_devices
+          <gmusicapi.clients.Mobileclient.get_registered_devices>` will provide
+          at least one working id. Omit ``'0x'`` from the start of the string if present.
+
+          Registered computer ids (a MAC address) will not be accepted and will 403.
+
+          Providing an unregistered mobile device id will register it to your account,
+          subject to Google's `device limits
+          <http://support.google.com/googleplay/bin/answer.py?hl=en&answer=1230356>`__.
+          **Registering a device id that you do not own is likely a violation of the TOS.**
+
+        :param incremental: if True, return a generator that yields lists
+          of at most 1000 podcast series
+          as they are retrieved from the server. This can be useful for
+          presenting a loading bar to a user.
+
+        :param include_deleted: if True, include podcast series that have been deleted
+          in the past.
+
+        :param updated_after: a datetime.datetime; defaults to unix epoch
+
+        Returns a list of podcast series dicts.
+
+        Here is an example podcast series dict::
+
+            {
+                'art': [
+                    {
+                        'aspectRatio': '1',
+                        'autogen': False,
+                        'kind': 'sj#imageRef',
+                        'url': 'http://lh3.googleusercontent.com/bNoyxoGTwCGkUscMjHsvKe5W80uMOfq...'
+                    }
+                ],
+                'author': 'Chris Hardwick',
+                'continuationToken': '',
+                'description': 'I am Chris Hardwick. I am on TV a lot and have a blog at '
+                               'nerdist.com. This podcast is basically just me talking about '
+                               'stuff and things with my two nerdy friends Jonah Ray and Matt '
+                               'Mira, and usually someone more famous than all of us. '
+                               'Occasionally we swear because that is fun. I hope you like '
+                               "it, but if you don't I'm sure you will not hesitate to unfurl "
+                               "your rage in the 'reviews' section because that's how the "
+                               'Internet works.',
+                'explicitType': '1',
+                'link': 'http://nerdist.com/',
+                'seriesId': 'Iliyrhelw74vdqrro77kq2vrdhy',
+                'title': 'The Nerdist',
+                'totalNumEpisodes': 829,
+                'userPreferences': {
+                    'autoDownload': False,
+                    'notifyOnNewEpisode': False,
+                    'subscribed': True
+                }
+            }
+
+        """
+
+        device_id = self._ensure_device_id(device_id)
+
+        return self._get_all_items(mobileclient.ListPodcastSeries, incremental=incremental,
+                                   include_deleted=include_deleted, updated_after=updated_after,
+                                   device_id=device_id)
+
+    def get_all_podcast_episodes(self, device_id=None, incremental=False,
+                                 include_deleted=False, updated_after=None):
+        """Retrieve list of episodes from user-subscribed podcast series.
+
+        :param device_id: (optional) defaults to ``android_id`` from login.
+
+          Otherwise, provide a mobile device id as a string.
+          Android device ids are 16 characters, while iOS ids
+          are uuids with 'ios:' prepended.
+
+          If you have already used Google Music on a mobile device,
+          :func:`Mobileclient.get_registered_devices
+          <gmusicapi.clients.Mobileclient.get_registered_devices>` will provide
+          at least one working id. Omit ``'0x'`` from the start of the string if present.
+
+          Registered computer ids (a MAC address) will not be accepted and will 403.
+
+          Providing an unregistered mobile device id will register it to your account,
+          subject to Google's `device limits
+          <http://support.google.com/googleplay/bin/answer.py?hl=en&answer=1230356>`__.
+          **Registering a device id that you do not own is likely a violation of the TOS.**
+
+        :param incremental: if True, return a generator that yields lists
+          of at most 1000 podcast episodes
+          as they are retrieved from the server. This can be useful for
+          presenting a loading bar to a user.
+
+        :param include_deleted: if True, include podcast episodes that have been deleted
+          in the past.
+
+        :param updated_after: a datetime.datetime; defaults to unix epoch
+
+        Returns a list of podcast episode dicts.
+
+        Here is an example podcast episode dict::
+
+            {
+                'art': [
+                    {
+                        'aspectRatio': '1',
+                        'autogen': False,
+                        'kind': 'sj#imageRef',
+                        'url': 'http://lh3.googleusercontent.com/bNoyxoGTwCGkUscMjHsvKe5W80uMOfq...'
+                    }
+                ],
+                'deleted': False,
+                'description': 'Comedian Bill Burr yelled at Philadelphia, Chris vaguely '
+                               'understands hockey, Jonah understands it even less, and Matt '
+                               'is weirdly not tired of the running "Matt loves the Dave '
+                               'Matthews Band" joke, though I\'m sure all of you are.',
+                'durationMillis': '4310000',
+                'episodeId': 'D6i26frpxu53t2ws3lpbjtpovum',
+                'explicitType': '2',
+                'fileSize': '69064793',
+                'publicationTimestampMillis': '1277791500000',
+                'seriesId': 'Iliyrhelw74vdqrro77kq2vrdhy',
+                'seriesTitle': 'The Nerdist',
+                'title': 'Bill Burr'
+            }
+
+        """
+        device_id = self._ensure_device_id(device_id)
+
+        return self._get_all_items(mobileclient.ListPodcastEpisodes, incremental=incremental,
+                                   include_deleted=include_deleted, updated_after=updated_after,
+                                   device_id=device_id)
+
+    # TODO: Support multiple.
+    @utils.enforce_id_param
+    def add_podcast_series(self, podcast_id, notify_on_new_episode=False):
+        """Subscribe to a podcast series.
+
+        :param podcast_id: A podcast series id (hint: they always start with 'I').
+        :param notify_on_new_episode: Get device notifications on new episodes.
+
+        Returns podcast series id of added podcast series
+        """
+
+        mutate_call = mobileclient.BatchMutatePodcastSeries
+        update_mutations = mutate_call.build_podcast_updates([
+            {
+                'seriesId': podcast_id,
+                'subscribed': True,
+                'userPreferences': {
+                    'subscribed': True,
+                    'notifyOnNewEpisode': notify_on_new_episode
+                }
+            }
+        ])
+
+        res = self._make_call(mutate_call, update_mutations)
+
+        return res['mutate_response'][0]['id']
+
+    # TODO: Support multiple.
+    @utils.enforce_id_param
+    def delete_podcast_series(self, podcast_id):
+        """Unsubscribe to a podcast series.
+
+        :param podcast_id: A podcast series id (hint: they always start with 'I').
+
+        Returns podcast series id of removed podcast series
+        """
+
+        mutate_call = mobileclient.BatchMutatePodcastSeries
+        update_mutations = mutate_call.build_podcast_updates([
+            {
+                'seriesId': podcast_id,
+                'subscribed': False,
+                'userPreferences': {
+                    'subscribed': False,
+                    'notifyOnNewEpisode': False
+                }
+            }
+        ])
+
+        res = self._make_call(mutate_call, update_mutations)
+
+        return res['mutate_response'][0]['id']
+
+    # TODO: Support multiple.
+    @utils.enforce_id_param
+    def edit_podcast_series(self, podcast_id, subscribe=True, notify_on_new_episode=False):
+        """Edit a podcast series subscription.
+
+        :param podcast_id: A podcast series id (hint: they always start with 'I').
+        :param subscribe: Subscribe to podcast.
+        :param notify_on_new_episode: Get device notifications on new episodes.
+
+        Returns podcast series id of edited podcast series
+        """
+
+        mutate_call = mobileclient.BatchMutatePodcastSeries
+        update_mutations = mutate_call.build_podcast_updates([
+            {
+                'seriesId': podcast_id,
+                'subscribed': subscribe,
+                'userPreferences': {
+                    'subscribed': subscribe,
+                    'notifyOnNewEpisode': notify_on_new_episode
+                }
+            }
+        ])
+
+        res = self._make_call(mutate_call, update_mutations)
+
+        return res['mutate_response'][0]['id']
+
+    @utils.enforce_id_param
+    def get_podcast_episode_stream_url(self, podcast_episode_id, device_id=None, quality='hi'):
+        """Returns a url that will point to an mp3 file.
+
+        :param podcast_episde_id: a single podcast episode id (hint: they always start with 'D').
+
+        :param device_id: (optional) defaults to ``android_id`` from login.
+
+          Otherwise, provide a mobile device id as a string.
+          Android device ids are 16 characters, while iOS ids
+          are uuids with 'ios:' prepended.
+
+          If you have already used Google Music on a mobile device,
+          :func:`Mobileclient.get_registered_devices
+          <gmusicapi.clients.Mobileclient.get_registered_devices>` will provide
+          at least one working id. Omit ``'0x'`` from the start of the string if present.
+
+          Registered computer ids (a MAC address) will not be accepted and will 403.
+
+          Providing an unregistered mobile device id will register it to your account,
+          subject to Google's `device limits
+          <http://support.google.com/googleplay/bin/answer.py?hl=en&answer=1230356>`__.
+          **Registering a device id that you do not own is likely a violation of the TOS.**
+
+        :param quality: (optional) stream bits per second quality
+          One of three possible values, hi: 320kbps, med: 160kbps, low: 128kbps.
+          The default is hi
+
+        When handling the resulting url, keep in mind that:
+            * you will likely need to handle redirects
+            * the url expires after a minute
+            * only one IP can be streaming music at once.
+              This can result in an http 403 with
+              ``X-Rejected-Reason: ANOTHER_STREAM_BEING_PLAYED``.
+
+        The file will not contain metadata.
+        """
+
+        device_id = self._ensure_device_id(device_id)
+
+        return self._make_call(
+            mobileclient.GetPodcastEpisodeStreamUrl, podcast_episode_id, device_id, quality)
+
+    def get_podcast_series_info(self, podcast_series_id, max_episodes=50):
+        """Retrieves information about a podcast series.
+
+        :param podcast_series_id: A podcast series id (hint: they always start with 'I').
+        :param max_episodes: Maximum number of episodes to retrieve
+
+        Returns a dict, eg::
+
+            {
+                'art': [
+                    {
+                        'aspectRatio': '1',
+                        'autogen': False,
+                        'kind': 'sj#imageRef',
+                        'url': 'http://lh3.googleusercontent.com/bNoyxoGTwCGkUscMjHsvKe5W80uMOfq...'
+                    }
+                ],
+                'author': 'Chris Hardwick',
+                'continuationToken': '',
+                'description': 'I am Chris Hardwick. I am on TV a lot and have a blog at '
+                               'nerdist.com. This podcast is basically just me talking about '
+                               'stuff and things with my two nerdy friends Jonah Ray and Matt '
+                               'Mira, and usually someone more famous than all of us. '
+                               'Occasionally we swear because that is fun. I hope you like '
+                               "it, but if you don't I'm sure you will not hesitate to unfurl "
+                               "your rage in the 'reviews' section because that's how the "
+                               'Internet works.',
+                'episodes': [
+                    {
+                        'art': [
+                            {
+                                'aspectRatio': '1',
+                                'autogen': False,
+                                'kind': 'sj#imageRef',
+                                'url': 'http://lh3.googleusercontent.com/bNoyxoGTwCGkUscMjHsvKe5...'
+                            }
+                        ],
+                        'description': 'Sarah Jessica Parker (Sex and the City) '
+                                       'chats with Chris about growing up without '
+                                       'television, her time on Square Pegs and '
+                                       'her character in L.A. Story. Sarah Jessica '
+                                       'then talks about how she felt when she first '
+                                       'got the part of Carrie on Sex and the '
+                                       'City, how she dealt with her sudden '
+                                       'celebrity of being Carrie Bradshaw and they '
+                                       'come up with a crazy theory about the show! '
+                                       'They also talk about Sarah Jessica’s new '
+                                       'show Divorce on HBO!',
+                        'durationMillis': '5101000',
+                        'episodeId': 'Dcz67vtkhrerzh4hptfqpadt5vm',
+                        'explicitType': '1',
+                        'fileSize': '40995252',
+                        'publicationTimestampMillis': '1475640000000',
+                        'seriesId': 'Iliyrhelw74vdqrro77kq2vrdhy',
+                        'seriesTitle': 'The Nerdist',
+                        'title': 'Sarah Jessica Parker'
+                    },
+                ]
+                'explicitType': '1',
+                'link': 'http://nerdist.com/',
+                'seriesId': 'Iliyrhelw74vdqrro77kq2vrdhy',
+                'title': 'The Nerdist',
+                'totalNumEpisodes': 829,
+                'userPreferences': {
+                    'autoDownload': False,
+                    'notifyOnNewEpisode': False,
+                    'subscribed': True
+                }
+            }
+
+        """
+
+        return self._make_call(mobileclient.GetPodcastSeries, podcast_series_id, max_episodes)
+
+    def get_podcast_episode_info(self, podcast_episode_id):
+        """Retrieves information about a podcast episode.
+
+        :param podcast_episode_id: A podcast episode id (hint: they always start with 'D').
+
+        Returns a dict, eg::
+
+            {
+                'art': [
+                    {
+                        'aspectRatio': '1',
+                        'autogen': False,
+                        'kind': 'sj#imageRef',
+                        'url': 'http://lh3.googleusercontent.com/bNoyxoGTwCGkUscMjHsvKe5...'
+                    }
+                ],
+                'description': 'Sarah Jessica Parker (Sex and the City) '
+                               'chats with Chris about growing up without '
+                               'television, her time on Square Pegs and '
+                               'her character in L.A. Story. Sarah Jessica '
+                               'then talks about how she felt when she first '
+                               'got the part of Carrie on Sex and the '
+                               'City, how she dealt with her sudden '
+                               'celebrity of being Carrie Bradshaw and they '
+                               'come up with a crazy theory about the show! '
+                               'They also talk about Sarah Jessica’s new '
+                               'show Divorce on HBO!',
+                'durationMillis': '5101000',
+                'episodeId': 'Dcz67vtkhrerzh4hptfqpadt5vm',
+                'explicitType': '1',
+                'fileSize': '40995252',
+                'publicationTimestampMillis': '1475640000000',
+                'seriesId': 'Iliyrhelw74vdqrro77kq2vrdhy',
+                'seriesTitle': 'The Nerdist',
+                'title': 'Sarah Jessica Parker'
+            }
+
+        """
+
+        return self._make_call(mobileclient.GetPodcastEpisode, podcast_episode_id)
+
     def create_station(self, name,
                        track_id=None, artist_id=None, album_id=None,
                        genre_id=None, playlist_token=None, curated_station_id=None):
@@ -977,7 +1526,9 @@ class Mobileclient(_Base):
         return [s['id'] for s in res['mutate_response']]
 
     def get_all_stations(self, incremental=False, include_deleted=False, updated_after=None):
-        """Returns a list of dictionaries that each represent a radio station.
+        """Retrieve all library stations.
+
+        Returns a list of dictionaries that each represent a radio station.
 
         :param incremental: if True, return a generator that yields lists
           of at most 1000 stations
@@ -1052,11 +1603,12 @@ class Mobileclient(_Base):
         """Queries Google Music for content.
 
         :param query: a string keyword to search with. Capitalization and punctuation are ignored.
-        :param max_results: Maximum number of items to be retrieved
+        :param max_results: Maximum number of items to be retrieved.
+          The maximum accepted value is 100. If set higher, results are limited to 10.
 
         The results are returned in a dictionary with keys:
-        ``album_hits, artist_hits, playlist_hits, situation_hits,
-        song_hits, station_hits, video_hits``
+        ``album_hits, artist_hits, playlist_hits, podcast_hits,
+          situation_hits, song_hits, station_hits, video_hits``
         containing lists of results of that type.
 
         Free account search is restricted so may not contain hits for all result types.
@@ -1117,6 +1669,39 @@ class Mobileclient(_Base):
                         'type': 'SHARED'
                     },
                     'type': '4'
+                }],
+                'podcast_hits': [{
+                    'series': {
+                        'art': [
+                            {
+                                'aspectRatio': '1',
+                                'autogen': False,
+                                'kind': 'sj#imageRef',
+                                'url': 'https://lh3.googleusercontent.com/je4lsaiQCdfcOWoYm3Z_mC...'
+                            }
+                        ],
+                        'author': 'Steve Boyett',
+                        'continuationToken': '',
+                        'copyright': 'Music copyright c the respective artists. All other '
+                                     'material c2006, 2016 by Podrunner, LLC. All rights '
+                                     'reserved. For personal use only. Unauthorized '
+                                     'reproduction, sale, rental, exchange, public '
+                                     'performance, or broadcast of this audio is '
+                                     'prohibited.',
+                        'description': 'Nonstop, one-hour, high-energy workout music mixes '
+                                       "to help you groove while you move. Podrunner's "
+                                       'fixed-tempo and interval exercise mixes are '
+                                       'perfect for power walking, jogging, running, '
+                                       'spinning, elliptical, aerobics, and many other '
+                                       'tempo-based forms of exercise. An iTunes '
+                                       'award-winner six years in a row!',
+                        'explicitType': '2',
+                        'link': 'http://www.podrunner.com/',
+                        'seriesId': 'Ilx4ufdua5rdvzplnojtloulo3a',
+                        'title': 'PODRUNNER: Workout Music',
+                        'totalNumEpisodes': 0
+                    },
+                    'type': '9'
                 }],
                 'situation_hits': [{
                     'situation': {
@@ -1229,6 +1814,7 @@ class Mobileclient(_Base):
         return {'album_hits': hits_by_type['3'],
                 'artist_hits': hits_by_type['2'],
                 'playlist_hits': hits_by_type['4'],
+                'podcast_hits': hits_by_type['9'],
                 'situation_hits': hits_by_type['7'],
                 'song_hits': hits_by_type['1'],
                 'station_hits': hits_by_type['6'],
@@ -1332,22 +1918,38 @@ class Mobileclient(_Base):
         kwargs are passed to the call."""
 
         get_next_chunk = True
-        lib_chunk = {'nextPageToken': None}
+        lib_chunk = {}
+        next_page_token = None
 
         while get_next_chunk:
             lib_chunk = self._make_call(call,
-                                        start_token=lib_chunk['nextPageToken'],
+                                        start_token=next_page_token,
                                         **kwargs)
 
-            items = lib_chunk['data']['items']
-
             if not include_deleted:
-                items = [item for item in items
-                         if not item.get('deleted', False)]
+                items = []
 
-            yield items
+                for item in lib_chunk['data']['items']:
+                    if 'userPreferences' in item:
+                        if item['userPreferences'].get('subscribed', False):
+                            items.append(item)
+                    elif not item.get('deleted', False):
+                        items.append(item)
+            else:
+                items = lib_chunk['data']['items']
 
-            get_next_chunk = 'nextPageToken' in lib_chunk
+            # Conditional prevents generator from yielding empty
+            # list for last page of podcast list calls.
+            if items:
+                yield items
+
+            # Podcast list calls always include 'nextPageToken' in responses.
+            # We have to check to make sure we don't get stuck in an infinite loop
+            # by comparing the previous and next page tokens.
+            prev_page_token = next_page_token
+            next_page_token = lib_chunk.get('nextPageToken')
+
+            get_next_chunk = (next_page_token and next_page_token != prev_page_token)
 
     @utils.enforce_id_param
     def get_album_info(self, album_id, include_tracks=True):

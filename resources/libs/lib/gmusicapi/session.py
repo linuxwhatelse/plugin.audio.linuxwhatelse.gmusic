@@ -4,9 +4,8 @@
 Sessions handle the details of authentication and transporting requests.
 """
 from __future__ import print_function, division, absolute_import, unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 from builtins import *  # noqa
+
 from contextlib import closing
 
 import gpsoauth
@@ -215,6 +214,11 @@ class Mobileclient(_Base):
             # Set locale for all Mobileclient calls.
             req_kwargs.setdefault('params', {})
             req_kwargs['params'].update({'hl': self._locale})
+
+            # As of API v2.5, dv is a required parameter for all calls.
+            # The dv value is part of the Android app version number,
+            # but setting this to 0 works fine.
+            req_kwargs['params'].update({'dv': 0})
 
             if self._is_subscribed:
                 req_kwargs['params'].update({'tier': 'aa'})

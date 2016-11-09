@@ -1,1 +1,3 @@
-__version__ = u"10.0.0"
+# -*- coding: utf-8 -*-
+
+__version__ = u"10.1.0"

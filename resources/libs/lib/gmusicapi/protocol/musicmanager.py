@@ -2,10 +2,7 @@
 
 """Calls made by the Music Manager (related to uploading)."""
 from __future__ import print_function, division, absolute_import, unicode_literals
-from future import standard_library
 from six import raise_from
-
-standard_library.install_aliases()
 from builtins import *  # noqa
 
 import base64
@@ -103,6 +100,23 @@ class MmCall(Call):
         return Call._filter_proto(msg)
 
 
+class GetClientState(MmCall):
+    static_url = _android_url + 'clientstate'
+
+    @classmethod
+    @pb
+    def dynamic_data(cls, uploader_id):
+        """
+        :param uploader_id: MM uses host MAC address
+        """
+
+        req_msg = upload_pb2.ClientStateRequest()
+
+        req_msg.uploader_id = uploader_id
+
+        return req_msg
+
+
 class AuthenticateUploader(MmCall):
     """Sent to auth, reauth, or register our upload client."""
 
@@ -192,6 +206,12 @@ class UploadMetadata(MmCall):
         """Given the path and contents of a track, return a filled locker_pb2.Track.
         On problems, raise ValueError."""
         track = locker_pb2.Track()
+
+        # The track protobuf message supports an additional metadata list field.
+        # ALBUM_ART_HASH has been observed being sent in this field so far.
+        # Append locker_pb2.AdditionalMetadata objects to additional_metadata.
+        # AdditionalMetadata objects consist of two fields, 'tag_name' and 'value'.
+        additional_metadata = []
 
         track.client_id = cls.get_track_clientid(filepath)
 
@@ -286,12 +306,6 @@ class UploadMetadata(MmCall):
             if null_field not in audio:
                 track_set(null_field, '')
 
-        if isinstance(audio, mutagen.mp3.EasyMP3):
-            # Mutagen tags the album artist as `performer` in EasyMP3 tags.
-            # https://bitbucket.org/lazka/mutagen/issue/195
-            if 'performer' in audio:
-                track_set('album_artist', audio['performer'][0])
-
         # Mass-populate the rest of the simple fields.
         # Merge shared and unshared fields into {mutagen: Track}.
         fields = dict(
@@ -310,6 +324,9 @@ class UploadMetadata(MmCall):
 
                 if len(numstrs) == 2 and numstrs[1]:
                     track_set(track_total_f, numstrs[1])
+
+        if additional_metadata:
+            track.track_extras.additional_metadata.extend(additional_metadata)
 
         return track
 
@@ -549,7 +566,7 @@ class UpdateUploadState(MmCall):
 
     static_method = 'POST'
     static_params = {'version': 1}
-    static_url = _android_url + 'sample'
+    static_url = _android_url + 'uploadstate'
 
     @staticmethod
     @pb
