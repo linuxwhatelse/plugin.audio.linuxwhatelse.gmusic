@@ -208,25 +208,39 @@ class GMusic(Mobileclient):
         else:
             return []
 
-    def get_artist_info(self, artist_id, include_albums=True, max_top_tracks=5, max_rel_artist=5):
+    def get_artist_info(self, artist_id, include_albums=True, max_top_tracks=5,
+                        max_rel_artist=5, from_cache=False):
         # If a user uploaded a song where google can't match a artist,
-        # an artistId doesn NOT exist.
-        # Therefore we generate our own id.
+        # an artistId does NOT exist.
+        # Therefore we generate our own id in `get_my_library_songs`.
         # A call to googles backend will obviously return nothing
         # so we handle this case beforehand
         #
         # Note: Google artistIds always start with a capital A
-        if artist_id.startswith('A'):
-            return super(GMusic, self).get_artist_info(artist_id,
-                                                       include_albums,
-                                                       max_top_tracks,
-                                                       max_rel_artist)
-
-        else:
+        if not artist_id.startswith('A'):
             return []
 
+        artist        = None
+        artists_cache = os.path.join(utils.get_cache_dir(['artists']), artist_id)
+
+        if os.path.exists(artists_cache) and from_cache:
+            with open(artists_cache, 'r') as f:
+                try:
+                    artist = json.loads(f.read())
+
+                except:
+                    pass
+
+        if not artist:
+            artist = super(GMusic, self).get_artist_info(artist_id,
+                                                         include_albums,
+                                                         max_top_tracks,
+                                                         max_rel_artist)
+
+        return artist
+
     ##
-    ## Methodes not yet in API
+    ## Methods not yet in API
     ##
     def get_new_releases(self, num_items=25, genre=None):
         res = self._make_call(mobileclient.GetNewReleases, num_items, genre)
@@ -323,7 +337,7 @@ class GMusic(Mobileclient):
                 with open(os.path.join(_target), 'w+') as f:
                     f.write(json.dumps(song))
 
-                # Other available ids
+                # Other available ids which we create symlinks for
                 for _id in ['trackId', 'storeId']:
                     if _id not in song:
                         continue
@@ -333,9 +347,12 @@ class GMusic(Mobileclient):
                         continue
 
                     try:
+                        # On unix systems we simply create a symlink
                         os.symlink(_target, _link)
 
                     except:
+                        # On other systems (*cough* windows *cough*) we just
+                        # write another version of the file
                         with open(os.path.join(_link), 'w+') as f:
                             f.write(json.dumps(song))
 
