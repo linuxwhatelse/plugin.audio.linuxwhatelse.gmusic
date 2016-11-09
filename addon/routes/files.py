@@ -6,6 +6,7 @@ from addon import mpr
 
 
 @mpr.s_url('/track/<track_id>/')
+@mpr.s_url('/track/<track_id>/<title>/')
 def track(track_id, title=''):
     actions.play_track(track_id, track_title=title)
 
