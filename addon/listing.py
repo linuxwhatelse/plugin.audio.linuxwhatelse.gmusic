@@ -36,7 +36,7 @@ def build_artist_listitems(artists, my_library=False):
         item.setArt({
             'thumb'  : artist_art,
             'poster' : artist_art,
-            'fanart' : artist_art + '=s1920'
+            #'fanart' : artist_art + '=s1920'
         })
 
         item.setInfo('music', {
@@ -124,7 +124,7 @@ def build_album_listitems(albums, my_library=False):
         item.setArt({
             'thumb'  : album_art,
             'poster' : album_art,
-            'fanart' : fanart
+            #'fanart' : fanart
         })
 
         item.setInfo('music', {
@@ -310,7 +310,7 @@ def build_playlist_listitems(playlists):
         item.setArt({
             'thumb'  : playlist_art,
             'poster' : playlist_art,
-            'fanart' : fanart
+            #'fanart' : fanart
         })
 
 
@@ -418,7 +418,7 @@ def build_station_listitems(stations):
         item.setArt({
             'thumb'  : station_art,
             'poster' : station_art,
-            'fanart' : fanart
+            #'fanart' : fanart
         })
 
         item.setInfo('music', {
@@ -511,7 +511,7 @@ def build_situation_listitems(situations):
         item.setArt({
             'thumb'  : situation_art,
             'poster' : situation_art,
-            'fanart' : fanart
+            #'fanart' : fanart
         })
 
         item.setInfo('music', {
@@ -594,7 +594,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         item.setArt({
             'thumb'  : album_art,
             'poster' : album_art,
-            'fanart' : fanart
+            #'fanart' : fanart
         })
 
         item.setInfo('music', {
