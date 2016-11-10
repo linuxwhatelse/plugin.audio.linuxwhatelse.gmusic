@@ -43,10 +43,13 @@ def setup(force=False):
     # If 2-Factor Authentication is used
     is_two_factor = dialog.yesno(utils.translate(30071), utils.translate(30072))
     if is_two_factor:
-        if not dialog.ok(utils.translate(30071), utils.translate(30073), utils.translate(30074)):
+        if not dialog.ok(utils.translate(30071),
+                         utils.translate(30073), utils.translate(30074)):
             return False
 
-    password = dialog.input(utils.translate(30076), type=xbmcgui.INPUT_ALPHANUM, option=xbmcgui.ALPHANUM_HIDE_INPUT)
+    password = dialog.input(utils.translate(30076),
+                            type=xbmcgui.INPUT_ALPHANUM,
+                            option=xbmcgui.ALPHANUM_HIDE_INPUT)
     if not password:
         return False
 
@@ -58,7 +61,8 @@ def setup(force=False):
             if not dialog.ok(utils.translate(30079), utils.translate(30081)):
                 return False
 
-            device_id = dialog.input(utils.translate(30084), type=xbmcgui.INPUT_ALPHANUM)
+            device_id = dialog.input(utils.translate(30084),
+                                     type=xbmcgui.INPUT_ALPHANUM)
             if not device_id:
                 return False
         else:
@@ -194,6 +198,7 @@ def play_track(track_id, store_id=None, track_title='', station_id=None):
     def _increment_playcount(track):
         try:
             wait_seconds = int(track['durationMillis']) / 3 / 1000
+
         except:
             # Just in case
             wait_seconds = 30
@@ -663,7 +668,8 @@ def my_library_remove(album_id=None, library_song_id=None):
     if not album_id and not library_song_id:
         return
 
-    if not xbmcgui.Dialog().yesno(heading=utils.translate(30061), line1=utils.translate(30063)):
+    if not xbmcgui.Dialog().yesno(heading=utils.translate(30061),
+                                  line1=utils.translate(30063)):
         return
 
     if album_id:
@@ -672,8 +678,9 @@ def my_library_remove(album_id=None, library_song_id=None):
     elif library_song_id:
         gmusic.delete_songs(library_song_id)
 
-    if xbmcgui.Dialog().yesno(heading=utils.translate(30030), line1=utils.translate(30065)):
-        mpr.call(utils.build_url(url=url, paths=['my-library', 'update'], r_path=True, r_query=True))
+    if xbmcgui.Dialog().yesno(heading=utils.translate(30030),
+                              line1=utils.translate(30065)):
+        my_library_update()
 
 
 @mpr.s_url('/my-library/playlist/add/')
@@ -695,7 +702,8 @@ def my_library_playlist_add(playlist_id=None, album_id=None, track_id=None):
             playlist_ids.append(playlist['id'])
 
         playlist_names.insert(0, utils.translate(30052))
-        selection = action_dialog.select(utils.translate(30020), playlist_names, 0)
+        selection = action_dialog.select(utils.translate(30020),
+                                         playlist_names, 0)
         if selection == -1:
             return
 
@@ -710,7 +718,9 @@ def my_library_playlist_add(playlist_id=None, album_id=None, track_id=None):
 
     if playlist_id:
         if track_id:
-            gmusic.add_songs_to_playlist(playlist_id=playlist_id, song_ids=track_id)
+            gmusic.add_songs_to_playlist(playlist_id=playlist_id,
+                                         song_ids=track_id)
+
         elif album_id:
             album = gmusic.get_album_info(album_id=album_id, include_tracks=True)
 
@@ -719,12 +729,14 @@ def my_library_playlist_add(playlist_id=None, album_id=None, track_id=None):
                 if 'storeId' in track:
                     track_ids.append(track['storeId'])
 
-            gmusic.add_songs_to_playlist(playlist_id=playlist_id, song_ids=track_ids)
+            gmusic.add_songs_to_playlist(playlist_id=playlist_id,
+                                         song_ids=track_ids)
 
 
 @mpr.s_url('/my-library/playlist/remove/')
 def my_library_playlist_remove(entry_id):
-    if xbmcgui.Dialog().yesno(heading=utils.translate(30062), line1=utils.translate(30064)):
+    if xbmcgui.Dialog().yesno(heading=utils.translate(30062),
+                              line1=utils.translate(30064)):
         gmusic.remove_entries_from_playlist([entry_id])
 
         xbmc.executebuiltin('Container.Refresh')
@@ -732,7 +744,8 @@ def my_library_playlist_remove(entry_id):
 
 @mpr.s_url('/my-library/playlist/delete/')
 def my_library_playlist_delete(playlist_id):
-    if xbmcgui.Dialog().yesno(heading=utils.translate(30068), line1=utils.translate(30069)):
+    if xbmcgui.Dialog().yesno(heading=utils.translate(30068),
+                              line1=utils.translate(30069)):
         gmusic.delete_playlist(playlist_id)
 
         xbmc.executebuiltin('Container.Refresh')
