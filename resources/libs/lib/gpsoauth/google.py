@@ -1,8 +1,7 @@
 import base64
 import hashlib
 
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Cipher import PKCS1_OAEP
+import pkcs1
 
 from .util import bytes_to_long, long_to_bytes
 
@@ -16,7 +15,7 @@ def key_from_b64(b64_key):
     j = bytes_to_long(binaryKey[i+4:i+4+4])
     exponent = bytes_to_long(binaryKey[i+8:i+8+j])
 
-    key = RSA.construct((mod, exponent))
+    key = pkcs1.keys.RsaPublicKey(mod, exponent)
 
     return key
 
@@ -46,8 +45,8 @@ def signature(email, password, key):
     struct = key_to_struct(key)
     signature.extend(hashlib.sha1(struct).digest()[:4])
 
-    cipher = PKCS1_OAEP.new(key)
-    encrypted_login = cipher.encrypt((email + u'\x00' + password).encode('utf-8'))
+    encrypted_login = pkcs1.rsaes_oaep.encrypt(
+        key, (email + u'\x00' + password).encode('utf-8'))
 
     signature.extend(encrypted_login)
 
