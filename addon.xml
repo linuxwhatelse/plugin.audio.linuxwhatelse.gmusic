@@ -5,23 +5,12 @@
        provider-name="linuxwhatelse">
 
     <requires>
-        <import addon="xbmc.python"                        version="2.20.0"/>
-        <import addon="script.module.beautifulsoup4"       version="4.3.2"/>
-        <import addon="script.module.dateutil"             version="2.5.3"/>
-        <import addon="script.module.six"                  version="1.9.0"/>
-        <import addon="script.module.validictory"          version="0.9.3"/>
-        <import addon="script.module.oauth2client"         version="1.4.7"/>
-        <import addon="script.module.requests"             version="2.9.1"/>
-        <import addon="script.module.decorator"            version="3.4.0"/>
-        <import addon="script.module.simplejson"           version="3.3.0"/>
+        <!-- kodi repository -->
+        <import addon="xbmc.python" version="2.20.0"/>
 
-        <!-- lwe repo -->
+        <!-- linuxwhatelse repository -->
+        <import addon="script.module.gmusicapi" version="10.1.0"/>
         <import addon="script.module.linuxwhatelse.mapper" version="3.0.0"/>
-
-        <!-- Outdated... include in lib folder
-        <import addon="script.module.protobuf"             version="2.5.0"/>
-        <import addon="script.module.mutagen"              version="1.22.0"/>
-        -->
     </requires>
 
     <extension point="xbmc.python.pluginsource" library="default.py">
@@ -49,5 +38,4 @@
         <description lang="en">Plugin that lets you manage and stream music from Google Play Music</description>
         <description lang="de">Plugin das dich die Musik von Google Play Music verwalten und streamen lässt</description>
     </extension>
-
 </addon>
