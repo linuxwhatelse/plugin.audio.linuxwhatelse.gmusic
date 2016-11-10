@@ -6,14 +6,11 @@ from addon import gmusic
 
 from addon import url
 
+from addon.routes import actions
+
 if __name__ == '__main__':
     if addon.getSetting('is_setup') != 'true':
-        mpr.call(utils.build_url(
-            url     = url,
-            paths   = ['setup'],
-            r_path  = True,
-            r_query = True
-        ))
+        actions.setup()
 
     gmusic.login()
     mpr.call(url)
