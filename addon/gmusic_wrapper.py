@@ -203,7 +203,14 @@ class GMusic(Mobileclient):
         #
         # Note: Google albumIds always start with a capital B
         if album_id.startswith('B'):
-            return super(GMusic, self).get_album_info(album_id, include_tracks)
+            album_info = super(GMusic, self).get_album_info(album_id,
+                                                            include_tracks)
+            if include_tracks and 'tracks' in album_info:
+                tracks = sorted(album_info['tracks'],
+                                key=lambda k: k['trackNumber'])
+                album_info['tracks'] = tracks
+
+            return album_info
 
         else:
             return []
