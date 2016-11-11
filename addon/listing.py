@@ -789,8 +789,7 @@ def list_songs(listitems, allow_view_overwrite=True):
 
 
 def list_items(listitems, allow_view_overwrite=True, view_mode_id=None,
-               sort_methods=None, cacheToDisc=True):
-    cacheToDisc = False
+               sort_methods=None, cache_to_disc=True):
     if not view_mode_id:
         view_mode_id = int(addon.getSetting('view_id_list'))
 
@@ -809,4 +808,4 @@ def list_items(listitems, allow_view_overwrite=True, view_mode_id=None,
     if allow_view_overwrite and addon.getSetting('overwrite_views') == 'true':
         xbmc.executebuiltin('Container.SetViewMode(%d)' % view_mode_id)
 
-    xbmcplugin.endOfDirectory(handle=addon_handle, cacheToDisc=cacheToDisc)
+    xbmcplugin.endOfDirectory(handle=addon_handle, cacheToDisc=cache_to_disc)
