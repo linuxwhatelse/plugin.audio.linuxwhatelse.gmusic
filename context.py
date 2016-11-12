@@ -11,6 +11,8 @@ from addon import gmusic
 _addon_path = 'plugin://%s' % addon.getAddonInfo('id')
 
 def run(track_id):
+    gmusic.login()
+
     dialog = xbmcgui.Dialog()
 
     data = [
@@ -26,44 +28,53 @@ def run(track_id):
         return
 
     if selection == 0:  # Add to my Library
-        xbmc.executebuiltin('RunPlugin(%s)' % utils.build_url(
-            url     = _addon_path,
-            paths   = ['my-library', 'add'],
-            queries = {'track_id': track_id})
+        xbmc.executebuiltin('RunPlugin(%s)' %
+            utils.build_url(
+                url     = _addon_path,
+                paths   = ['my-library', 'add'],
+                queries = {'track_id': track_id}
+            )
         )
 
     elif selection == 1:  # Add to Playlist
-        xbmc.executebuiltin('RunPlugin(%s)' % utils.build_url(
-            url     = _addon_path,
-            paths   = ['my-library', 'playlist', 'add'],
-            queries = {'track_id': track_id})
+        xbmc.executebuiltin('RunPlugin(%s)' %
+            utils.build_url(
+                url     = _addon_path,
+                paths   = ['my-library', 'playlist', 'add'],
+                queries = {'track_id': track_id}
+            )
         )
 
     elif selection == 2:  # Go to Artist
         track = gmusic.get_track_info(track_id)
 
         if 'artistId' in track and len(track['artistId']) > 0:
-            xbmc.executebuiltin('ActivateWindow(music, %s, return)' % utils.build_url(
-                url     = _addon_path,
-                paths   = ['browse', 'artist'],
-                queries = {'artist_id': track['artistId'][0]})
+            xbmc.executebuiltin('ActivateWindow(music, %s, return)' %
+                utils.build_url(
+                    url     = _addon_path,
+                    paths   = ['browse', 'artist', track['artistId'][0]]
+                )
             )
 
     elif selection == 3:  # Go to Album
         track = gmusic.get_track_info(track_id)
+        print(track)
 
         if 'albumId' in track:
-            xbmc.executebuiltin('ActivateWindow(music, %s, return)' % utils.build_url(
-                url     = _addon_path,
-                paths   = ['browse', 'album'],
-                queries = {'album_id': track['albumId']})
+            xbmc.executebuiltin('ActivateWindow(music, %s, return)' %
+                utils.build_url(
+                    url     = _addon_path,
+                    paths   = ['browse', 'album', track['albumId']],
+                )
             )
 
     elif selection == 4:  # Rate song
-        xbmc.executebuiltin('RunPlugin(%s)' % utils.build_url(
-            url     = _addon_path,
-            paths   = ['rate'],
-            queries = {'track_id': track_id})
+        xbmc.executebuiltin('RunPlugin(%s)' %
+            utils.build_url(
+                url     = _addon_path,
+                paths   = ['rate'],
+                queries = {'track_id': track_id}
+            )
         )
 
 
