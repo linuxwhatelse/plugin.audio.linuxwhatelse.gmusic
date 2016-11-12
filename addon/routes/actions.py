@@ -654,13 +654,13 @@ def my_library_update():
 @mpr.s_url('/my-library/add/')
 def my_library_add(album_id=None, track_id=None):
     if track_id:
-        gmusic.add_aa_track(aa_song_id=track_id)
+        gmusic.add_store_track(track_id)
 
     elif album_id:
         album = gmusic.get_album_info(album_id=album_id, include_tracks=True)
         for track in album['tracks']:
             if 'storeId' in track:
-                gmusic.add_aa_track(aa_song_id=track['storeId'])
+                gmusic.add_store_track(aa_song_id=track['storeId'])
 
 
 @mpr.s_url('/my-library/remove/')
