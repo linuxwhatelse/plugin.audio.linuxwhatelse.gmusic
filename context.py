@@ -48,7 +48,9 @@ def run(track_id):
 
 
 if __name__ == '__main__':
-    query = urlparse.parse_qsl(urlparse.urlparse(xbmc.getInfoLabel('ListItem.FileNameAndPath')).query)
-    track_id = dict(query)['track_id']
+    path = urlparse.urlparse(xbmc.getInfoLabel('ListItem.FileNameAndPath')).path
 
-    run(track_id)
+    track_id = path.rstrip('/').rsplit('/',1)[1]
+
+    if track_id.startswith('T'):
+        run(track_id)
