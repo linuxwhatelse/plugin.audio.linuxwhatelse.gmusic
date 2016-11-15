@@ -239,7 +239,7 @@ def my_library_albums():
     listing.list_albums(items)
 
 
-@mpr.s_url('/browse/my-library/album/')
+@mpr.s_url('/browse/my-library/album/<album_id>')
 def my_library_album(album_id):
     items = listing.build_song_listitems(
         tracks     = gmusic.get_user_album_songs(album_id=album_id),

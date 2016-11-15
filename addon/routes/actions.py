@@ -651,7 +651,8 @@ def my_library_update():
     xbmc.executebuiltin('Container.Refresh')
 
 
-@mpr.s_url('/my-library/add/')
+@mpr.s_url('/my-library/add/track/<track_id>/')
+@mpr.s_url('/my-library/add/album/<album_id>/')
 def my_library_add(album_id=None, track_id=None):
     if track_id:
         gmusic.add_store_track(track_id)
@@ -660,12 +661,17 @@ def my_library_add(album_id=None, track_id=None):
         album = gmusic.get_album_info(album_id=album_id, include_tracks=True)
         for track in album['tracks']:
             if 'storeId' in track:
-                gmusic.add_store_track(aa_song_id=track['storeId'])
+                gmusic.add_store_track(track['storeId'])
+
+    if xbmcgui.Dialog().yesno(heading=utils.translate(30030),
+                              line1=utils.translate(30065)):
+        my_library_update()
 
 
-@mpr.s_url('/my-library/remove/')
-def my_library_remove(album_id=None, library_song_id=None):
-    if not album_id and not library_song_id:
+@mpr.s_url('/my-library/remove/track/<track_id>/')
+@mpr.s_url('/my-library/remove/album/<album_id>/')
+def my_library_remove(album_id=None, track_id=None):
+    if not album_id and not track_id:
         return
 
     if not xbmcgui.Dialog().yesno(heading=utils.translate(30061),
@@ -675,8 +681,8 @@ def my_library_remove(album_id=None, library_song_id=None):
     if album_id:
         gmusic.delete_album(album_id)
 
-    elif library_song_id:
-        gmusic.delete_songs(library_song_id)
+    elif track_id:
+        gmusic.delete_songs([track_id])
 
     if xbmcgui.Dialog().yesno(heading=utils.translate(30030),
                               line1=utils.translate(30065)):

@@ -170,8 +170,7 @@ def build_album_listitems(albums, my_library=False):
                 utils.translate(30061),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
                     url     = url,
-                    paths   = ['my-library', 'remove'],
-                    queries = {'album_id': album_id},
+                    paths   = ['my-library', 'remove', 'album', album_id],
                     r_path  = True,
                     r_query = True
                 )
@@ -182,8 +181,7 @@ def build_album_listitems(albums, my_library=False):
                 utils.translate(30037),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
                     url     = url,
-                    paths   = ['my-library', 'add'],
-                    queries = {'album_id': album_id},
+                    paths   = ['my-library', 'add', 'album', album_id],
                     r_path  = True,
                     r_query = True
                 )
@@ -231,8 +229,7 @@ def build_album_listitems(albums, my_library=False):
             items.append((
                 utils.build_url(
                     url     = url,
-                    paths   = ['browse', 'my-library', 'album'],
-                    queries = {'album_id': album_id},
+                    paths   = ['browse', 'my-library', 'album', album_id],
                     r_path  = True,
                     r_query = True
                 ),
@@ -631,14 +628,13 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
             ),
         ]
 
-        if my_library:
+        if my_library and 'id' in track:
             # Add "Remove from library" to context menu
             menu_items.append((
                 utils.translate(30061),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
                     url     = url,
-                    paths   = ['my-library', 'remove'],
-                    queries = {'library_song_id': track_id},
+                    paths   = ['my-library', 'remove', 'track', track['id']],
                     r_path  = True,
                     r_query = True
                 )
@@ -650,8 +646,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
                 utils.translate(30037),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
                     url     = url,
-                    paths   = ['my-library', 'add'],
-                    queries = {'track_id': track_id},
+                    paths   = ['my-library', 'add', 'track', track_id],
                     r_path  = True,
                     r_query = True
                 )
