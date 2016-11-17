@@ -1,7 +1,5 @@
 from gmusicapi.protocol.mobileclient import *
 
-sj_url = 'https://mclients.googleapis.com/sj/v2.4/'
-
 
 class GetNewReleases(McCall):
     static_params = {'alt': 'json'}
