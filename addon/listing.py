@@ -320,7 +320,6 @@ def build_playlist_listitems(playlists):
 
         if playlist_id:
             paths = ['browse', 'my-library', 'playlist', playlist_id]
-            query['playlist_id'] = playlist_id
 
         elif playlist_token:
             paths = ['browse', 'shared-playlist', playlist_token]
