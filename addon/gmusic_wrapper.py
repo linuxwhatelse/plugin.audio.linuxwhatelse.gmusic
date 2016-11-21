@@ -501,7 +501,8 @@ class GMusic(Mobileclient):
         playlist_content = self.get_all_user_playlist_contents()
 
         for playlist in playlist_content:
-            if playlist['id'] != playlist_id:
+            if (playlist['id'] != playlist_id
+                    and playlist['shareToken'] != playlist_id):
                 continue
 
             return playlist
