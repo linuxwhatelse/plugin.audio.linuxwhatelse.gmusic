@@ -58,7 +58,6 @@ def run(track_id):
 
     elif selection == 3:  # Go to Album
         track = gmusic.get_track_info(track_id)
-        print(track)
 
         if 'albumId' in track:
             xbmc.executebuiltin('ActivateWindow(music, %s, return)' %
