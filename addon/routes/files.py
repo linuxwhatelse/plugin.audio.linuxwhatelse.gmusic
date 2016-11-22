@@ -13,7 +13,7 @@ def track(track_id, title=''):
 
 @mpr.s_url('/artist/<artist_id>/')
 def artist(artist_id):
-    generic.artist(artist_id, False)
+    generic.artist_top_tracks(artist_id)
 
 
 @mpr.s_url('/album/<album_id>/')
