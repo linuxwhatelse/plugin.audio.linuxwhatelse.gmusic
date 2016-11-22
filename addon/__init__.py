@@ -29,9 +29,10 @@ import resources.libs
 # will be written into our cache dir
 # On Windows the default directory would be Kodis installation dir where we can
 # NOT assume to have write rights
-import os
-import utils
-os.chdir(utils.get_cache_dir())
+if sys.platform == 'win32':
+    import os
+    from addon import utils
+    os.chdir(utils.get_cache_dir())
 
 
 from gmusic_wrapper import GMusic
