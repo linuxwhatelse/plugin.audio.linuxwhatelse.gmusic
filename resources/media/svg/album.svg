@@ -28,16 +28,16 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.7760022"
-     inkscape:cx="59.851438"
-     inkscape:cy="164.52309"
+     inkscape:cx="109.37382"
+     inkscape:cy="105.10315"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g3372"
      showgrid="false"
      units="px"
-     inkscape:window-width="2048"
-     inkscape:window-height="1097"
-     inkscape:window-x="0"
-     inkscape:window-y="27"
+     inkscape:window-width="1920"
+     inkscape:window-height="1138"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata3349">
@@ -81,7 +81,7 @@
          style="fill:none" />
       <path
          id="path3364"
-         d="M 12,2 C 6.48,2 2,6.48 2,12 2,17.52 6.48,22 12,22 17.52,22 22,17.52 22,12 22,6.48 17.52,2 12,2 Z m 0,14.5 C 9.51,16.5 7.5,14.49 7.5,12 7.5,9.51 9.51,7.5 12,7.5 c 2.49,0 4.5,2.01 4.5,4.5 0,2.49 -2.01,4.5 -4.5,4.5 z M 12,11 c -0.55,0 -1,0.45 -1,1 0,0.55 0.45,1 1,1 0.55,0 1,-0.45 1,-1 0,-0.55 -0.45,-1 -1,-1 z"
+         d="M 12,-1.0285715e-8 C 5.376,-1.0285715e-8 0,5.376 0,12 0,18.624 5.376,24 12,24 18.624,24 24,18.624 24,12 24,5.376 18.624,-1.0285715e-8 12,-1.0285715e-8 Z M 12,17.4 C 9.012,17.4 6.6,14.988 6.6,12 6.6,9.0120001 9.012,6.6 12,6.6 c 2.988,0 5.4,2.4120001 5.4,5.4 0,2.988 -2.412,5.4 -5.4,5.4 z m 0,-6.6 c -0.66,0 -1.2,0.54 -1.2,1.2 0,0.66 0.54,1.2 1.2,1.2 0.66,0 1.2,-0.54 1.2,-1.2 0,-0.66 -0.54,-1.2 -1.2,-1.2 z"
          inkscape:connector-curvature="0" />
     </g>
   </g>
