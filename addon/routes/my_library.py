@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 import xbmcgui
 
 from addon import utils
@@ -179,7 +181,8 @@ def my_library_playlist(playlist_id, allow_view_overwrite=True):
 @mpr.s_url('/browse/my-library/stations/')
 def my_library_stations():
     stations = gmusic.get_all_stations()
-    stations = sorted(stations, key=lambda k: k['lastModifiedTimestamp'], reverse=True)
+    stations = sorted(stations, key=itemgetter('lastModifiedTimestamp'), reverse=True)
+
     items = listing.build_station_listitems(stations)
     listing.list_stations(items)
 

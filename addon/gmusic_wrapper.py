@@ -4,6 +4,7 @@ import json
 import time
 import locale
 import traceback
+from operator import itemgetter
 
 import xbmc
 
@@ -207,7 +208,7 @@ class GMusic(Mobileclient):
                                                             include_tracks)
             if include_tracks and 'tracks' in album_info:
                 tracks = sorted(album_info['tracks'],
-                                key=lambda k: k['trackNumber'])
+                                key=itemgetter('trackNumber'))
                 album_info['tracks'] = tracks
 
             return album_info
@@ -402,7 +403,7 @@ class GMusic(Mobileclient):
 
                 artists.append(artist)
 
-            artists = sorted(artists, key=lambda k: k['name'].lower())
+            artists = sorted(artists, key=itemgetter('name'))
             with open(_cache, 'w+') as f:
                 f.write(json.dumps(artists))
 
@@ -444,7 +445,7 @@ class GMusic(Mobileclient):
 
                 albums.append(album)
 
-            albums = sorted(albums, key=lambda k: k['name'].lower())
+            albums = sorted(albums, key=itemgetter('name'))
             with open(_cache, 'w+') as f:
                 f.write(json.dumps(albums))
 
@@ -481,7 +482,7 @@ class GMusic(Mobileclient):
             if 'albumId' in song and album_id == song['albumId']:
                 album_songs.append(song)
 
-        return sorted(album_songs, key=lambda k: k['trackNumber'])
+        return sorted(album_songs, key=itemgetter('trackNumber'))
 
     def get_user_genre_albums(self, genre):
         genre_albums = []
@@ -489,11 +490,11 @@ class GMusic(Mobileclient):
             if 'genre' in album and genre == album['genre']:
                 genre_albums.append(album)
 
-        return sorted(genre_albums, key=lambda k: k['name'])
+        return sorted(genre_albums, key=itemgetter('name'))
 
     def get_user_playlists(self):
         playlists = self.get_all_playlists()
-        playlists = sorted(playlists, key=lambda k: k['name'])
+        playlists = sorted(playlists, key=itemgetter('name'))
 
         return playlists
 
@@ -512,6 +513,6 @@ class GMusic(Mobileclient):
         # ToDo:
         # Google also sorts by tracknumber specific to the album
         # Can we do that as well somehow?
-        songs = sorted(songs, key=lambda k: -long(k['recentTimestamp']))
+        songs = sorted(songs, key=itemgetter('recentTimestamp'), reverse=True)
 
         return songs[:limit]
