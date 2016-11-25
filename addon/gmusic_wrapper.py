@@ -333,7 +333,7 @@ class GMusic(Mobileclient):
                     songs[i]['albumId'] = str(uuid.uuid4())
 
                 if 'album' not in song:
-                    song[i]['album'] = ''
+                    songs[i]['album'] = ''
 
 
             with open(_cache, 'w+') as f:
