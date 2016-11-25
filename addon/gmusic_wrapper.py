@@ -208,7 +208,7 @@ class GMusic(Mobileclient):
                                                             include_tracks)
             if include_tracks and 'tracks' in album_info:
                 tracks = sorted(album_info['tracks'],
-                                key=itemgetter('trackNumber'))
+                                key=itemgetter('discNumber', 'trackNumber'))
                 album_info['tracks'] = tracks
 
             return album_info
@@ -481,11 +481,12 @@ class GMusic(Mobileclient):
     def get_user_album_songs(self, album_id):
         album_songs = []
         for song in self.get_my_library_songs():
-
             if 'albumId' in song and album_id == song['albumId']:
                 album_songs.append(song)
 
-        return sorted(album_songs, key=itemgetter('trackNumber'))
+        print(json.dumps(album_songs, indent=2))
+
+        return sorted(album_songs, key=itemgetter('discNumber', 'trackNumber'))
 
     def get_user_genre_albums(self, genre):
         genre_albums = []
