@@ -39,19 +39,16 @@ def get_current_track_id(key_name='track_id'):
         return None
 
     playlist_item = playlist[playlist.getposition()]
-
     path = playlist_item.getfilename()
 
-    query = urlparse.parse_qs(urlparse.urlparse(path).query)
+    track_id = path.rstrip('/').rsplit('/', 1)[1]
 
-    if not query:
-        return None
-
-    if key_name in query:
-        return query[key_name][0]
+    if track_id and track_id.startswith('T'):
+        return track_id
 
     else:
         return None
+
 
 def execute_jsonrpc(method, params=None):
     data = {}
