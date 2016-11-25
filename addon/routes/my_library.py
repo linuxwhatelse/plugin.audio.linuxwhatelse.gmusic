@@ -205,24 +205,41 @@ def my_library_artist(artist_id):
             'poster' : thumbs.IMG_ARTIST
         })
 
+        all_albums = xbmcgui.ListItem(utils.translate(30098))
+        all_albums.setArt({
+            'thumb'  : thumbs.IMG_ALBUM,
+            'poster' : thumbs.IMG_ALBUM
+        })
+
         items = [
             (
                 utils.build_url(
-                    url    = url,
-                    paths  = ['browse', 'artist', artist_id, 'top-songs'],
-                    r_path = True
+                    url     = url,
+                    paths   = ['browse', 'artist', artist_id, 'top-songs'],
+                    r_path  = True,
+                    r_query = True,
                 ),
                 top_songs,
                 True
             ),
             (
                 utils.build_url(
-                    url    = url,
-                    paths  = ['browse', 'artist', artist_id, 'related-artists'],
-                    r_path = True,
+                    url     = url,
+                    paths   = ['browse', 'artist', artist_id, 'related-artists'],
+                    r_path  = True,
                     r_query = True,
                 ),
                 related_artists,
+                True
+            ),
+            (
+                utils.build_url(
+                    url     = url,
+                    paths   = ['browse', 'artist', artist_id],
+                    r_path  = True,
+                    r_query = True,
+                ),
+                all_albums,
                 True
             ),
         ]
