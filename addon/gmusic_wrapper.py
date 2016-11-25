@@ -332,6 +332,9 @@ class GMusic(Mobileclient):
                 if 'albumId' not in song:
                     songs[i]['albumId'] = str(uuid.uuid4())
 
+                if 'album' not in song:
+                    song[i]['album'] = ''
+
 
             with open(_cache, 'w+') as f:
                 f.write(json.dumps(songs))
