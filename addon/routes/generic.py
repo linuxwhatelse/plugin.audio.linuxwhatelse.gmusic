@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 import xbmcgui
 
 from addon import utils
@@ -48,7 +50,11 @@ def artist(artist_id, allow_view_overwrite=True):
                                   max_top_tracks=0, max_rel_artist=0)
 
     if 'albums' in info:
-        items += listing.build_album_listitems(info['albums'])
+        albums = info['albums']
+        albums.sort(key=itemgetter('name'))
+        albums.sort(key=itemgetter('year'), reverse=True)
+
+        items += listing.build_album_listitems(albums)
         listing.list_albums(items, allow_view_overwrite)
 
     else:

@@ -181,7 +181,8 @@ def my_library_playlist(playlist_id, allow_view_overwrite=True):
 @mpr.s_url('/browse/my-library/stations/')
 def my_library_stations():
     stations = gmusic.get_all_stations()
-    stations = sorted(stations, key=itemgetter('lastModifiedTimestamp'), reverse=True)
+    stations = sorted(stations, key=itemgetter('lastModifiedTimestamp'),
+                      reverse=True)
 
     items = listing.build_station_listitems(stations)
     listing.list_stations(items)
@@ -189,7 +190,8 @@ def my_library_stations():
 
 @mpr.s_url('/browse/my-library/artists/')
 def my_library_artists():
-    items = listing.build_artist_listitems(gmusic.get_my_library_artists(), True)
+    artists = gmusic.get_my_library_artists()
+    items = listing.build_artist_listitems(artists, True)
     listing.list_artists(items)
 
 
@@ -247,24 +249,26 @@ def my_library_artist(artist_id):
             ),
         ]
 
-        items += listing.build_album_listitems(
-            gmusic.get_user_artist_albums(artist_id=artist_id), True)
+        albums = gmusic.get_user_artist_albums(artist_id=artist_id)
+        albums.sort(key=itemgetter('name'))
+        albums.sort(key=itemgetter('year'), reverse=True)
+
+        items += listing.build_album_listitems(albums, True)
 
         listing.list_albums(items)
 
 
 @mpr.s_url('/browse/my-library/albums/')
 def my_library_albums():
-    items = listing.build_album_listitems(gmusic.get_my_library_albums(), True)
+    albums = gmusic.get_my_library_albums()
+    items = listing.build_album_listitems(albums, True)
     listing.list_albums(items)
 
 
-@mpr.s_url('/browse/my-library/album/<album_id>')
+@mpr.s_url('/browse/my-library/album/<album_id>/')
 def my_library_album(album_id):
-    items = listing.build_song_listitems(
-        tracks     = gmusic.get_user_album_songs(album_id=album_id),
-        my_library = True
-    )
+    songs = gmusic.get_user_album_songs(album_id=album_id)
+    items = listing.build_song_listitems(songs, my_library=True)
 
     listing.list_songs(items)
 
