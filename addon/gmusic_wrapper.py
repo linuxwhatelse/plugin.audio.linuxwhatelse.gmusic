@@ -314,7 +314,8 @@ class GMusic(Mobileclient):
                 songs = json.loads(f.read())
 
         else:
-            generator = self.get_all_songs(incremental=True, include_deleted=False)
+            generator = self.get_all_songs(incremental=True,
+                                           include_deleted=False)
 
             tmp = []
             for songs in generator:
@@ -326,14 +327,18 @@ class GMusic(Mobileclient):
             # missing (applies to user uploaded songs without
             # a matching entry in googles database)
             for i, song in enumerate(songs):
+                if ('title' not in song
+                        or 'album' not in song
+                        or 'artist' not in song):
+                    utils.log('Skipping broken entry: %s' % json.dumps(song),
+                              xbmc.LOGERROR)
+                    continue
+
                 if 'artistId' not in song:
                     songs[i]['artistId'] = [str(uuid.uuid4())]
 
                 if 'albumId' not in song:
                     songs[i]['albumId'] = str(uuid.uuid4())
-
-                if 'album' not in song:
-                    songs[i]['album'] = ''
 
 
             with open(_cache, 'w+') as f:
@@ -370,7 +375,8 @@ class GMusic(Mobileclient):
         return songs
 
     def get_my_library_song_details(self, track_id):
-        _cache = os.path.join(utils.get_cache_dir(['library', 'songs']), track_id)
+        _cache = utils.get_cache_dir(['library', 'songs'])
+        _cache = os.path.join(_cache, track_id)
 
         track = None
         if os.path.exists(_cache):
@@ -391,7 +397,10 @@ class GMusic(Mobileclient):
             songs = self._uniquify(songs, 'albumArtist')
 
             for song in songs:
-                if 'artistId' not in song:
+                if ('artistId' not in song
+                        or 'title' not in song):
+                    utils.log('Skipping broken entry: %s' % json.dumps(song),
+                              xbmc.LOGERROR)
                     continue
 
                 _art = thumbs.IMG_ARTIST
@@ -425,10 +434,13 @@ class GMusic(Mobileclient):
             songs = self._uniquify(songs, 'albumId')
 
             for song in songs:
-                if 'albumId' not in song:
-                    continue
-
-                if 'artistId' not in song:
+                if ('albumId' not in song
+                        or 'artistId' not in song
+                        or 'album' not in song
+                        or 'artist' not in song
+                        or 'albumArtist' not in song):
+                    utils.log('Skipping broken entry: %s' % json.dumps(song),
+                              xbmc.LOGERROR)
                     continue
 
                 _art = thumbs.IMG_ALBUM
@@ -438,11 +450,11 @@ class GMusic(Mobileclient):
                 album = {
                     'albumId'    : song['albumId'],
                     'artistId'   : song['artistId'],
-                    'name'       : song['album']       if 'album'       in song else '',
-                    'artist'     : song['artist']      if 'artist'      in song else '',
-                    'albumArtist': song['albumArtist'] if 'albumArtist' in song else '',
-                    'year'       : song['year']        if 'year'        in song else '',
-                    'genre'      : song['genre']       if 'genre'       in song else '',
+                    'name'       : song['album'],
+                    'artist'     : song['artist'],
+                    'albumArtist': song['albumArtist'],
+                    'year'       : song['year'] if 'year' in song else 0,
+                    'genre'      : song['genre'] if 'genre' in song else '',
                     'albumArtRef': _art
                 }
 
