@@ -25,15 +25,5 @@ mpr = mapper.Mapper()
 import resources.libs
 
 
-# The initial login to google will be logged, therefor we make sure the logfile
-# will be written into our cache dir
-# On Windows the default directory would be Kodis installation dir where we can
-# NOT assume to have write rights
-if sys.platform == 'win32':
-    import os
-    from addon import utils
-    os.chdir(utils.get_cache_dir())
-
-
 from gmusic_wrapper import GMusic
 gmusic = GMusic(debug_logging=False, validate=True, verify_ssl=True)
