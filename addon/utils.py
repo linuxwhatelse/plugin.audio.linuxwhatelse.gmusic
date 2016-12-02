@@ -13,7 +13,7 @@ def log(message, level=xbmc.LOGDEBUG):
 
 def notify(title, message, icon=None, display_time=5000):
     if not icon:
-        icon = os.path.join(addon.getAddonInfo('path'), 'icon.png')
+        icon = addon.getAddonInfo('icon')
 
     xbmc.executebuiltin('Notification(%s, %s, %s, %s)' % (title, message, display_time, icon))
 
