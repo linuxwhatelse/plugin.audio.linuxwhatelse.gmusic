@@ -165,18 +165,7 @@ def build_album_listitems(albums, my_library=False):
             )
         ]
 
-        if my_library:
-            menu_items.append((
-                utils.translate(30061),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['my-library', 'remove', 'album', album_id],
-                    r_path  = True,
-                    r_query = True
-                )
-            ))
-
-        else:
+        if not my_library:
             menu_items.append((
                 utils.translate(30037),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
@@ -220,6 +209,18 @@ def build_album_listitems(albums, my_library=False):
                     r_query = True
                 )
             ))
+
+        if my_library:
+            menu_items.append((
+                utils.translate(30061),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['my-library', 'remove', 'album', album_id],
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
+
 
         item.addContextMenuItems(items=menu_items, replaceItems=True)
 
