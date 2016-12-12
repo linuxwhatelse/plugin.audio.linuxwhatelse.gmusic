@@ -262,6 +262,7 @@ def my_library_artist(artist_id):
 def my_library_albums():
     albums = gmusic.get_my_library_albums()
     items = listing.build_album_listitems(albums, True)
+
     listing.list_albums(items)
 
 
@@ -279,6 +280,7 @@ def my_library_songs():
         tracks     = gmusic.get_my_library_songs(),
         my_library = True
     )
+
     listing.list_songs(items)
 
 

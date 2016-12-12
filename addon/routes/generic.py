@@ -111,11 +111,10 @@ def listen_now_shared_playlist(playlist_token):
     listing.list_songs(items)
 
 
-@mpr.s_url('/browse/station/')
+@mpr.s_url('/browse/station/', type_cast={'allow_view_overwrite': bool})
 def station(station_id=None, station_name=None, artist_id=None, album_id=None,
             track_id=None, genre_id=None, curated_station_id=None,
             playlist_token=None, allow_view_overwrite=True):
-    allow_view_overwrite = False if allow_view_overwrite == 'False' else True
 
     if not station_id:
         station_id = gmusic.create_station(
