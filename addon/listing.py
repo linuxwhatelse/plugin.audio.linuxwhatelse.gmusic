@@ -475,7 +475,7 @@ def build_station_listitems(stations):
                 r_query = True
             ),
             item,
-            True
+            False
         ))
 
     return items
