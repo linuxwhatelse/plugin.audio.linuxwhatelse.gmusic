@@ -26,7 +26,7 @@ class GMusic(Mobileclient):
 
         except:
             utils.notify(utils.translate(30050), utils.translate(30051))
-            utils.log(traceback.format_exc(), xbmc.LOGERROR)
+            utils.log(traceback.format_exc(), lvl=xbmc.LOGERROR)
             return None
 
     def _should_test_login(self):
@@ -252,7 +252,7 @@ class GMusic(Mobileclient):
     ##
     def get_new_releases(self, num_items=25, genre=None):
         res = self._make_call(mobileclient.GetNewReleases, num_items, genre)
-        utils.log(json.dumps(res, indent=2), xbmc.LOGERROR)
+        utils.log(json.dumps(res, indent=2), lvl=xbmc.LOGERROR)
         for tabs in res['tabs']:
             if tabs['tab_type'] == 'NEW_RELEASES':
                 return tabs['groups'][0]['entities']
@@ -330,8 +330,8 @@ class GMusic(Mobileclient):
                 if ('title' not in song
                         or 'album' not in song
                         or 'artist' not in song):
-                    utils.log('Skipping broken entry: %s' % json.dumps(song),
-                              xbmc.LOGERROR)
+                    utils.log('Skipping broken entry:', json.dumps(song),
+                              lvl=xbmc.LOGERROR)
                     continue
 
                 if 'artistId' not in song:
@@ -399,8 +399,8 @@ class GMusic(Mobileclient):
             for song in songs:
                 if ('artistId' not in song
                         or 'title' not in song):
-                    utils.log('Skipping broken entry: %s' % json.dumps(song),
-                              xbmc.LOGERROR)
+                    utils.log('Skipping broken entry:', json.dumps(song),
+                              lvl=xbmc.LOGERROR)
                     continue
 
                 _art = thumbs.IMG_ARTIST
@@ -439,8 +439,8 @@ class GMusic(Mobileclient):
                         or 'album' not in song
                         or 'artist' not in song
                         or 'albumArtist' not in song):
-                    utils.log('Skipping broken entry: %s' % json.dumps(song),
-                              xbmc.LOGERROR)
+                    utils.log('Skipping broken entry:', json.dumps(song),
+                              lvl=xbmc.LOGERROR)
                     continue
 
                 _art = thumbs.IMG_ALBUM

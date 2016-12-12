@@ -8,8 +8,17 @@ import xbmcaddon
 
 addon = xbmcaddon.Addon()
 
-def log(message, level=xbmc.LOGDEBUG):
-    xbmc.log('[%s]: %s' % (addon.getAddonInfo('name'), message), level)
+def log(*args, **kwargs):
+    if not kwargs or 'lvl' not in kwargs:
+        lvl = xbmc.LOGNOTICE
+
+    else:
+        lvl = kwargs['lvl']
+
+    msg = '[%s] ' % addon.getAddonInfo('name')
+    msg += ' '.join(str(x) for x in args)
+
+    xbmc.log(msg, level=lvl)
 
 def notify(title, message, icon=None, display_time=5000):
     if not icon:
