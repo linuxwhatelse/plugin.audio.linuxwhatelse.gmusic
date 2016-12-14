@@ -11,8 +11,8 @@ from addon import listing
 from addon import gmusic
 
 
-@mpr.s_url('/browse/artist/<artist_id>/', type_cast={'allow_view_overwrite': bool})
-def artist(artist_id, allow_view_overwrite=True):
+@mpr.s_url('/browse/artist/<artist_id>/')
+def artist(artist_id):
     top_songs = xbmcgui.ListItem(utils.translate(30066))
     top_songs.setArt({
         'thumb'  : thumbs.IMG_STAR,
@@ -55,7 +55,7 @@ def artist(artist_id, allow_view_overwrite=True):
         albums.sort(key=itemgetter('year'), reverse=True)
 
         items += listing.build_album_listitems(albums)
-        listing.list_albums(items, allow_view_overwrite)
+        listing.list_albums(items)
 
     else:
         listing.list_items([])
@@ -87,13 +87,13 @@ def artist_related_artists(artist_id):
         listing.list_items([])
 
 
-@mpr.s_url('/browse/album/<album_id>/', type_cast={'allow_view_overwrite': bool})
-def album(album_id, allow_view_overwrite=True):
+@mpr.s_url('/browse/album/<album_id>/')
+def album(album_id):
     album_info = gmusic.get_album_info(album_id=album_id)
 
     if album_info and 'tracks' in album_info:
         items = listing.build_song_listitems(album_info['tracks'])
-        listing.list_songs(items, allow_view_overwrite)
+        listing.list_songs(items)
 
     else:
         listing.list_items([])
@@ -111,10 +111,10 @@ def listen_now_shared_playlist(playlist_token):
     listing.list_songs(items)
 
 
-@mpr.s_url('/browse/station/', type_cast={'allow_view_overwrite': bool})
+@mpr.s_url('/browse/station/')
 def station(station_id=None, station_name=None, artist_id=None, album_id=None,
             track_id=None, genre_id=None, curated_station_id=None,
-            playlist_token=None, allow_view_overwrite=True):
+            playlist_token=None):
 
     if not station_id:
         station_id = gmusic.create_station(
@@ -131,4 +131,4 @@ def station(station_id=None, station_name=None, artist_id=None, album_id=None,
     tracks = gmusic.get_station_tracks(station_id=station_id, num_tracks=25)
 
     items = listing.build_song_listitems(tracks=tracks, station_id=station_id)
-    listing.list_songs(items, allow_view_overwrite)
+    listing.list_songs(items)

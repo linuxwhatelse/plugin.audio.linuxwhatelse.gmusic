@@ -149,7 +149,7 @@ def my_library_playlists():
 
 
 @mpr.s_url('/browse/my-library/playlist/<playlist_id>/')
-def my_library_playlist(playlist_id, allow_view_overwrite=True):
+def my_library_playlist(playlist_id):
     my_library = False
     my_library_playlist = False
 
@@ -175,7 +175,7 @@ def my_library_playlist(playlist_id, allow_view_overwrite=True):
         my_library_playlist = my_library_playlist
     )
 
-    listing.list_songs(items, allow_view_overwrite)
+    listing.list_songs(items)
 
 
 @mpr.s_url('/browse/my-library/stations/')

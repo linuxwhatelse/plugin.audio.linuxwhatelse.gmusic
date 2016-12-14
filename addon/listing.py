@@ -86,7 +86,7 @@ def build_artist_listitems(artists, my_library=False):
     return items
 
 
-def list_artists(listitems, allow_view_overwrite=True):
+def list_artists(listitems):
     xbmcplugin.setContent(addon_handle, 'artists')
 
     sort_methods = [
@@ -94,8 +94,7 @@ def list_artists(listitems, allow_view_overwrite=True):
         xbmcplugin.SORT_METHOD_ARTIST,
     ]
 
-    list_items(listitems, allow_view_overwrite,
-               int(addon.getSetting('view_id_artists')), sort_methods)
+    list_items(listitems, sort_methods)
 
 
 def build_album_listitems(albums, my_library=False):
@@ -253,7 +252,7 @@ def build_album_listitems(albums, my_library=False):
     return items
 
 
-def list_albums(listitems, allow_view_overwrite=True):
+def list_albums(listitems):
     xbmcplugin.setContent(addon_handle, 'albums')
 
     sort_methods = [
@@ -263,7 +262,7 @@ def list_albums(listitems, allow_view_overwrite=True):
         xbmcplugin.SORT_METHOD_GENRE,
     ]
 
-    list_items(listitems, allow_view_overwrite, int(addon.getSetting('view_id_albums')), sort_methods)
+    list_items(listitems, sort_methods)
 
 
 def build_playlist_listitems(playlists):
@@ -383,11 +382,10 @@ def build_playlist_listitems(playlists):
     return items
 
 
-def list_playlists(listitems, allow_view_overwrite=True):
+def list_playlists(listitems):
     xbmcplugin.setContent(addon_handle, 'albums')
 
-    list_items(listitems, allow_view_overwrite,
-               int(addon.getSetting('view_id_playlists')))
+    list_items(listitems)
 
 
 def build_station_listitems(stations):
@@ -482,11 +480,10 @@ def build_station_listitems(stations):
     return items
 
 
-def list_stations(listitems, allow_view_overwrite=True):
+def list_stations(listitems):
     xbmcplugin.setContent(addon_handle, 'albums')
 
-    list_items(listitems, allow_view_overwrite,
-               int(addon.getSetting('view_id_stations')), None, False)
+    list_items(listitems, None, False)
 
 
 def build_situation_listitems(situations):
@@ -534,8 +531,8 @@ def build_situation_listitems(situations):
     return items
 
 
-def list_situations(listitems, allow_view_overwrite=True):
-    list_albums(listitems, allow_view_overwrite)
+def list_situations(listitems):
+    list_albums(listitems)
 
 
 def build_song_listitems(tracks, station_id=None, my_library=False, my_library_playlist=False):
@@ -764,7 +761,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
     return items
 
 
-def list_songs(listitems, allow_view_overwrite=True):
+def list_songs(listitems):
     xbmcplugin.setContent(addon_handle, 'songs')
 
     sort_methods = [
@@ -779,15 +776,10 @@ def list_songs(listitems, allow_view_overwrite=True):
         xbmcplugin.SORT_METHOD_GENRE,
     ]
 
-    list_items(listitems, allow_view_overwrite,
-               int(addon.getSetting('view_id_songs')), sort_methods)
+    list_items(listitems, sort_methods)
 
 
-def list_items(listitems, allow_view_overwrite=True, view_mode_id=None,
-               sort_methods=None, cache_to_disc=True):
-    if not view_mode_id:
-        view_mode_id = int(addon.getSetting('view_id_list'))
-
+def list_items(listitems, sort_methods=None, cache_to_disc=True):
     if not sort_methods:
         sort_methods = []
 
@@ -799,8 +791,5 @@ def list_items(listitems, allow_view_overwrite=True, view_mode_id=None,
 
     for sort_method in sort_methods:
         xbmcplugin.addSortMethod(addon_handle, sort_method)
-
-    if allow_view_overwrite and addon.getSetting('overwrite_views') == 'true':
-        xbmc.executebuiltin('Container.SetViewMode(%d)' % view_mode_id)
 
     xbmcplugin.endOfDirectory(handle=addon_handle, cacheToDisc=cache_to_disc)

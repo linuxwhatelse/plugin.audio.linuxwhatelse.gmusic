@@ -27,14 +27,4 @@
         <setting   id="clear_cache"            type="action"   label="30013"   action="RunPlugin(plugin://plugin.audio.linuxwhatelse.gmusic/clear/cache)" />
     </category>
 
-    <!-- Advanced -->
-    <category label="30054">
-        <setting   id="overwrite_views"     type="bool"     label="30003"   default="false" />
-        <setting   id="view_id_list"        type="number"   label="30007"   default="50"    enable="eq(-1,true)" />
-        <setting   id="view_id_artists"     type="number"   label="30055"   default="50"    enable="eq(-2,true)" />
-        <setting   id="view_id_albums"      type="number"   label="30056"   default="500"   enable="eq(-3,true)" />
-        <setting   id="view_id_playlists"   type="number"   label="30057"   default="51"    enable="eq(-4,true)" />
-        <setting   id="view_id_stations"    type="number"   label="30058"   default="50"    enable="eq(-5,true)" />
-        <setting   id="view_id_songs"       type="number"   label="30059"   default="506"   enable="eq(-6,true)" />
-    </category>
 </settings>

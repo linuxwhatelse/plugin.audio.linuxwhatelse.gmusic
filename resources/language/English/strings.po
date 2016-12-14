@@ -38,7 +38,7 @@ msgid "Playback"
 msgstr ""
 
 msgctxt "#30007"
-msgid "List view ID"
+msgid ""
 msgstr ""
 
 msgctxt "#30008"
@@ -218,27 +218,27 @@ msgid "-- New Search --"
 msgstr ""
 
 msgctxt "#30054"
-msgid "Advanced"
+msgid ""
 msgstr ""
 
 msgctxt "#30055"
-msgid "Artists view ID"
+msgid ""
 msgstr ""
 
 msgctxt "#30056"
-msgid "Albums view ID"
+msgid ""
 msgstr ""
 
 msgctxt "#30057"
-msgid "Playlists view ID"
+msgid ""
 msgstr ""
 
 msgctxt "#30058"
-msgid "Stations view ID"
+msgid ""
 msgstr ""
 
 msgctxt "#30059"
-msgid "Songs view ID"
+msgid ""
 msgstr ""
 
 msgctxt "#30060"
