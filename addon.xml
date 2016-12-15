@@ -39,5 +39,9 @@
         <summary lang="de">Google Play Music</summary>
         <description lang="en">Plugin that lets you manage and stream music from Google Play Music</description>
         <description lang="de">Plugin das dich die Musik von Google Play Music verwalten und streamen lässt</description>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>fanart.jpg</fanart>
+        </assets>
     </extension>
 </addon>
