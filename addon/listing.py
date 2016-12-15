@@ -40,7 +40,8 @@ def build_artist_listitems(artists, my_library=False):
         })
 
         item.setInfo('music', {
-            'artist': artist_name
+            'mediatype' : 'artist',
+            'artist'    : artist_name,
         })
 
         item.addContextMenuItems(
@@ -127,10 +128,11 @@ def build_album_listitems(albums, my_library=False):
         })
 
         item.setInfo('music', {
-            'album'   : album_name,
-            'artist'  : album['albumArtist']  if 'albumArtist' in album else '',
-            'genre'   : album['genre']        if 'genre'       in album else '',
-            'year'    : album['year']         if 'year'        in album else '',
+            'mediatype': 'album',
+            'album'    : album_name,
+            'artist'   : album['albumArtist']  if 'albumArtist' in album else '',
+            'genre'    : album['genre']        if 'genre'       in album else '',
+            'year'     : album['year']         if 'year'        in album else '',
         })
 
         menu_items = [
@@ -312,7 +314,8 @@ def build_playlist_listitems(playlists):
 
 
         item.setInfo('music', {
-            'album': playlist['name'],
+            'mediatype' : 'album',
+            'album'     : playlist['name'],
         })
 
         paths = []
@@ -398,6 +401,10 @@ def build_station_listitems(stations):
         if 'name' not in station:
             continue
 
+        description = ''
+        if 'description' in station:
+            description = station['description']
+
         station_name = station['name']
         station_art  = thumbs.IMG_STATION
         fanart       = None
@@ -417,10 +424,9 @@ def build_station_listitems(stations):
         })
 
         item.setInfo('music', {
+            'mediatype' : 'album',
             'album': station_name,
-            # This might look a little bit wrong, but as long as no one complains about it,
-            # we'll leave that in so we have that nice description at least somewhere
-            'artist': station['description'] if 'description' in station else '',
+            'comment': description,
         })
 
         query = {}
@@ -494,6 +500,10 @@ def build_situation_listitems(situations):
         situation_art   = thumbs.IMG_ALBUM
         fanart          = None
 
+        description = ''
+        if 'description' in situation:
+            description = situation['description']
+
         if 'imageUrl' in situation:
             situation_art = situation['imageUrl']
 
@@ -509,10 +519,9 @@ def build_situation_listitems(situations):
         })
 
         item.setInfo('music', {
-            'album'   : situation_title,
-            # This might look a little bit wrong, but as long as no one complains about it,
-            # we'll leave that in so we have that nice description at least somewhere
-            'artist'  : situation['description']  if 'description' in situation else '',
+            'mediatype' : 'album',
+            'album'     : situation_title,
+            'comment'   : description,
         })
 
         item.addContextMenuItems(items=[], replaceItems=True)
@@ -592,6 +601,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         })
 
         item.setInfo('music', {
+            'mediatype'    : 'song',
             'title'        :  track_title,
             'tracknumber'  :  track['trackNumber']  if 'trackNumber' in track else '',
             'year'         :  track['year']         if 'year'        in track else '',
