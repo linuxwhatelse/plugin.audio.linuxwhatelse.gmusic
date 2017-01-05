@@ -6,7 +6,7 @@
 
     <requires>
         <!-- kodi repository -->
-        <import addon="xbmc.python" version="2.20.0"/>
+        <import addon="xbmc.python" version="2.25.0"/>
 
         <!-- linuxwhatelse repository -->
         <import addon="script.module.gmusicapi" version="10.1.0"/>
