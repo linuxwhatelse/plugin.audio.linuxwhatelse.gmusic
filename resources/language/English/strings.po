@@ -400,3 +400,7 @@ msgstr ""
 msgctxt "#30098"
 msgid "All Albums"
 msgstr ""
+
+msgctxt "#30099"
+msgid "Rating submitted"
+msgstr ""

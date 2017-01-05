@@ -773,18 +773,19 @@ def rate(track_id):
 
     song = gmusic.get_track_info(track_id)
 
-    if song:
-        if selection == 0:
-            song['rating'] = '5'
+    if not song:
+        return
 
-        elif selection == 1:
-            song['rating'] = '0'
+    if selection == 0:
+        gmusic.rate_songs(song, 5)
 
-        elif selection == 2:
-            song['rating'] = '1'
+    elif selection == 1:
+        gmusic.rate_songs(song, 0)
 
-        song['lastRatingChangeTimestamp'] = int(round(time.time() * 1000000))
-        gmusic.change_song_metadata(song)
+    elif selection == 2:
+        gmusic.rate_songs(song, 1)
+
+    utils.notify(utils.translate(30099), "")
 
 
 @mpr.s_url('/clear/cache/')
