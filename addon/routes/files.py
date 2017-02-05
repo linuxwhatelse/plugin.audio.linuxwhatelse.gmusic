@@ -36,4 +36,4 @@ def station(station_id=None, station_name=None, artist_id=None, album_id=None,
             playlist_token=None):
 
     generic.station(station_id, station_name, artist_id, album_id,
-                    genre_id, track_id, curated_station_id, playlist_token)
+                    track_id, genre_id, curated_station_id, playlist_token)
