@@ -99,7 +99,4 @@ def main_menu():
         )
     )])
 
-    for item in items:
-        item[1].addContextMenuItems([], True)
-
     listing.list_items(items)

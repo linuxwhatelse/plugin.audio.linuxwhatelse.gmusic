@@ -99,10 +99,6 @@ def listen_now():
             True
         ))
 
-    # Remove all default context menu items (like "Play all", "Queue", etc.)
-    for item in items:
-        item[1].addContextMenuItems([], True)
-
     listing.list_items(items)
 
 

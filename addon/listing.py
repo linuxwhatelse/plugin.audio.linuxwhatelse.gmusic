@@ -54,8 +54,7 @@ def build_artist_listitems(artists, my_library=False):
                     r_path  = True,
                     r_query = True
                 )
-            )],
-            replaceItems=True
+            )]
         )
 
         # My Library entries differ from normal AllAcces ones as users are able
@@ -223,7 +222,7 @@ def build_album_listitems(albums, my_library=False):
             ))
 
 
-        item.addContextMenuItems(items=menu_items, replaceItems=True)
+        item.addContextMenuItems(items=menu_items)
 
         # My Library entries differ from normal AllAcces ones as users are able
         # to add only parts of the item to there library
@@ -368,7 +367,7 @@ def build_playlist_listitems(playlists):
                 )
             ))
 
-        item.addContextMenuItems(items=menu_items, replaceItems=True)
+        item.addContextMenuItems(items=menu_items)
 
         items.append((
             utils.build_url(
@@ -467,8 +466,7 @@ def build_station_listitems(stations):
                     r_path  = True,
                     r_query = True
                 )
-            )],
-            replaceItems=True
+            )]
         )
 
         items.append((
@@ -523,8 +521,6 @@ def build_situation_listitems(situations):
             'album'     : situation_title,
             'comment'   : description,
         })
-
-        item.addContextMenuItems(items=[], replaceItems=True)
 
         items.append((
             utils.build_url(
@@ -733,7 +729,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
             )
         ))
 
-        item.addContextMenuItems(items=menu_items, replaceItems=True)
+        item.addContextMenuItems(items=menu_items)
 
         item.setProperty('IsPlayable', 'true')
         item.setProperty('Music',      'true')

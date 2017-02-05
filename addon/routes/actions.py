@@ -421,9 +421,6 @@ def search_history():
             True
         ))
 
-    for item in items:
-        item[1].addContextMenuItems([],True)
-
     listing.list_items(items)
 
 
@@ -554,9 +551,6 @@ def search(query):
             item,
             True
         ))
-
-    for item in items:
-        item[1].addContextMenuItems([],True)
 
     listing.list_items(items)
 

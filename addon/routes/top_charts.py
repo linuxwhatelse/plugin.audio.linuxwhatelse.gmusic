@@ -36,10 +36,6 @@ def top_charts():
         )
     ]
 
-    # Remove default context menu entries (like "Play all", "Queue", etc.)
-    for item in items:
-        item[1].addContextMenuItems([], True)
-
     listing.list_items(items)
 
 

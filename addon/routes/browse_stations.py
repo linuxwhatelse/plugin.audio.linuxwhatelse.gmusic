@@ -35,9 +35,6 @@ def browse_stations():
             True
         ))
 
-    for item in items:
-        item[1].addContextMenuItems([], True)
-
     listing.list_items(items)
 
 
@@ -69,9 +66,6 @@ def browse_stations_categories(category_id):
                     item,
                     True
                 ))
-
-        for item in items:
-            item[1].addContextMenuItems([], True)
 
     listing.list_items(items)
 

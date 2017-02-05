@@ -81,10 +81,6 @@ def my_library():
         ),
     ]
 
-    # Remove all default context menu entries (like "Play all", "Queue", etc.)
-    for item in items:
-        item[1].addContextMenuItems([], True)
-
     listing.list_items(items)
 
 
@@ -139,8 +135,7 @@ def my_library_playlists():
                     r_path  = True,
                     r_query = True
                 )
-            )],
-            True
+            )]
         )
 
     # User playlists
