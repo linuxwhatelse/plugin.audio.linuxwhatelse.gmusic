@@ -134,36 +134,7 @@ def build_album_listitems(albums, my_library=False):
             'year'     : album['year']         if 'year'        in album else '',
         })
 
-        menu_items = [
-            (
-                utils.translate(30033),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['play', 'album', album_id],
-                    r_path  = True,
-                    r_query = True
-                )
-            ),
-            (
-                utils.translate(30039),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['queue', 'album', album_id],
-                    r_path  = True,
-                    r_query = True
-                )
-            ),
-            (
-                utils.translate(30040),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['queue', 'album', album_id],
-                    queries = {'play_next': True},
-                    r_path  = True,
-                    r_query = True
-                )
-            )
-        ]
+        menu_items = []
 
         if not my_library:
             menu_items.append((
@@ -608,28 +579,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
             'playcount'    :  track['playCount']    if 'playCount'   in track else '',
         })
 
-        # Add "Queue" and "Play next" to context menu
-        menu_items = [
-            (
-                utils.translate(30039),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['queue', 'track', track_id],
-                    r_path  = True,
-                    r_query = True
-                )
-            ),
-            (
-                utils.translate(30040),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['queue', 'track', track_id],
-                    queries = {'play_next': True},
-                    r_path  = True,
-                    r_query = True
-                )
-            ),
-        ]
+        menu_items = []
 
         if my_library and 'id' in track:
             # Add "Remove from library" to context menu
