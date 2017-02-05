@@ -18,7 +18,7 @@ def artist(artist_id):
 
 @mpr.s_url('/album/<album_id>/')
 def album(album_id):
-    generic.album(album_id, False)
+    generic.album(album_id)
 
 
 @mpr.s_url('/playlist/')
