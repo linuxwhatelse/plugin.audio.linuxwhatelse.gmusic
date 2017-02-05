@@ -581,19 +581,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
 
         menu_items = []
 
-        if my_library and 'id' in track:
-            # Add "Remove from library" to context menu
-            menu_items.append((
-                utils.translate(30061),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['my-library', 'remove', 'track', track['id']],
-                    r_path  = True,
-                    r_query = True
-                )
-            ))
-
-        else:
+        if not my_library and 'id' not in track:
             # Add "Add to library" to context menu
             menu_items.append((
                 utils.translate(30037),
@@ -678,6 +666,18 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
                 r_query = True
             )
         ))
+
+        if my_library and 'id' in track:
+            # Add "Remove from library" to context menu
+            menu_items.append((
+                utils.translate(30061),
+                'XBMC.RunPlugin(%s)' % utils.build_url(
+                    url     = url,
+                    paths   = ['my-library', 'remove', 'track', track['id']],
+                    r_path  = True,
+                    r_query = True
+                )
+            ))
 
         item.addContextMenuItems(items=menu_items)
 
