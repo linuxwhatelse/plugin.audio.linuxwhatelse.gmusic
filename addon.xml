@@ -26,10 +26,10 @@
         <source>https://github.com/linuxwhatelse/plugin.audio.linuxwhatelse.gmusic</source>
         <website>http://www.linuxwhatelse.com</website>
         <email>info@linuxwhatelse.com</email>
-        <summary lang="en">Google Play Music</summary>
-        <summary lang="de">Google Play Music</summary>
-        <description lang="en">Plugin that lets you manage and stream music from Google Play Music</description>
-        <description lang="de">Plugin das dich die Musik von Google Play Music verwalten und streamen lässt</description>
+        <summary lang="en_GB">Google Play Music</summary>
+        <summary lang="de_DE">Google Play Music</summary>
+        <description lang="en_GB">Plugin that lets you manage and stream music from Google Play Music</description>
+        <description lang="de_DE">Plugin das dich die Musik von Google Play Music verwalten und streamen lässt</description>
         <assets>
             <icon>icon.png</icon>
             <fanart>fanart.jpg</fanart>

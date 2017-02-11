@@ -42,8 +42,8 @@ msgid ""
 msgstr ""
 
 msgctxt "#30008"
-msgid "Fullscreen when playing Station or \"Play all\""
-msgstr "Vollbild bei Wiedergabe von Station oder \"Alle wiedergeben\""
+msgid "Fullscreen when playing Station"
+msgstr "Vollbild bei Wiedergabe von Station"
 
 msgctxt "#30009"
 msgid ""

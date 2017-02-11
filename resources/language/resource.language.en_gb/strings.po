@@ -42,7 +42,7 @@ msgid ""
 msgstr ""
 
 msgctxt "#30008"
-msgid "Fullscreen when playing Station or \"Play all\""
+msgid "Fullscreen when playing Station"
 msgstr ""
 
 msgctxt "#30009"
