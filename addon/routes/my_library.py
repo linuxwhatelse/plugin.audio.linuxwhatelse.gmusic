@@ -123,21 +123,6 @@ def my_library_playlists():
         ),
     ]
 
-    # Add "Play All" to "Thumbs up" and "Last added" context menu
-    for item, playlist_id in zip(items, ['thumbsup', 'lastadded']):
-        item[1].addContextMenuItems([
-            (
-                utils.translate(30033),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['play', 'playlist'],
-                    queries = {'playlist_id': playlist_id},
-                    r_path  = True,
-                    r_query = True
-                )
-            )]
-        )
-
     # User playlists
     items += listing.build_playlist_listitems(gmusic.get_user_playlists())
     listing.list_playlists(items)
