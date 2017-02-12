@@ -6,6 +6,7 @@ import urlparse
 import re
 import uuid
 import threading
+import codecs
 
 import xbmc
 import xbmcgui
@@ -445,9 +446,9 @@ def search(query):
     history      = _get_search_history()
 
     # It was a new search so we add it to the history
-    if query.lower() not in (hist.lower() for hist in history):
+    if query.decode('utf-8').lower() not in (hist.lower() for hist in history):
         history.insert(0, query)
-        with open(history_file, 'w+') as f:
+        with codecs.open(history_file, 'w+', encoding='utf-8') as f:
             f.write(json.dumps(history[:20], indent=2))
 
     result = gmusic.search(query)
@@ -620,7 +621,7 @@ def _get_search_history():
 
     history = []
     if os.path.exists(history_file):
-        with open(history_file, 'r') as f:
+        with codecs.open(history_file, 'r', encoding='utf-8') as f:
             try:
                 history = json.loads(f.read())
             except ValueError:
