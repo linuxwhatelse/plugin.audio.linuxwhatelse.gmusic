@@ -5,6 +5,7 @@ import urlparse
 
 import xbmc
 import xbmcaddon
+import xbmcgui
 
 addon = xbmcaddon.Addon()
 
@@ -20,11 +21,11 @@ def log(*args, **kwargs):
 
     xbmc.log(msg, level=lvl)
 
-def notify(title, message, icon=None, display_time=5000):
+def notify(title, message, icon=None, display_time=5000, sound=True):
     if not icon:
         icon = addon.getAddonInfo('icon')
 
-    xbmc.executebuiltin('Notification(%s, %s, %s, %s)' % (title, message, display_time, icon))
+    xbmcgui.Dialog().notification(title, message, icon, display_time, sound)
 
 def translate(id):
     return addon.getLocalizedString(id)
