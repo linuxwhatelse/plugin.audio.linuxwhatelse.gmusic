@@ -301,16 +301,7 @@ def build_playlist_listitems(playlists):
         else:
             continue
 
-        menu_items = [(
-            utils.translate(30033),
-            'XBMC.RunPlugin(%s)' % utils.build_url(
-                url     = url,
-                paths   = ['play', 'playlist'],
-                queries = query,
-                r_path  = True,
-                r_query = True
-            ),
-        )]
+        menu_items = []
 
         if playlist_token:
             menu_items.append((
@@ -426,19 +417,6 @@ def build_station_listitems(stations):
 
             else:
                 continue
-
-        item.addContextMenuItems(
-            items=[(
-                utils.translate(30033),
-                'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['play', 'station'],
-                    queries = query,
-                    r_path  = True,
-                    r_query = True
-                )
-            )]
-        )
 
         items.append((
             utils.build_url(

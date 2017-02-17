@@ -134,7 +134,7 @@ msgid "Update Library"
 msgstr ""
 
 msgctxt "#30033"
-msgid "Play all"
+msgid ""
 msgstr ""
 
 msgctxt "#30034"
@@ -162,7 +162,7 @@ msgid "Queue"
 msgstr ""
 
 msgctxt "#30040"
-msgid "Play next"
+msgid ""
 msgstr ""
 
 msgctxt "#30041"
