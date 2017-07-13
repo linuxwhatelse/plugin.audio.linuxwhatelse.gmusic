@@ -9,7 +9,7 @@
         <import addon="xbmc.python" version="2.25.0"/>
 
         <!-- linuxwhatelse repository -->
-        <import addon="script.module.gmusicapi" version="10.1.1.1"/>
+        <import addon="script.module.gmusicapi" version="10.1.2"/>
         <import addon="script.module.lwe_mapper" version="1.2.1"/>
     </requires>
 
