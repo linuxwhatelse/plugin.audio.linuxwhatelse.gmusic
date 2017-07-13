@@ -1,14 +1,16 @@
 import xbmcgui
 
+import mapper
+
 from addon import utils
 from addon import thumbs
 
-from addon import mpr
 from addon import url
 from addon import listing
 from addon import gmusic
 
 
+mpr = mapper.Mapper.get()
 _cache_dir   = utils.get_cache_dir()
 
 

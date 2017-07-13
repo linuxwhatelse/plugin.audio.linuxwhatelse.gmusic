@@ -16,10 +16,6 @@ import xbmcaddon
 addon = xbmcaddon.Addon()
 
 
-import mapper
-mpr = mapper.Mapper()
-
-
 # Adds all libraries to our path
 # see "resources/libs/lib/__init__.py"
 import resources.libs

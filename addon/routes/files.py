@@ -1,8 +1,11 @@
+import mapper
+
 from addon.routes import my_library
 from addon.routes import actions
 from addon.routes import generic
 
-from addon import mpr
+
+mpr = mapper.Mapper.get()
 
 
 @mpr.s_url('/track/<track_id>/')

@@ -1,6 +1,10 @@
-from addon import mpr
+import mapper
+
 from addon import listing
 from addon import gmusic
+
+
+mpr = mapper.Mapper.get()
 
 
 @mpr.s_url('/browse/new-releases/')

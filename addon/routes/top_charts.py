@@ -1,12 +1,16 @@
 import xbmcgui
 
+import mapper
+
 from addon import utils
 from addon import thumbs
 
-from addon import mpr
 from addon import url
 from addon import listing
 from addon import gmusic
+
+
+mpr = mapper.Mapper.get()
 
 
 @mpr.s_url('/browse/top-charts/')
