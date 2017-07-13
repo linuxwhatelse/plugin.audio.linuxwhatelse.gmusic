@@ -2,9 +2,13 @@ import time
 
 import xbmc
 
-from addon import addon
 from addon import utils
-from addon import gmusic
+from addon.gmusic_wrapper import GMusic
+
+from addon import addon
+
+
+gmusic = GMusic.get(debug_logging=False)
 
 
 def _get_update_interval():

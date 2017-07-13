@@ -3,6 +3,7 @@ import uuid
 import json
 import time
 import locale
+import threading
 import traceback
 from operator import itemgetter
 
@@ -17,8 +18,30 @@ from addon import thumbs
 from addon import addon
 
 
+_lock = threading.RLock()
+_instances = dict()
+
+
 class GMusic(Mobileclient):
     _is_logged_in = False
+
+    @staticmethod
+    def get(debug_logging=True, validate=True, verify_ssl=True,
+            name=__name__):
+        if not isinstance(name, str):
+            raise TypeError('A name must be a string')
+
+        rv = None
+        with _lock:
+            if name in _instances:
+                rv = _instances[name]
+
+            else:
+                rv = GMusic(debug_logging, validate, verify_ssl)
+                _instances[name] = rv
+
+        return rv
+
 
     def _make_call(self, protocol, *args, **kwargs):
         try:

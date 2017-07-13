@@ -19,7 +19,3 @@ addon = xbmcaddon.Addon()
 # Adds all libraries to our path
 # see "resources/libs/lib/__init__.py"
 import resources.libs
-
-
-from gmusic_wrapper import GMusic
-gmusic = GMusic(debug_logging=False, validate=True, verify_ssl=True)
