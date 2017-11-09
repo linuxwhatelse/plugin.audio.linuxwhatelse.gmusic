@@ -5,7 +5,6 @@ import time
 import urlparse
 import re
 import uuid
-import threading
 import codecs
 
 import xbmc
@@ -198,39 +197,7 @@ def play_track(track_id, store_id=None, track_title='', station_id=None):
 
     xbmcplugin.setResolvedUrl(addon_handle, True, item)
 
-    def _increment_playcount(track):
-        try:
-            wait_seconds = int(track['durationMillis']) / 3 / 1000
-
-        except:
-            # Just in case
-            wait_seconds = 30
-
-        wait_unitl   = time.time() + wait_seconds
-
-        monitor = xbmc.Monitor()
-        player  = xbmc.Player()
-
-        while not monitor.abortRequested():
-            if monitor.waitForAbort(1):
-                # Abort was requested while waiting. We should exit
-                break
-
-            # Check wheter or not the same track is still playing.
-            # If not the user either stoped or skipped to the next/previous
-            # on meaning we can exit
-            if player.isPlayingAudio():
-                if track_id != utils.get_current_track_id():
-                    return
-
-            if time.time() >= wait_unitl:
-                break
-
-        if not monitor.abortRequested():
-            gmusic.increment_song_playcount(track_id)
-
-    _thread = threading.Thread(target=_increment_playcount, args=[track])
-    _thread.start()
+    gmusic.increment_song_playcount(track_id)
 
     # If the current track is from a station and within the last five (5)
     # playlist tracks, we get a new set of tracks for this station and
