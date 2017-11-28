@@ -62,14 +62,14 @@ class GMusic(Mobileclient):
         if last_login_check == 0:
             return True
 
-        # We check every 3 hours
-        elif (last_login_check + 10800) < time.time():
+        # We check every 1 hours
+        elif (last_login_check + 3600) < time.time():
             return True
 
         else:
             return False
 
-    def login(self, validate=False):
+    def login(self):
         # Set Kodis locale to super class
         locale_code = xbmc.getLanguage(xbmc.ISO_639_1)
         locale_code = locale.normalize(locale_code).split('.')[0]
@@ -78,36 +78,32 @@ class GMusic(Mobileclient):
 
         self.locale = locale_code
 
-        if self._is_logged_in and not validate:
+        if self._is_logged_in and not self._should_test_login():
             return True
 
-        username  = addon.getSetting('username')
-        password  = addon.getSetting('password')
+        username = addon.getSetting('username')
+        password = addon.getSetting('password')
         device_id = addon.getSetting('device_id')
         authtoken = addon.getSetting('authtoken')
 
         if authtoken:
-            self.android_id               = device_id
-            self.session._authtoken       = authtoken
+            self.android_id = device_id
+            self.session._authtoken = authtoken
             self.session.is_authenticated = True
 
-            if not self._should_test_login():
+            addon.setSetting('last_login_check', str(int(time.time())))
+            try:
+                # Send a test request to ensure our authtoken
+                # is still valide and working
+                self.get_registered_devices()
                 self._is_logged_in = True
                 return True
 
-            else:
-                addon.setSetting('last_login_check', str(int(time.time())))
-                try:
-                    # Send a test request to ensure our authtoken
-                    # is still valide and working
-                    self.get_registered_devices()
-                    self._is_logged_in = True
-                    return True
-                except:
-                    # Faild with the test-request so we set
-                    # "is_authenticated=False" and go through the login-process
-                    # again to get a new "authtoken"
-                    self.session.is_authenticated = False
+            except:
+                # Faild with the test-request so we set
+                # "is_authenticated=False" and go through the login-process
+                # again to get a new "authtoken"
+                self.session.is_authenticated = False
 
         if device_id:
             success = super(GMusic, self).login(username, password,

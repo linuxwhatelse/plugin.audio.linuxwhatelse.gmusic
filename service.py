@@ -44,7 +44,7 @@ if __name__ == '__main__':
             addon.setSetting('library_last_updated', str(int(time.time())))
 
             try:
-                if gmusic.login(validate=True):
+                if gmusic.login():
                     gmusic.get_my_library_songs(from_cache=False)
                     gmusic.get_my_library_artists(from_cache=False)
                     gmusic.get_my_library_albums(from_cache=False)
