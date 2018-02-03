@@ -27,10 +27,10 @@ def album(album_id):
 @mpr.s_url('/playlist/')
 def playlist(playlist_id=None, playlist_token=None):
     if playlist_id:
-        my_library.my_library_playlist(playlist_id, False)
+        my_library.my_library_playlist(playlist_id)
 
     elif playlist_token:
-        generic.listen_now_shared_playlist(playlist_token, False)
+        generic.listen_now_shared_playlist(playlist_token)
 
 
 @mpr.s_url('/station/')
