@@ -2,7 +2,6 @@ import os
 import json
 import time
 
-import xbmc
 import xbmcgui
 import xbmcplugin
 
@@ -10,12 +9,11 @@ from addon.gmusic_wrapper import GMusic
 from addon import utils
 from addon import thumbs
 
-from addon import addon
-from addon import url
-from addon import addon_handle
+from addon import URL
+from addon import ADDON_HANDLE
 
 
-gmusic = GMusic.get(debug_logging=False)
+GMUSIC = GMusic.get(debug_logging=False)
 
 
 def build_artist_listitems(artists, my_library=False):
@@ -28,34 +26,35 @@ def build_artist_listitems(artists, my_library=False):
         if 'artistId' not in artist or 'name' not in artist:
             continue
 
-        artist_id   = artist['artistId']
+        artist_id = artist['artistId']
         artist_name = artist['name']
-        artist_art  = thumbs.IMG_ARTIST_FLAT
+        artist_art = thumbs.IMG_ARTIST_FLAT
         if 'artistArtRef' in artist:
             artist_art = artist['artistArtRef']
 
         item = xbmcgui.ListItem(artist_name)
 
         item.setArt({
-            'thumb'  : artist_art,
-            'poster' : artist_art,
-            #'fanart' : artist_art + '=s1920'
+            'thumb': artist_art,
+            'poster': artist_art,
+            # 'fanart' : artist_art + '=s1920'
         })
 
         item.setInfo('music', {
-            'mediatype' : 'artist',
-            'artist'    : artist_name,
+            'mediatype': 'artist',
+            'artist': artist_name,
         })
 
         item.addContextMenuItems(
             items=[(
                 utils.translate(30036),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['play', 'station'],
-                    queries = {'station_name': artist_name.encode('utf-8'), 'artist_id': artist_id},
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['play', 'station'],
+                    queries={'station_name': artist_name.encode(
+                        'utf-8'), 'artist_id': artist_id},
+                    r_path=True,
+                    r_query=True
                 )
             )]
         )
@@ -65,10 +64,10 @@ def build_artist_listitems(artists, my_library=False):
         if my_library:
             items.append((
                 utils.build_url(
-                    url     = url,
-                    paths   = ['browse', 'my-library', 'artist', artist_id],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['browse', 'my-library', 'artist', artist_id],
+                    r_path=True,
+                    r_query=True
                 ),
                 item,
                 True
@@ -77,10 +76,10 @@ def build_artist_listitems(artists, my_library=False):
         else:
             items.append((
                 utils.build_url(
-                    url     = url,
-                    paths   = ['browse', 'artist', artist_id],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['browse', 'artist', artist_id],
+                    r_path=True,
+                    r_query=True
                 ),
                 item,
                 True
@@ -90,7 +89,7 @@ def build_artist_listitems(artists, my_library=False):
 
 
 def list_artists(listitems):
-    xbmcplugin.setContent(addon_handle, 'artists')
+    xbmcplugin.setContent(ADDON_HANDLE, 'artists')
 
     sort_methods = [
         xbmcplugin.SORT_METHOD_UNSORTED,
@@ -110,10 +109,10 @@ def build_album_listitems(albums, my_library=False):
         if 'albumId' not in album or 'name' not in album:
             continue
 
-        album_id   = album['albumId']
+        album_id = album['albumId']
         album_name = album['name']
-        album_art  = thumbs.IMG_ALBUM
-        fanart     = None
+        album_art = thumbs.IMG_ALBUM
+        fanart = None
 
         if 'albumArtRef' in album:
             album_art = album['albumArtRef']
@@ -124,17 +123,17 @@ def build_album_listitems(albums, my_library=False):
         item = xbmcgui.ListItem(album_name)
 
         item.setArt({
-            'thumb'  : album_art,
-            'poster' : album_art,
-            #'fanart' : fanart
+            'thumb': album_art,
+            'poster': album_art,
+            # 'fanart' : fanart
         })
 
         item.setInfo('music', {
             'mediatype': 'album',
-            'album'    : album_name,
-            'artist'   : album['albumArtist']  if 'albumArtist' in album else '',
-            'genre'    : album['genre']        if 'genre'       in album else '',
-            'year'     : album['year']         if 'year'        in album else '',
+            'album': album_name,
+            'artist': album.get('albumArtist', ''),
+            'genre': album.get('genre', ''),
+            'year': album.get('year', ''),
         })
 
         menu_items = []
@@ -143,10 +142,10 @@ def build_album_listitems(albums, my_library=False):
             menu_items.append((
                 utils.translate(30037),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['my-library', 'add', 'album', album_id],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['my-library', 'add', 'album', album_id],
+                    r_path=True,
+                    r_query=True
                 )
             ))
 
@@ -154,21 +153,22 @@ def build_album_listitems(albums, my_library=False):
             (
                 utils.translate(30038),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['my-library', 'playlist', 'add'],
-                    queries = {'album_id': album_id},
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['my-library', 'playlist', 'add'],
+                    queries={'album_id': album_id},
+                    r_path=True,
+                    r_query=True
                 )
             ),
             (
                 utils.translate(30036),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['play', 'station'],
-                    queries = {'station_name': album_name.encode('utf-8'), 'album_id': album_id},
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['play', 'station'],
+                    queries={'station_name': album_name.encode(
+                        'utf-8'), 'album_id': album_id},
+                    r_path=True,
+                    r_query=True
                 )
             )
         ]
@@ -177,10 +177,10 @@ def build_album_listitems(albums, my_library=False):
             menu_items.append((
                 utils.translate(30034),
                 'Container.Update(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['browse', 'artist', album['artistId'][0]],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['browse', 'artist', album['artistId'][0]],
+                    r_path=True,
+                    r_query=True
                 )
             ))
 
@@ -188,13 +188,12 @@ def build_album_listitems(albums, my_library=False):
             menu_items.append((
                 utils.translate(30061),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['my-library', 'remove', 'album', album_id],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['my-library', 'remove', 'album', album_id],
+                    r_path=True,
+                    r_query=True
                 )
             ))
-
 
         item.addContextMenuItems(items=menu_items)
 
@@ -203,10 +202,10 @@ def build_album_listitems(albums, my_library=False):
         if my_library:
             items.append((
                 utils.build_url(
-                    url     = url,
-                    paths   = ['browse', 'my-library', 'album', album_id],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['browse', 'my-library', 'album', album_id],
+                    r_path=True,
+                    r_query=True
                 ),
                 item,
                 True
@@ -215,10 +214,10 @@ def build_album_listitems(albums, my_library=False):
         else:
             items.append((
                 utils.build_url(
-                    url     = url,
-                    paths   = ['browse', 'album', album_id],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['browse', 'album', album_id],
+                    r_path=True,
+                    r_query=True
                 ),
                 item,
                 True
@@ -228,7 +227,7 @@ def build_album_listitems(albums, my_library=False):
 
 
 def list_albums(listitems):
-    xbmcplugin.setContent(addon_handle, 'albums')
+    xbmcplugin.setContent(ADDON_HANDLE, 'albums')
 
     sort_methods = [
         xbmcplugin.SORT_METHOD_UNSORTED,
@@ -250,11 +249,11 @@ def build_playlist_listitems(playlists):
         if 'name' not in playlist:
             continue
 
-        playlist_id     = None
-        playlist_token  = None
-        playlist_name   = playlist['name']
-        playlist_art    = thumbs.IMG_PLAYLIST
-        fanart          = None
+        playlist_id = None
+        playlist_token = None
+        playlist_name = playlist['name']
+        playlist_art = thumbs.IMG_PLAYLIST
+        fanart = None
 
         # Find a thumbnail to be displayed
         if 'images' in playlist and len(playlist['images']) > 0:
@@ -268,7 +267,7 @@ def build_playlist_listitems(playlists):
 
         # Get the id if available (Would mean it's a user playlist)
         if 'id' in playlist and type(playlist['id']) == unicode:
-            playlist_id   = playlist['id']
+            playlist_id = playlist['id']
 
         # Get the shareToken if available
         if 'shareToken' in playlist:
@@ -280,15 +279,14 @@ def build_playlist_listitems(playlists):
         item = xbmcgui.ListItem(playlist_name)
 
         item.setArt({
-            'thumb'  : playlist_art,
-            'poster' : playlist_art,
-            #'fanart' : fanart
+            'thumb': playlist_art,
+            'poster': playlist_art,
+            # 'fanart' : fanart
         })
 
-
         item.setInfo('music', {
-            'mediatype' : 'album',
-            'album'     : playlist['name'],
+            'mediatype': 'album',
+            'album': playlist['name'],
         })
 
         paths = []
@@ -310,11 +308,11 @@ def build_playlist_listitems(playlists):
             menu_items.append((
                 utils.translate(30036),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['play', 'station'],
-                    queries = {'playlist_token': playlist_token},
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['play', 'station'],
+                    queries={'playlist_token': playlist_token},
+                    r_path=True,
+                    r_query=True
                 )
             ))
 
@@ -324,11 +322,11 @@ def build_playlist_listitems(playlists):
             menu_items.append((
                 utils.translate(30068),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['my-library', 'playlist', 'delete'],
-                    queries = query,
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['my-library', 'playlist', 'delete'],
+                    queries=query,
+                    r_path=True,
+                    r_query=True
                 )
             ))
 
@@ -336,11 +334,11 @@ def build_playlist_listitems(playlists):
 
         items.append((
             utils.build_url(
-                url     = url,
-                paths   = paths,
-                queries = query,
-                r_path  = True,
-                r_query = True
+                url=URL,
+                paths=paths,
+                queries=query,
+                r_path=True,
+                r_query=True
             ),
             item,
             True
@@ -350,7 +348,7 @@ def build_playlist_listitems(playlists):
 
 
 def list_playlists(listitems):
-    xbmcplugin.setContent(addon_handle, 'albums')
+    xbmcplugin.setContent(ADDON_HANDLE, 'albums')
 
     list_items(listitems)
 
@@ -370,8 +368,8 @@ def build_station_listitems(stations):
             description = station['description']
 
         station_name = station['name']
-        station_art  = thumbs.IMG_STATION
-        fanart       = None
+        station_art = thumbs.IMG_STATION
+        fanart = None
 
         if 'imageUrls' in station and len(station['imageUrls']) > 0:
             station_art = station['imageUrls'][0]['url']
@@ -382,13 +380,13 @@ def build_station_listitems(stations):
         item = xbmcgui.ListItem(station_name)
 
         item.setArt({
-            'thumb'  : station_art,
-            'poster' : station_art,
-            #'fanart' : fanart
+            'thumb': station_art,
+            'poster': station_art,
+            # 'fanart' : fanart
         })
 
         item.setInfo('music', {
-            'mediatype' : 'album',
+            'mediatype': 'album',
             'album': station_name,
             'comment': description,
         })
@@ -423,11 +421,11 @@ def build_station_listitems(stations):
 
         items.append((
             utils.build_url(
-                url     = url,
-                paths   = ['play', 'station'],
-                queries = query,
-                r_path  = True,
-                r_query = True
+                url=URL,
+                paths=['play', 'station'],
+                queries=query,
+                r_path=True,
+                r_query=True
             ),
             item,
             False
@@ -437,7 +435,7 @@ def build_station_listitems(stations):
 
 
 def list_stations(listitems):
-    xbmcplugin.setContent(addon_handle, 'albums')
+    xbmcplugin.setContent(ADDON_HANDLE, 'albums')
 
     list_items(listitems, None, False)
 
@@ -445,10 +443,10 @@ def list_stations(listitems):
 def build_situation_listitems(situations):
     items = []
     for situation in situations:
-        situation_id    = situation['id']
+        situation_id = situation['id']
         situation_title = situation['title']
-        situation_art   = thumbs.IMG_ALBUM
-        fanart          = None
+        situation_art = thumbs.IMG_ALBUM
+        fanart = None
 
         description = ''
         if 'description' in situation:
@@ -463,23 +461,23 @@ def build_situation_listitems(situations):
         item = xbmcgui.ListItem(situation_title)
 
         item.setArt({
-            'thumb'  : situation_art,
-            'poster' : situation_art,
-            #'fanart' : fanart
+            'thumb': situation_art,
+            'poster': situation_art,
+            # 'fanart' : fanart
         })
 
         item.setInfo('music', {
-            'mediatype' : 'album',
-            'album'     : situation_title,
-            'comment'   : description,
+            'mediatype': 'album',
+            'album': situation_title,
+            'comment': description,
         })
 
         items.append((
             utils.build_url(
-                url     = url,
-                paths   = ['browse', 'listen-now', 'situation', situation_id],
-                r_path  = True,
-                r_query = True
+                url=URL,
+                paths=['browse', 'listen-now', 'situation', situation_id],
+                r_path=True,
+                r_query=True
             ),
             item,
             True
@@ -492,7 +490,8 @@ def list_situations(listitems):
     list_albums(listitems)
 
 
-def build_song_listitems(tracks, station_id=None, my_library=False, my_library_playlist=False):
+def build_song_listitems(tracks, station_id=None, my_library=False,
+                         my_library_playlist=False):
     tracks_cache = utils.get_cache_dir(['tracks'])
 
     items = []
@@ -526,13 +525,13 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         # We only do this if the title is missing as other metadata
         # isn't as important and we don't want to do this to often
         if 'title' not in track:
-            _track = gmusic.get_my_library_song_details(track_id)
+            _track = GMUSIC.get_my_library_song_details(track_id)
             if _track:
                 track = _track
 
-        track_title = track['title'] if 'title' in track else ''
-        album_art   = thumbs.IMG_TRACK
-        fanart      = None
+        track_title = track.get('title', '')
+        album_art = thumbs.IMG_TRACK
+        fanart = None
 
         if 'albumArtRef' in track and len(track['albumArtRef']) > 0:
             album_art = track['albumArtRef'][0]['url']
@@ -543,21 +542,21 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         item = xbmcgui.ListItem(track_title)
 
         item.setArt({
-            'thumb'  : album_art,
-            'poster' : album_art,
-            #'fanart' : fanart
+            'thumb': album_art,
+            'poster': album_art,
+            # 'fanart' : fanart
         })
 
         item.setInfo('music', {
-            'mediatype'    : 'song',
-            'title'        :  track_title,
-            'tracknumber'  :  track['trackNumber']  if 'trackNumber' in track else '',
-            'year'         :  track['year']         if 'year'        in track else '',
-            'genre'        :  track['genre']        if 'genre'       in track else '',
-            'album'        :  track['album']        if 'album'       in track else '',
-            'artist'       :  track['artist']       if 'artist'      in track else '',
-            'rating'       :  track['rating']       if 'rating'      in track else '',
-            'playcount'    :  track['playCount']    if 'playCount'   in track else '',
+            'mediatype': 'song',
+            'title':  track_title,
+            'tracknumber':  track('trackNumber', ''),
+            'year':  track('year', ''),
+            'genre':  track('genre', ''),
+            'album':  track('album', ''),
+            'artist':  track('artist', ''),
+            'rating':  track('rating', ''),
+            'playcount':  track('playCount', ''),
         })
 
         menu_items = []
@@ -567,10 +566,10 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
             menu_items.append((
                 utils.translate(30037),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['my-library', 'add', 'track', track_id],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['my-library', 'add', 'track', track_id],
+                    r_path=True,
+                    r_query=True
                 )
             ))
 
@@ -578,11 +577,11 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         menu_items.append((
             utils.translate(30038),
             'XBMC.RunPlugin(%s)' % utils.build_url(
-                url     = url,
-                paths   = ['my-library', 'playlist', 'add'],
-                queries = {'track_id': track_id},
-                r_path  = True,
-                r_query = True
+                url=URL,
+                paths=['my-library', 'playlist', 'add'],
+                queries={'track_id': track_id},
+                r_path=True,
+                r_query=True
             )
         ))
 
@@ -592,11 +591,11 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
                 menu_items.append((
                     utils.translate(30062),
                     'XBMC.RunPlugin(%s)' % utils.build_url(
-                        url     = url,
-                        paths   = ['my-library', 'playlist', 'remove'],
-                        queries = {'entry_id': elem['id']},
-                        r_path  = True,
-                        r_query = True
+                        url=URL,
+                        paths=['my-library', 'playlist', 'remove'],
+                        queries={'entry_id': elem['id']},
+                        r_path=True,
+                        r_query=True
                     )
                 ))
 
@@ -604,11 +603,12 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         menu_items.append((
             utils.translate(30036),
             'XBMC.RunPlugin(%s)' % utils.build_url(
-                url     = url,
-                paths   = ['play', 'station'],
-                queries = {'track_id': track_id, 'station_name': track_title.encode('utf-8')},
-                r_path  = True,
-                r_query = True
+                url=URL,
+                paths=['play', 'station'],
+                queries={'track_id': track_id,
+                         'station_name': track_title.encode('utf-8')},
+                r_path=True,
+                r_query=True
             )
         ))
 
@@ -617,10 +617,10 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
             menu_items.append((
                 utils.translate(30034),
                 'Container.Update(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['browse', 'artist', track['artistId'][0]],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['browse', 'artist', track['artistId'][0]],
+                    r_path=True,
+                    r_query=True
                 )
             ))
 
@@ -629,10 +629,10 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
             menu_items.append((
                 utils.translate(30035),
                 'Container.Update(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['browse', 'album', track['albumId']],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['browse', 'album', track['albumId']],
+                    r_path=True,
+                    r_query=True
                 )
             ))
 
@@ -640,11 +640,11 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         menu_items.append((
             utils.translate(30041),
             'XBMC.RunPlugin(%s)' % utils.build_url(
-                url     = url,
-                paths   = ['rate'],
-                queries = {'track_id': track_id},
-                r_path  = True,
-                r_query = True
+                url=URL,
+                paths=['rate'],
+                queries={'track_id': track_id},
+                r_path=True,
+                r_query=True
             )
         ))
 
@@ -653,10 +653,10 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
             menu_items.append((
                 utils.translate(30061),
                 'XBMC.RunPlugin(%s)' % utils.build_url(
-                    url     = url,
-                    paths   = ['my-library', 'remove', 'track', track['id']],
-                    r_path  = True,
-                    r_query = True
+                    url=URL,
+                    paths=['my-library', 'remove', 'track', track['id']],
+                    r_path=True,
+                    r_query=True
                 )
             ))
 
@@ -666,7 +666,8 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
         item.setProperty('Music',      'true')
         item.setProperty('mimetype',   'audio/mpeg')
 
-        # We cache everything so :play_track: doesn't have to fetch those informations again
+        # We cache everything so :play_track: doesn't have to fetch those
+        # informations again
         with open(os.path.join(tracks_cache, track_id), 'w+') as f:
             f.write(json.dumps(track))
 
@@ -676,11 +677,11 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
 
         items.append((
             utils.build_url(
-                url     = url,
-                paths   = ['play', 'track', track_id],
-                queries = queries,
-                r_path  = True,
-                r_query = True
+                url=URL,
+                paths=['play', 'track', track_id],
+                queries=queries,
+                r_path=True,
+                r_query=True
             ),
             item,
             False
@@ -699,7 +700,7 @@ def build_song_listitems(tracks, station_id=None, my_library=False, my_library_p
 
 
 def list_songs(listitems):
-    xbmcplugin.setContent(addon_handle, 'songs')
+    xbmcplugin.setContent(ADDON_HANDLE, 'songs')
 
     sort_methods = [
         xbmcplugin.SORT_METHOD_UNSORTED,
@@ -721,12 +722,12 @@ def list_items(listitems, sort_methods=None, cache_to_disc=True):
         sort_methods = []
 
     xbmcplugin.addDirectoryItems(
-        handle     = addon_handle,
-        items      = listitems,
-        totalItems = len(listitems)
+        handle=ADDON_HANDLE,
+        items=listitems,
+        totalItems=len(listitems)
     )
 
     for sort_method in sort_methods:
-        xbmcplugin.addSortMethod(addon_handle, sort_method)
+        xbmcplugin.addSortMethod(ADDON_HANDLE, sort_method)
 
-    xbmcplugin.endOfDirectory(handle=addon_handle, cacheToDisc=cache_to_disc)
+    xbmcplugin.endOfDirectory(handle=ADDON_HANDLE, cacheToDisc=cache_to_disc)

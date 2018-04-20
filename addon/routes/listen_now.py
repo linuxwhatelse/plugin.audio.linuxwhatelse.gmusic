@@ -6,68 +6,68 @@ import mapper
 
 from addon.gmusic_wrapper import GMusic
 from addon import utils
+from addon import listing
 from addon import thumbs
 
-from addon import addon
-from addon import url
-from addon import listing
+from addon import ADDON
+from addon import URL
 
 
-mpr = mapper.Mapper.get()
+MPR = mapper.Mapper.get()
 gmusic = GMusic.get(debug_logging=False)
 _cache_dir = utils.get_cache_dir()
 
 
-@mpr.s_url('/browse/listen-now/')
+@MPR.s_url('/browse/listen-now/')
 def listen_now():
     ifl = xbmcgui.ListItem(utils.translate(30045))
     ifl.setArt({
-        'thumb'  : thumbs.IMG_IFL,
-        'poster' : thumbs.IMG_IFL
+        'thumb': thumbs.IMG_IFL,
+        'poster': thumbs.IMG_IFL
     })
 
     albums = xbmcgui.ListItem(utils.translate(30023))
     albums.setArt({
-        'thumb'  : thumbs.IMG_ALBUM,
-        'poster' : thumbs.IMG_ALBUM
+        'thumb': thumbs.IMG_ALBUM,
+        'poster': thumbs.IMG_ALBUM
     })
 
     stations = xbmcgui.ListItem(utils.translate(30021))
     stations.setArt({
-        'thumb'  : thumbs.IMG_STATION,
-        'poster' : thumbs.IMG_STATION
+        'thumb': thumbs.IMG_STATION,
+        'poster': thumbs.IMG_STATION
     })
 
     playlists = xbmcgui.ListItem(utils.translate(30020))
     playlists.setArt({
-        'thumb'  : thumbs.IMG_PLAYLIST,
-        'poster' : thumbs.IMG_PLAYLIST
+        'thumb': thumbs.IMG_PLAYLIST,
+        'poster': thumbs.IMG_PLAYLIST
     })
 
     items = [
         (
             utils.build_url(
-                url     = url,
-                paths   = ['play', 'station'],
-                queries = {'station_id': 'IFL'},
-                r_path  = True,
-                r_query = True
+                url=URL,
+                paths=['play', 'station'],
+                queries={'station_id': 'IFL'},
+                r_path=True,
+                r_query=True
             ),
             ifl,
             False
         ),
         (
-            utils.build_url(url, ['albums']),
+            utils.build_url(URL, ['albums']),
             albums,
             True
         ),
         (
-            utils.build_url(url, ['stations']),
+            utils.build_url(URL, ['stations']),
             stations,
             True
         ),
         (
-            utils.build_url(url, ['playlists']),
+            utils.build_url(URL, ['playlists']),
             playlists,
             True
         ),
@@ -77,7 +77,7 @@ def listen_now():
     # Only fetch new information if one full hour has passed
     # to keep things speedy on slow devices
     try:
-        last_check = addon.getSetting('listen_now_last_update')
+        last_check = ADDON.getSetting('listen_now_last_update')
 
     except:
         last_check = -1
@@ -85,20 +85,20 @@ def listen_now():
     from_cache = True
     if last_check != time.strftime('%Y%m%d%H'):
         from_cache = False
-        addon.setSetting('listen_now_last_update', time.strftime('%Y%m%d%H'))
+        ADDON.setSetting('listen_now_last_update', time.strftime('%Y%m%d%H'))
 
     primary_header, situations = gmusic.get_listen_now_situations(from_cache)
 
     if primary_header and situations:
         situations = xbmcgui.ListItem(primary_header)
         situations.setArt({
-            'thumb'  : thumbs.IMG_ALBUM,
-            'poster' : thumbs.IMG_ALBUM
+            'thumb': thumbs.IMG_ALBUM,
+            'poster': thumbs.IMG_ALBUM
         })
 
         # Add Situations after IFL
         items.insert(1, (
-            utils.build_url(url, ['situations']),
+            utils.build_url(URL, ['situations']),
             situations,
             True
         ))
@@ -106,7 +106,7 @@ def listen_now():
     listing.list_items(items)
 
 
-@mpr.s_url('/browse/listen-now/situations/')
+@MPR.s_url('/browse/listen-now/situations/')
 def listen_now_situations():
     primary_header, situations = gmusic.get_listen_now_situations(
         from_cache=True)
@@ -116,13 +116,13 @@ def listen_now_situations():
         listing.list_situations(items)
 
 
-@mpr.s_url('/browse/listen-now/situation/<situation_id>/')
+@MPR.s_url('/browse/listen-now/situation/<situation_id>/')
 def listen_now_situation(situation_id):
     def _find_situation(situation_id, situations, parent=None):
         """ Helper to find the right situation as
         situations can have situations as child (instead of stations)
         """
-        match  = None
+        match = None
         for situation in situations:
             parent = situation
 
@@ -170,12 +170,12 @@ def listen_now_situation(situation_id):
                     break
 
             stations.append({
-                'name'      : station['name'],
-                'imageUrls' : [{
-                    'url' : art
+                'name': station['name'],
+                'imageUrls': [{
+                    'url': art
                 }],
-                'curatedStationId' : station['seed']['curatedStationId'],
-                'description'      : station['description']
+                'curatedStationId': station['seed']['curatedStationId'],
+                'description': station['description']
             })
 
         items = listing.build_station_listitems(stations)
@@ -183,11 +183,11 @@ def listen_now_situation(situation_id):
     listing.list_stations(items)
 
 
-@mpr.s_url('/browse/listen-now/albums/')
+@MPR.s_url('/browse/listen-now/albums/')
 def listen_now_albums():
     listen_now = gmusic.get_listen_now_items()
 
-    albums   = []
+    albums = []
     for item in listen_now:
         # 1 = album
         # 2 = playlist
@@ -212,17 +212,17 @@ def listen_now_albums():
             album_art = item['images'][0]['url']
 
         albums.append({
-            'albumId'     : album['id']['metajamCompactKey'],
-            'name'        : album_title,
-            'albumArtist' : album_artist,
-            'albumArtRef' : album_art
+            'albumId': album['id']['metajamCompactKey'],
+            'name': album_title,
+            'albumArtist': album_artist,
+            'albumArtRef': album_art
         })
 
     items = listing.build_album_listitems(albums)
     listing.list_albums(items)
 
 
-@mpr.s_url('/browse/listen-now/stations/')
+@MPR.s_url('/browse/listen-now/stations/')
 def listen_now_stations():
     listen_now = gmusic.get_listen_now_items()
 
@@ -244,9 +244,9 @@ def listen_now_stations():
         station = item['radio_station']
 
         tmp_station = {
-            'name'      : station['title'],
-            'imageUrls' : [{
-                'url' : art
+            'name': station['title'],
+            'imageUrls': [{
+                'url': art
             }],
         }
 
@@ -269,11 +269,11 @@ def listen_now_stations():
     listing.list_stations(items)
 
 
-@mpr.s_url('/browse/listen-now/playlists/')
+@MPR.s_url('/browse/listen-now/playlists/')
 def listen_now_playlists():
     listen_now = gmusic.get_listen_now_items()
 
-    playlists   = []
+    playlists = []
     for item in listen_now:
         # 1 = album
         # 2 = playlist
@@ -287,9 +287,9 @@ def listen_now_playlists():
         playlist = item['playlist']
 
         playlists.append({
-            'id'     : playlist['id'],
-            'name'   : playlist['title'],
-            'images' : item['images'],
+            'id': playlist['id'],
+            'name': playlist['title'],
+            'images': item['images'],
         })
 
     items = listing.build_playlist_listitems(playlists)

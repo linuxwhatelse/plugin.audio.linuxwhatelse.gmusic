@@ -1,9 +1,9 @@
-from addon.routes import home
-from addon.routes import listen_now
-from addon.routes import top_charts
-from addon.routes import new_releases
-from addon.routes import my_library
-from addon.routes import browse_stations
-from addon.routes import generic
-from addon.routes import actions
-from addon.routes import files
+from addon.routes import home  # noqa
+from addon.routes import listen_now  # noqa
+from addon.routes import top_charts  # noqa
+from addon.routes import new_releases  # noqa
+from addon.routes import my_library  # noqa
+from addon.routes import browse_stations  # noqa
+from addon.routes import generic  # noqa
+from addon.routes import actions  # noqa
+from addon.routes import files  # noqa

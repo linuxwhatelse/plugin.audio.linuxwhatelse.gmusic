@@ -7,7 +7,9 @@ import xbmc
 import xbmcaddon
 import xbmcgui
 
-addon = xbmcaddon.Addon()
+
+ADDON = xbmcaddon.Addon()
+
 
 def log(*args, **kwargs):
     if not kwargs or 'lvl' not in kwargs:
@@ -16,31 +18,35 @@ def log(*args, **kwargs):
     else:
         lvl = kwargs['lvl']
 
-    msg = '[%s] ' % addon.getAddonInfo('name')
+    msg = '[%s] ' % ADDON.getAddonInfo('name')
     msg += ' '.join(str(x) for x in args)
 
     xbmc.log(msg, level=lvl)
 
+
 def notify(title, message, icon=None, display_time=5000, sound=True):
     if not icon:
-        icon = addon.getAddonInfo('icon')
+        icon = ADDON.getAddonInfo('icon')
 
     xbmcgui.Dialog().notification(title, message, icon, display_time, sound)
 
+
 def translate(id):
-    return addon.getLocalizedString(id)
+    return ADDON.getLocalizedString(id)
+
 
 def get_cache_dir(sub_dir=None):
     if not sub_dir:
         sub_dir = []
 
     cache_dir = xbmc.translatePath(
-        os.path.join(addon.getAddonInfo('profile'), '.cache', *sub_dir))
+        os.path.join(ADDON.getAddonInfo('profile'), '.cache', *sub_dir))
 
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
 
     return cache_dir
+
 
 def get_current_track_id(key_name='track_id'):
     playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
@@ -62,9 +68,9 @@ def get_current_track_id(key_name='track_id'):
 
 def execute_jsonrpc(method, params=None):
     data = {}
-    data['id']         = 1
-    data['jsonrpc']    = '2.0'
-    data['method']     = method
+    data['id'] = 1
+    data['jsonrpc'] = '2.0'
+    data['method'] = method
     if params:
         data['params'] = params
 
@@ -82,6 +88,7 @@ def execute_jsonrpc(method, params=None):
         return response
     except KeyError:
         return None
+
 
 def build_url(url, paths=None, queries=None, r_path=False, r_query=False):
     """Build new urls by adding/overwriting path-fragments and/or queries

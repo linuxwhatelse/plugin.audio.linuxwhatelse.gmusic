@@ -15,7 +15,7 @@ from addon import mobileclient
 from addon import utils
 from addon import thumbs
 
-from addon import addon
+from addon import ADDON
 
 
 _lock = threading.RLock()
@@ -42,7 +42,6 @@ class GMusic(Mobileclient):
 
         return rv
 
-
     def _make_call(self, protocol, *args, **kwargs):
         try:
             return super(GMusic, self)._make_call(protocol, *args, **kwargs)
@@ -54,7 +53,7 @@ class GMusic(Mobileclient):
 
     def _should_test_login(self):
         try:
-            last_login_check = int(addon.getSetting('last_login_check'))
+            last_login_check = int(ADDON.getSetting('last_login_check'))
 
         except:
             last_login_check = 0
@@ -81,17 +80,17 @@ class GMusic(Mobileclient):
         if self._is_logged_in and not self._should_test_login():
             return True
 
-        username = addon.getSetting('username')
-        password = addon.getSetting('password')
-        device_id = addon.getSetting('device_id')
-        authtoken = addon.getSetting('authtoken')
+        username = ADDON.getSetting('username')
+        password = ADDON.getSetting('password')
+        device_id = ADDON.getSetting('device_id')
+        authtoken = ADDON.getSetting('authtoken')
 
         if authtoken:
             self.android_id = device_id
             self.session._authtoken = authtoken
             self.session.is_authenticated = True
 
-            addon.setSetting('last_login_check', str(int(time.time())))
+            ADDON.setSetting('last_login_check', str(int(time.time())))
             try:
                 # Send a test request to ensure our authtoken
                 # is still valide and working
@@ -110,18 +109,18 @@ class GMusic(Mobileclient):
                                                 device_id, self.locale)
 
             if success:
-                addon.setSetting('authtoken', self.session._authtoken)
+                ADDON.setSetting('authtoken', self.session._authtoken)
                 self._is_logged_in = True
                 return True
 
         utils.notify(utils.translate(30048), '')
-        addon.setSetting('is_setup', 'false')
+        ADDON.setSetting('is_setup', 'false')
 
         # Prevent further addon execution in case we failed with the login-process
         raise SystemExit
 
     ##
-    ## Overloaded to add some stuff
+    # Overloaded to add some stuff
     ##
     def get_listen_now_situations(self, from_cache=True):
         _cache = os.path.join(utils.get_cache_dir(), 'situations.json')
@@ -247,8 +246,9 @@ class GMusic(Mobileclient):
         if not artist_id.startswith('A'):
             return []
 
-        artist        = None
-        artists_cache = os.path.join(utils.get_cache_dir(['artists']), artist_id)
+        artist = None
+        artists_cache = os.path.join(
+            utils.get_cache_dir(['artists']), artist_id)
 
         if os.path.exists(artists_cache) and from_cache:
             with open(artists_cache, 'r') as f:
@@ -267,7 +267,7 @@ class GMusic(Mobileclient):
         return artist
 
     ##
-    ## Methods not yet in API
+    # Methods not yet in API
     ##
     def get_new_releases(self, num_items=25, genre=None):
         res = self._make_call(mobileclient.GetNewReleases, num_items, genre)
@@ -307,9 +307,8 @@ class GMusic(Mobileclient):
 
         return res['stations']
 
-
     ##
-    ## Helper/Wrapper functions
+    # Helper/Wrapper functions
     ##
     def _uniquify(self, dict_list, key):
         new = []
@@ -359,10 +358,8 @@ class GMusic(Mobileclient):
                 if 'albumId' not in song:
                     songs[i]['albumId'] = str(uuid.uuid4())
 
-
             with open(_cache, 'w+') as f:
                 f.write(json.dumps(songs))
-
 
             # Save each song as separate file
             # for easier and quicker access
@@ -426,7 +423,7 @@ class GMusic(Mobileclient):
                 if 'artistArtRef' in song and len(song['artistArtRef']) > 0:
                     _art = song['artistArtRef'][0]['url']
 
-                artist ={
+                artist = {
                     'artistId':     song['artistId'][0],
                     'name':         song['albumArtist'],
                     'artistArtRef': _art
@@ -467,13 +464,13 @@ class GMusic(Mobileclient):
                     _art = song['albumArtRef'][0]['url']
 
                 album = {
-                    'albumId'    : song['albumId'],
-                    'artistId'   : song['artistId'],
-                    'name'       : song['album'],
-                    'artist'     : song['artist'],
+                    'albumId': song['albumId'],
+                    'artistId': song['artistId'],
+                    'name': song['album'],
+                    'artist': song['artist'],
                     'albumArtist': song['albumArtist'],
-                    'year'       : song['year'] if 'year' in song else 0,
-                    'genre'      : song['genre'] if 'genre' in song else '',
+                    'year': song.get('year', 0),
+                    'genre': song.get('genre', ''),
                     'albumArtRef': _art
                 }
 

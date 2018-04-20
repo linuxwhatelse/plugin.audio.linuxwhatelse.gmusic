@@ -3,81 +3,81 @@ import xbmcgui
 import mapper
 
 from addon import utils
+from addon import listing
 from addon import thumbs
 
-from addon import url
-from addon import listing
+from addon import URL
 
 
-mpr = mapper.Mapper.get()
+MPR = mapper.Mapper.get()
 
 
-@mpr.s_url('/browse/')
+@MPR.s_url('/browse/')
 def main_menu():
     listen_now = xbmcgui.ListItem(utils.translate(30014))
     listen_now.setArt({
-        'thumb'  : thumbs.IMG_HEADPHONES,
-        'poster' : thumbs.IMG_HEADPHONES
+        'thumb': thumbs.IMG_HEADPHONES,
+        'poster': thumbs.IMG_HEADPHONES
     })
 
     top_charts = xbmcgui.ListItem(utils.translate(30015))
     top_charts.setArt({
-        'thumb'  : thumbs.IMG_STAR,
-        'poster' : thumbs.IMG_STAR
+        'thumb': thumbs.IMG_STAR,
+        'poster': thumbs.IMG_STAR
     })
 
     new_releases = xbmcgui.ListItem(utils.translate(30016))
     new_releases.setArt({
-        'thumb'  : thumbs.IMG_RELEASES,
-        'poster' : thumbs.IMG_RELEASES
+        'thumb': thumbs.IMG_RELEASES,
+        'poster': thumbs.IMG_RELEASES
     })
 
     my_library = xbmcgui.ListItem(utils.translate(30017))
     my_library.setArt({
-        'thumb'  : thumbs.IMG_LIBRARY,
-        'poster' : thumbs.IMG_LIBRARY
+        'thumb': thumbs.IMG_LIBRARY,
+        'poster': thumbs.IMG_LIBRARY
     })
 
     browse_stations = xbmcgui.ListItem(utils.translate(30018))
     browse_stations.setArt({
-        'thumb'  : thumbs.IMG_STATION,
-        'poster' : thumbs.IMG_STATION
+        'thumb': thumbs.IMG_STATION,
+        'poster': thumbs.IMG_STATION
     })
 
     search = xbmcgui.ListItem(utils.translate(30019))
     search.setArt({
-        'thumb'  : thumbs.IMG_SEARCH,
-        'poster' : thumbs.IMG_SEARCH
+        'thumb': thumbs.IMG_SEARCH,
+        'poster': thumbs.IMG_SEARCH
     })
 
     items = [
         (
-            utils.build_url(url, ['listen-now']),
+            utils.build_url(URL, ['listen-now']),
             listen_now,
             True
         ),
         (
-            utils.build_url(url, ['top-charts']),
+            utils.build_url(URL, ['top-charts']),
             top_charts,
             True
         ),
         (
-            utils.build_url(url, ['new-releases']),
+            utils.build_url(URL, ['new-releases']),
             new_releases,
             True
         ),
         (
-            utils.build_url(url, ['my-library']),
+            utils.build_url(URL, ['my-library']),
             my_library,
             True
         ),
         (
-            utils.build_url(url, ['browse-stations']),
+            utils.build_url(URL, ['browse-stations']),
             browse_stations,
             True
         ),
         (
-            utils.build_url(url, ['search', 'history'], r_path=True),
+            utils.build_url(URL, ['search', 'history'], r_path=True),
             search,
             True
         ),
@@ -87,9 +87,9 @@ def main_menu():
     items[3][1].addContextMenuItems([(
         utils.translate(30030),
         'XBMC.RunPlugin(%s)' % utils.build_url(
-            url    = url,
-            paths  = ['my-library', 'update'],
-            r_path = True
+            url=URL,
+            paths=['my-library', 'update'],
+            r_path=True
         )
     )])
 
@@ -97,9 +97,9 @@ def main_menu():
     items[5][1].addContextMenuItems([(
         utils.translate(30012),
         'XBMC.RunPlugin(%s)' % utils.build_url(
-            url    = url,
-            paths  = ['clear', 'search-history'],
-            r_path = True
+            url=URL,
+            paths=['clear', 'search-history'],
+            r_path=True
         )
     )])
 
